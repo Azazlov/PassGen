@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
 
 
 String secureHash(String a, String b, String c, int stretch) {
+
   dynamic result = utf8.encode(a + b + c);
   for (int i = 0; i < stretch~/2; i++) {
     result = sha256.convert(result).bytes;
@@ -13,7 +13,7 @@ String secureHash(String a, String b, String c, int stretch) {
   return base64.encode(result);
 }
 
-String encrypt(List<int> psswdBytes, int charsIn, String alphabet) {
+String encryptpsswd(List<int> psswdBytes, int charsIn, String alphabet) {
   return psswdBytes.map((b) => alphabet[b % charsIn]).join();
 }
 
@@ -53,10 +53,12 @@ String getPsswd(String masterpsswd, String service, int psswdlen, bool upper, bo
   final specChar2 = "\"'`,./;:[]}{<>\\|";
   final specChar3 = "~?";
 
-  final enMP = utf8.encode(masterpsswd).map((e) => e.toRadixString(16).padLeft(2, '0')).join();
-  final enS = utf8.encode(service).map((e) => e.toRadixString(16).padLeft(2, '0')).join();
+  final enMP = masterpsswd.codeUnits.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
+  final enS = service.codeUnits.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
 
   final radius = utf8.encode(secureHash(enMP, enS, enS + enMP, psswdlen * 789)).length;
+
+  // print('${enMP} ${enS} ${radius}');
 
   String az = '';
   if (upper) az += upperLet;
@@ -78,16 +80,16 @@ String getPsswd(String masterpsswd, String service, int psswdlen, bool upper, bo
   for (int d = 0; d < 6; d++) {
     for (int i = d; i < iterations; i++) {
       String enMPtemp = '';
-      if (dig && d == 6) enMPtemp = encrypt(utf8.encode(secureHash(digChar, enS, salted, radius)), digChar.length, alphabet);
-      else if (spec3 && d == 5) enMPtemp = encrypt(utf8.encode(secureHash(specChar3, enS, salted, radius)), specChar3.length, alphabet);
-      else if (spec2 && d == 4) enMPtemp = encrypt(utf8.encode(secureHash(specChar2, enS, salted, radius)), specChar2.length, alphabet);
-      else if (spec1 && d == 3) enMPtemp = encrypt(utf8.encode(secureHash(specChar1, enS, salted, radius)), specChar1.length, alphabet);
-      else if (lower && d == 2) enMPtemp = encrypt(utf8.encode(secureHash(lowerLet, enS, salted, radius)), lowerLet.length, alphabet);
-      else if (upper && d == 1) enMPtemp = encrypt(utf8.encode(secureHash(upperLet, enS, salted, radius)), upperLet.length, alphabet);
+      if (dig && d == 6) enMPtemp = encryptpsswd(utf8.encode(secureHash(digChar, enS, salted, radius)), digChar.length, alphabet);
+      else if (spec3 && d == 5) enMPtemp = encryptpsswd(utf8.encode(secureHash(specChar3, enS, salted, radius)), specChar3.length, alphabet);
+      else if (spec2 && d == 4) enMPtemp = encryptpsswd(utf8.encode(secureHash(specChar2, enS, salted, radius)), specChar2.length, alphabet);
+      else if (spec1 && d == 3) enMPtemp = encryptpsswd(utf8.encode(secureHash(specChar1, enS, salted, radius)), specChar1.length, alphabet);
+      else if (lower && d == 2) enMPtemp = encryptpsswd(utf8.encode(secureHash(lowerLet, enS, salted, radius)), lowerLet.length, alphabet);
+      else if (upper && d == 1) enMPtemp = encryptpsswd(utf8.encode(secureHash(upperLet, enS, salted, radius)), upperLet.length, alphabet);
       else enMPtemp = enMP;
 
       final hash = secureHash(BigInt.parse(bytesToHex(psswd), radix: 16).toString(), salt, enMPtemp, psswdlen * 130 + i * d);
-      securepsswd += encrypt(utf8.encode(hash), charsIn, alphabet);
+      securepsswd += encryptpsswd(utf8.encode(hash), charsIn, alphabet);
       psswd = sha256.convert(utf8.encode(BigInt.parse(bytesToHex(psswd), radix: 16).toString())).bytes;
     }
   }
