@@ -1,8 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:secure_pass/features/storage/storageService.dart';
 
 class StorageScreen extends StatelessWidget {
   const StorageScreen({super.key});
+
+  @override
+  void initState(){
+    
+  }
 
   @override
   Widget build(BuildContext context) {

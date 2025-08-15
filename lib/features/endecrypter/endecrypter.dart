@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:secure_pass/features/passwordGenerator/domain/psswdGenInterface.dart';
 import 'package:flutter/services.dart';
+import 'package:secure_pass/features/storage/storageService.dart';
 
 class EndecrypterScreen extends StatefulWidget {
   const EndecrypterScreen({super.key});
@@ -22,6 +23,14 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
   void initState(){
     super.initState();
     generator = PasswordGenerationInterface();
+    setupConfigs();
+  }
+
+  Future<void> setupConfigs() async{
+    dynamic configs = await getConfig('endecrypter');
+    print(configs);
+    keyController.text = configs[0];
+    masterKeyController.text = configs[1];
   }
 
   Future<void> generatePassword() async {
@@ -38,7 +47,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
       result = await generator.generateSecret(mssg: textController.text, key: keyController.text, masterKey: masterKeyController.text);
     }
       
-
+    await saveConfig('endecrypter', [keyController.text, masterKeyController.text]);
 
     setState(() {
       mssg = result;

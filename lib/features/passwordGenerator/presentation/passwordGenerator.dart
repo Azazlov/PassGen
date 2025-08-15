@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/cupertino.dart';
 import 'package:secure_pass/features/passwordGenerator/domain/psswdGenInterface.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +21,14 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   final TextEditingController lengthController = TextEditingController(text: '16');
   late PasswordGenerationInterface generator;
 
+  bool useRand = true;
+  bool useUpper = true;
+  bool useLower = true;
+  bool useDigits = true;
+  bool useSpec1 = false;
+  bool useSpec2 = false;
+  bool useSpec3 = false; 
+
   String generatedPassword = '';
   String secret = '';
 
@@ -26,6 +36,22 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   void initState(){
     super.initState();
     generator = PasswordGenerationInterface();
+    setupConfigs();
+  }
+
+  Future<void> setupConfigs() async{
+    List<String> configs = await getConfig('psswdGen');
+    print(configs);
+    keyController.text = configs[0];
+    masterKeyController.text = configs[1];
+    masterController.text = configs[2];
+    useRand = configs[3]=='true'?true:false;
+    useUpper = configs[4]=='true'?true:false;
+    useLower = configs[5]=='true'?true:false;
+    useDigits = configs[6]=='true'?true:false;
+    useSpec1 = configs[7]=='true'?true:false;
+    useSpec2 = configs[8]=='true'?true:false;
+    useSpec3 = configs[9]=='true'?true:false;
   }
 
   Future<void> generatePassword() async {
@@ -80,21 +106,25 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       masterController.text = await generator.generateMaster();
     }
 
-    lol();
+    // print(await getConfig());
+    await saveConfig('psswdGen', [
+      keyController.text, 
+      masterKeyController.text, 
+      masterController.text,
+      useRand.toString(),
+      useUpper.toString(),
+      useLower.toString(),
+      useDigits.toString(),
+      useSpec1.toString(),
+      useSpec2.toString(),
+      useSpec3.toString()
+      ]);
 
     setState(() {
       generatedPassword = success[0];
       secret = success[1];
     });
   }
-
-  bool useRand = true;
-  bool useUpper = true;
-  bool useLower = true;
-  bool useDigits = true;
-  bool useSpec1 = false;
-  bool useSpec2 = false;
-  bool useSpec3 = false; 
 
   Widget buildSwitch(String label, bool value, void Function(bool) onChanged) {
     return CupertinoFormRow(
