@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
-import 'package:secure_pass/features/endecrypter/about.dart';
+import 'package:secure_pass/features/about/about.dart';
+import 'package:secure_pass/features/storage/storage.dart';
+import 'package:secure_pass/features/endecrypter/endecrypter.dart';
 import 'package:secure_pass/features/passwordGenerator/presentation/passwordGenerator.dart';
 
 class TabScaffold extends StatelessWidget {
@@ -31,9 +33,13 @@ class TabScaffold extends StatelessWidget {
       tabBuilder: (context, index) {
         return CupertinoTabView(
           builder: (context) {
-            print('${index}'); 
             switch (index) {  
-                           
+              case 0:
+                return const PasswordGeneratorScreen();    
+              case 1:
+                return const EndecrypterScreen();
+              case 2:
+                return const StorageScreen();
               case 3:
                 return const AboutScreen();
               default:

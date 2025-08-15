@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:secure_pass/features/passwordGenerator/domain/psswdGenInterface.dart';
 import 'package:flutter/services.dart';
+import 'package:secure_pass/features/storage/storageService.dart';
 
 
 class PasswordGeneratorScreen extends StatefulWidget {
@@ -13,6 +14,7 @@ class PasswordGeneratorScreen extends StatefulWidget {
 class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   final TextEditingController masterController = TextEditingController();
   final TextEditingController keyController = TextEditingController();
+  final TextEditingController masterKeyController = TextEditingController();
   final TextEditingController serviceController = TextEditingController();
   final TextEditingController lengthController = TextEditingController(text: '16');
   late PasswordGenerationInterface generator;
@@ -31,9 +33,35 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       generatedPassword = 'Генерация...';
       secret = 'Криптографический анализ...';
     });
-    final success = await generator.generate(
+    final check = masterController.text.split('.');
+
+    if (check.length == 4){
+      final config = await generator.getConfig(config: masterController.text, key: keyController.text, masterKey: masterKeyController.text);
+      final params = config.split('.');
+      // print('$params');
+      if (params.length == 9){
+        String checkConfig = '';
+        for (int i = 0; i < 8; i++){
+          i!=7?checkConfig+='${params[i]}.':checkConfig+=params[i];
+        }
+        if (checkConfig.hashCode.toString() == params[8]){
+          serviceController.text = check[0];
+          masterController.text = params[0];
+          lengthController.text = params[1];
+          useUpper = params[2]=='true'?true:false;
+          useLower = params[3]=='true'?true:false;
+          useDigits = params[4]=='true'?true:false;
+          useSpec1 = params[5]=='true'?true:false;
+          useSpec2 = params[6]=='true'?true:false;
+          useSpec3 = params[7]=='true'?true:false;
+        }
+      }
+    }
+
+    final success = await generator.generatePsswdSecret(
       master: masterController.text, 
       key: keyController.text,
+      masterKey: masterKeyController.text,
       service: serviceController.text, 
       length: lengthController.text, 
       useUpper: useUpper, 
@@ -41,16 +69,26 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       useDigits: useDigits, 
       useSpec1: useSpec1, 
       useSpec2: useSpec2, 
-      useSpec3: useSpec3
+      useSpec3: useSpec3,
+      secretPsswd: 'RH2RFC@u054+ERrWIao8dhJ4WB&THPhihXC()VYZY#SIX6^Y&DB1^b6WO)Y5#QlhG\$Y5U@DscggM(Crw!(CJ^Wl1YXR\$^Q&gg=gV^SUavI!Dr2XP&tCVaEiY1KE7Al30' 
+      // secretPsswd для личного секретного пароля для генерации пароля
+      // ПРИ ИЗМЕНЕНИИ МЕНЯЕТ ЛОГИКУ ФОРМИРОВАНИЯ ПАРОЛЯ
+      // ПРИЛОЖЕНИЯ С РАЗНЫМИ ПАРОЛЯМИ НЕСОВМЕСТИМЫ ДЛЯ ГЕНЕРАЦИИ ОДИНАКОВЫХ ПАРОЛЕЙ ПРИ ОДИНАКОВЫХ КОНФИГАХ
     );
 
+    if (useRand == true){
+      masterController.text = await generator.generateMaster();
+    }
+
+    lol();
+
     setState(() {
-      
       generatedPassword = success[0];
       secret = success[1];
     });
   }
 
+  bool useRand = true;
   bool useUpper = true;
   bool useLower = true;
   bool useDigits = true;
@@ -145,13 +183,15 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
         //     minHeight: 600,
         //   ),
         child: ListView(
-          padding: const EdgeInsets.only(top: 40.0, right: 20, left: 20, bottom: 20),
+          padding: const EdgeInsets.only(top: 100.0, right: 20, left: 20, bottom: 20),
           children: [
             ConstrainedBox(constraints: const BoxConstraints(
               maxWidth: 400
             )),
             buildInput('Мастер-пароль', 'efasd<83', masterController, true, TextInputType.text),
+            buildSwitch('Рандомный мастер-пароль', useRand, (v) => setState(() => useRand = v)),
             buildInput('Ключ шифрования', 'mum{gse24}', keyController, true, TextInputType.text),
+            buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text),
             buildInput('Сервис', 'example.com', serviceController, false, TextInputType.text),
             buildInput('Длина пароля', '24', lengthController, false, TextInputType.number),
 
@@ -169,7 +209,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
               onPressed: generatePassword,
               child: const Text('Сгенерировать'),
             ),
-            buildCopy('Пароль', generatedPassword, false),
+            buildCopy('Пароль', generatedPassword, true),
             buildCopy('Шифр', secret, true),
             const SizedBox(height: 48),
           ],
