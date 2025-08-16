@@ -28,7 +28,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
 
   Future<void> setupConfigs() async{
     dynamic configs = await getConfig('endecrypter');
-    print(configs);
+    // print(configs);
     keyController.text = configs[0];
     masterKeyController.text = configs[1];
   }
@@ -138,7 +138,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
             ConstrainedBox(constraints: const BoxConstraints(
               maxWidth: 400
             )),
-            buildInput('Сообщение/код', 'Текст/шифр', textController, true, TextInputType.text),
+            buildInput('Сообщение/код', 'Текст/шифр', textController, false, TextInputType.text),
             buildInput('Ключ шифрования', 'mum{gse24}', keyController, true, TextInputType.text),
             buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text),
             

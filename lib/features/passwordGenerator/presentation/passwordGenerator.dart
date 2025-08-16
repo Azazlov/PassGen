@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/cupertino.dart';
 import 'package:secure_pass/features/passwordGenerator/domain/psswdGenInterface.dart';
 import 'package:flutter/services.dart';
@@ -27,10 +25,13 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   bool useDigits = true;
   bool useSpec1 = false;
   bool useSpec2 = false;
-  bool useSpec3 = false; 
+  bool useSpec3 = false;
+  bool changeConfig = true; 
 
   String generatedPassword = '';
   String secret = '';
+  String randomMaster = '';
+  String lastConfig = '';
 
   @override 
   void initState(){
@@ -41,51 +42,104 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
 
   Future<void> setupConfigs() async{
     List<String> configs = await getConfig('psswdGen');
-    print(configs);
+
     keyController.text = configs[0];
-    masterKeyController.text = configs[1];
-    masterController.text = configs[2];
-    useRand = configs[3]=='true'?true:false;
-    useUpper = configs[4]=='true'?true:false;
-    useLower = configs[5]=='true'?true:false;
-    useDigits = configs[6]=='true'?true:false;
-    useSpec1 = configs[7]=='true'?true:false;
-    useSpec2 = configs[8]=='true'?true:false;
-    useSpec3 = configs[9]=='true'?true:false;
+    lengthController.text = configs[1];
+    useUpper = configs[2]=='true'?true:false;
+    useLower = configs[3]=='true'?true:false;
+    useDigits = configs[4]=='true'?true:false;
+    useSpec1 = configs[5]=='true'?true:false;
+    useSpec2 = configs[6]=='true'?true:false;
+    useSpec3 = configs[7]=='true'?true:false;
   }
 
   Future<void> generatePassword() async {
-    setState(() {
-      generatedPassword = 'Генерация...';
-      secret = 'Криптографический анализ...';
-    });
+    // setState(() {
+    //   generatedPassword = 'Генерация...';
+    //   secret = 'Криптографический анализ...';
+    // });
+
+    if (serviceController.text.contains('.')){
+      showCupertinoDialog(
+        context: context,
+        builder: (_) => CupertinoAlertDialog(
+          title: const Text('Ошибка!'),
+          content: Text('Попробуйте заменить или убрать точку в названии сервиса'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+            ),
+          ],
+        ),
+      );
+
+      return;
+    }
+
+    changeConfig = true;
+
+    if (lastConfig == masterController.text && masterController.text != ''){
+      showCupertinoDialog(
+        context: context,
+        builder: (_) => CupertinoAlertDialog(
+          title: const Text('Изменить конфиг'),
+          content: Text('Хотите изменить конфигурацию генерации пароля?'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('Да'),
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+                changeConfig = true;
+                lastConfig = '';
+                masterController.text = '';
+              },
+            ),
+            CupertinoDialogAction(
+              child: const Text('Нет'),
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+                changeConfig = false;
+              },
+            ),
+          ],
+        ),
+      );
+      // return;
+    }
+
+    randomMaster = await generator.generateMaster();
     final check = masterController.text.split('.');
 
     if (check.length == 4){
-      final config = await generator.getConfig(config: masterController.text, key: keyController.text, masterKey: masterKeyController.text);
-      final params = config.split('.');
-      // print('$params');
-      if (params.length == 9){
-        String checkConfig = '';
-        for (int i = 0; i < 8; i++){
-          i!=7?checkConfig+='${params[i]}.':checkConfig+=params[i];
+        final config = await generator.getConfig(config: masterController.text, key: keyController.text, masterKey: masterKeyController.text);
+        final params = config.split('.');
+        // print('$params');
+        if (params.length == 9){          
+          String checkConfig = '';
+          for (int i = 0; i < 8; i++){
+            i!=7?checkConfig+='${params[i]}.':checkConfig+=params[i];
+          }
+          if (checkConfig.hashCode.toString() == params[8]){
+            serviceController.text = check[0];
+            randomMaster = params[0];
+            lengthController.text = params[1];
+            useUpper = params[2]=='true'?true:false;
+            useLower = params[3]=='true'?true:false;
+            useDigits = params[4]=='true'?true:false;
+            useSpec1 = params[5]=='true'?true:false;
+            useSpec2 = params[6]=='true'?true:false;
+            useSpec3 = params[7]=='true'?true:false;
+
+            lastConfig = masterController.text;
+          }
         }
-        if (checkConfig.hashCode.toString() == params[8]){
-          serviceController.text = check[0];
-          masterController.text = params[0];
-          lengthController.text = params[1];
-          useUpper = params[2]=='true'?true:false;
-          useLower = params[3]=='true'?true:false;
-          useDigits = params[4]=='true'?true:false;
-          useSpec1 = params[5]=='true'?true:false;
-          useSpec2 = params[6]=='true'?true:false;
-          useSpec3 = params[7]=='true'?true:false;
-        }
-      }
     }
 
     final success = await generator.generatePsswdSecret(
-      master: masterController.text, 
+      master: randomMaster, 
       key: keyController.text,
       masterKey: masterKeyController.text,
       service: serviceController.text, 
@@ -102,16 +156,14 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       // ПРИЛОЖЕНИЯ С РАЗНЫМИ ПАРОЛЯМИ НЕСОВМЕСТИМЫ ДЛЯ ГЕНЕРАЦИИ ОДИНАКОВЫХ ПАРОЛЕЙ ПРИ ОДИНАКОВЫХ КОНФИГАХ
     );
 
-    if (useRand == true){
-      masterController.text = await generator.generateMaster();
-    }
+    // if (!changeConfig){
+    //   masterController.text = success[1];
+    // }
 
     // print(await getConfig());
     await saveConfig('psswdGen', [
-      keyController.text, 
-      masterKeyController.text, 
-      masterController.text,
-      useRand.toString(),
+      keyController.text,  
+      lengthController.text,
       useUpper.toString(),
       useLower.toString(),
       useDigits.toString(),
@@ -123,6 +175,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     setState(() {
       generatedPassword = success[0];
       secret = success[1];
+      return;
     });
   }
 
@@ -218,11 +271,11 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             ConstrainedBox(constraints: const BoxConstraints(
               maxWidth: 400
             )),
-            buildInput('Мастер-пароль', 'efasd<83', masterController, true, TextInputType.text),
-            buildSwitch('Рандомный мастер-пароль', useRand, (v) => setState(() => useRand = v)),
-            buildInput('Ключ шифрования', 'mum{gse24}', keyController, true, TextInputType.text),
-            buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text),
-            buildInput('Сервис', 'example.com', serviceController, false, TextInputType.text),
+            buildInput('Шифр конфига', 'сервис.****.****.****', masterController, false, TextInputType.text),
+            // buildSwitch('Рандомный мастер-пароль', useRand, (v) => setState(() => useRand = v)),
+            buildInput('Ключ шифрования', 'Любой текст', keyController, true, TextInputType.text),
+            // buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text),
+            buildInput('Сервис', 'Название сервиса', serviceController, false, TextInputType.text),
             buildInput('Длина пароля', '24', lengthController, false, TextInputType.number),
 
             const SizedBox(height: 20,),
