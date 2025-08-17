@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:secure_pass/features/passwordGenerator/domain/psswdGenInterface.dart';
 import 'package:flutter/services.dart';
 import 'package:secure_pass/features/storage/storageService.dart';
@@ -41,7 +42,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   }
 
   Future<void> setupConfigs() async{
-    List<String> configs = await getConfig('psswdGen');
+    List<String> configs = await getConfigs('psswdGen');
 
     keyController.text = configs[0];
     lengthController.text = configs[1];
@@ -54,10 +55,6 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   }
 
   Future<void> generatePassword() async {
-    // setState(() {
-    //   generatedPassword = 'Генерация...';
-    //   secret = 'Криптографический анализ...';
-    // });
 
     if (serviceController.text.contains('.')){
       showCupertinoDialog(
@@ -85,7 +82,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       showCupertinoDialog(
         context: context,
         builder: (_) => CupertinoAlertDialog(
-          title: const Text('Изменить конфиг'),
+          title: const Text('Изменить'),
           content: Text('Хотите изменить конфигурацию генерации пароля?'),
           actions: [
             CupertinoDialogAction(
@@ -135,6 +132,24 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
 
             lastConfig = masterController.text;
           }
+        }
+        else{
+          showCupertinoDialog(
+            context: context,
+            builder: (_) => CupertinoAlertDialog(
+              title: const Text('Ошибка!'),
+              content: Text('Неправильный конфиг или пароль от конфига'),
+              actions: [
+                CupertinoDialogAction(
+                  child: const Text('Ок'),
+                  onPressed: () {
+                    Navigator.of(context, rootNavigator: true).pop();
+                  },
+                ),
+              ],
+            ),
+          );
+          return;
         }
     }
 
@@ -234,7 +249,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 214, 214, 214),
+              // color: Colors.black,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: const Color.fromARGB(255, 90, 90, 90)),
             ),
@@ -242,7 +257,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
               child: Text(
                 data,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 32, fontFamily: 'segoe UI', color: Color.fromARGB(255, 21, 21, 21)),
+                style: const TextStyle(fontSize: 32, fontFamily: 'segoe UI'),
               ),
             ),
           ),
@@ -273,7 +288,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             )),
             buildInput('Шифр конфига', 'сервис.****.****.****', masterController, false, TextInputType.text),
             // buildSwitch('Рандомный мастер-пароль', useRand, (v) => setState(() => useRand = v)),
-            buildInput('Ключ шифрования', 'Любой текст', keyController, true, TextInputType.text),
+            buildInput('Ключ шифрования', 'СОХРАНИТЕ ЕГО!', keyController, true, TextInputType.text),
             // buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text),
             buildInput('Сервис', 'Название сервиса', serviceController, false, TextInputType.text),
             buildInput('Длина пароля', '24', lengthController, false, TextInputType.number),
@@ -285,15 +300,64 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             buildSwitch('!@#\$%^&*()_+-=', useSpec1, (v) => setState(() => useSpec1 = v)),
             buildSwitch("\"'`,./;:[]}{<>\\|", useSpec2, (v) => setState(() => useSpec2 = v)),
             buildSwitch('~?', useSpec3, (v) => setState(() => useSpec3 = v)),
-            
+
             const SizedBox(height: 24),
             CupertinoButton.filled(
               padding: const EdgeInsets.all(16.0),
               onPressed: generatePassword,
               child: const Text('Сгенерировать'),
             ),
-            buildCopy('Пароль', generatedPassword, true),
-            buildCopy('Шифр', secret, true),
+            ListBody(
+                  children: [
+                    const SizedBox(height: 48),
+                    Text('Пароль', style: const TextStyle(fontSize: 20),),
+                    GestureDetector(
+                      onTap: () {
+                        if (true){
+                          Clipboard.setData(ClipboardData(text: generatedPassword));
+                          showCupertinoDialog(
+                            context: context,
+                            builder: (_) => CupertinoAlertDialog(
+                              title: const Text('Скопировано'),
+                              content: Text('Сохранить шифр пароля в хранилище?'),
+                              actions: [
+                                CupertinoDialogAction(
+                                  child: const Text('Да'),
+                                  onPressed: () async {
+                                    Navigator.of(context, rootNavigator: true).pop();
+                                    final encryptedconfigs = await getConfigs('encryptedConfigs');
+                                    await saveConfig('encryptedConfigs', encryptedconfigs==null?[secret]:encryptedconfigs+[secret]);
+                                  },
+                                ),
+                                CupertinoDialogAction(
+                                  child: const Text('Нет'),
+                                  onPressed: () {
+                                    Navigator.of(context, rootNavigator: true).pop();
+                                  },
+                                )
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          // color: Colors.black,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color.fromARGB(255, 90, 90, 90)),
+                        ),
+                        child: Center(
+                          child: Text(
+                            generatedPassword,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(fontSize: 32, fontFamily: 'segoe UI'),
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
             const SizedBox(height: 48),
           ],
         ),

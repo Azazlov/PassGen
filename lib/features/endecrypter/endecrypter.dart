@@ -27,7 +27,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
   }
 
   Future<void> setupConfigs() async{
-    dynamic configs = await getConfig('endecrypter');
+    dynamic configs = await getConfigs('endecrypter');
     // print(configs);
     keyController.text = configs[0];
     masterKeyController.text = configs[1];
