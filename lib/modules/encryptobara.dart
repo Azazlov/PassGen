@@ -6,7 +6,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-const TEST = "!%&\$()*+,-/0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_abcdefghijklmnopqrstuvwxyz{|}~";
+// ignore: constant_identifier_names
+const standartAlphabet = "!%&\$()*+,-/0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_abcdefghijklmnopqrstuvwxyz{|}~";
 
 /// ===================== Utilities =====================
 
@@ -315,8 +316,8 @@ String encrypt(
   // salts as 128 random bytes each -> base-N via conv
   final saltKeyBytes = randomBytes(128);
   final saltMasterBytes = randomBytes(128);
-  final saltKey = conv(bigIntFromBytesBE(saltKeyBytes), TEST);
-  final saltMaster = conv(bigIntFromBytesBE(saltMasterBytes), TEST);
+  final saltKey = conv(bigIntFromBytesBE(saltKeyBytes), standartAlphabet);
+  final saltMaster = conv(bigIntFromBytesBE(saltMasterBytes), standartAlphabet);
   // print(alphabet);
   final detAlpha = generateDeterministicAlphabet(
     key: key + saltKey,
@@ -341,7 +342,7 @@ String encrypt(
   // bytes(utf-16) -> BigInt -> conv
   final bytes = utf16leWithBomEncode(mEnc);
   final asInt = bigIntFromBytesBE(bytes);
-  final encrypted = conv(asInt, TEST);
+  final encrypted = conv(asInt, standartAlphabet);
 
   return '$saltKey.$saltMaster.$encrypted';
 }
@@ -374,7 +375,7 @@ String decrypt(String secret, {
     alphabet: detAlpha,
   );
 
-  final asInt = deconv(body, TEST);
+  final asInt = deconv(body, standartAlphabet);
   final bytes = bigIntToBytesBE(asInt);
   String mEnc;
   try {
@@ -385,19 +386,4 @@ String decrypt(String secret, {
 
   final plain = decryptString(mEnc, alphabet: streamAlpha, key: skey + saltKey);
   return plain;
-}
-
-/// ===================== Example Usage =====================
-
-void main() {
-  final newalpha = String.fromCharCodes(List.generate(2*15, (i) => i));
-  final master = generateRandomMaster(alphabet: newalpha);
-  final key = 'adlkfajsl;dfjals;dkfjlkj';
-  final msg = '..16.true.true.true.false.false.false';
-  final scr = 'PjOfn3*s481S6@H7Lbs1jCgGn3Jk+L<Ja|)x58L*4E-P&DTRqPc}hbA1g?TYnTRznoT]%R51a!e1CkWv0)B-<L:152]kuTlq_TEmZav6HCf%}viCfr}7Njxl!6)YMyN&KvvXt]~=MFwP6i,p,-5vbVaf972}mdk.PyUD_-iXW:fN1NdL[OWA6-,E;soD,fLbMl0E&N&yhRX-UnEkJmrbMi/Zv]VHA,x(@E(d*FLvMPmGKdl1LHOq=Z3aoJc)aHd8}=%@Zjoj;DoH-F3nN^CMqzWPWEuX5Q<w43,PHvJk6%pCAZ0,J-m1}1{b:?mt=7*.*2_QYRb^2QGhBJ9aq-[Dg)hf&%X+K:*OwQmQ8r-Xe:mzJ,1tIEO;XFs%<[,Z7%B8-!>%ctSDMAi{X:y0HYW[pA0ey6WNR=}';
-
-  // final sec = encrypt(msg, key: '', master: '', alphabet: String.fromCharCodes(List.generate(32768, (i) => i)));
-  // print('SEC: $sec');
-  final back = decrypt(scr, key: '', master: '', alphabet: String.fromCharCodes(List.generate(32768, (i) => i)));
-  print('DEC: $back');
 }

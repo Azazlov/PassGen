@@ -7,8 +7,8 @@ class PasswordGeneratorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const CupertinoApp(
-      title: 'PSW',
-      home: TabScaffold(), // <-- заменили
+      title: 'PassGen',
+      home: TabScaffold(),
     );
   }
 }

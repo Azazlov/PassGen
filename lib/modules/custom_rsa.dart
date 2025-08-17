@@ -3,7 +3,7 @@ import 'dart:convert';
 
 class CustomRSA {
   static const String alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  static const List<int> SMALL_PRIMES = [
+  static const List<int> smallPrimes = [
     3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
     73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149,
     151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199
@@ -118,7 +118,7 @@ class CustomRSA {
   static bool isProbablePrime(BigInt n, [int k = 10]) {
     if (n < BigInt.two) return false;
     
-    for (var p in SMALL_PRIMES) {
+    for (var p in smallPrimes) {
       var pBig = BigInt.from(p);
       if (n % pBig == BigInt.zero) return n == pBig;
     }

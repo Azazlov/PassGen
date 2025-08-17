@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:secure_pass/features/about/about.dart';
 import 'package:secure_pass/features/storage/storage.dart';
 import 'package:secure_pass/features/endecrypter/endecrypter.dart';
-import 'package:secure_pass/features/passwordGenerator/presentation/passwordGenerator.dart';
+import 'package:secure_pass/features/passwordGenerator/password_generator.dart';
 
 class TabScaffold extends StatelessWidget {
   const TabScaffold({super.key});

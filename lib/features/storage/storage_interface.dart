@@ -1,12 +1,12 @@
-import 'package:secure_pass/features/storage/storageService.dart';
-import 'package:secure_pass/features/passwordGenerator/domain/psswdGenInterface.dart';
+import 'package:secure_pass/features/storage/storage_service.dart';
+import 'package:secure_pass/features/passwordGenerator/psswd_gen_interface.dart';
 
 Future<String> getPsswd(int id) async{
   final encryptedConfig = (await getConfigs('encryptedConfigs'))[id];
   // print(encryptedConfig);
   final key = (await getConfigs('psswdGen'))[0];
   // print(key);
-  final config = ('${encryptedConfig.split('.')[0]}.' + (await PasswordGenerationInterface().getConfig(config: encryptedConfig, key: key, masterKey: ''))).split('.');
+  final config = ('${encryptedConfig.split('.')[0]}.${await PasswordGenerationInterface().getConfig(config: encryptedConfig, key: key, masterKey: '')}').split('.');
   // print(config);
   try{
     final psswd = await PasswordGenerationInterface().generatePsswd(

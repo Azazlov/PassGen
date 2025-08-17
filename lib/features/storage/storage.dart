@@ -1,8 +1,12 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:secure_pass/features/storage/storageService.dart';
-import 'package:secure_pass/features/passwordGenerator/domain/psswdGenInterface.dart';
-import 'package:secure_pass/features/storage/storageInterface.dart';
+import 'package:secure_pass/features/storage/storage_service.dart';
+import 'package:secure_pass/features/passwordGenerator/psswd_gen_interface.dart';
+import 'package:secure_pass/features/storage/storage_interface.dart';
+import 'package:secure_pass/shared/dialog.dart';
+import 'package:secure_pass/shared/interface.dart';
 
 class StorageScreen extends StatefulWidget {
   const StorageScreen({super.key});
@@ -17,6 +21,7 @@ class _StorageScreenState extends State<StorageScreen>{
   String service = 'Нет названия сервиса';
   String keyConfig = 'encryptedConfigs';
   String thisConfig = '';
+  int configs = 0;
 
   int id = 0;
   late PasswordGenerationInterface generator;
@@ -28,41 +33,40 @@ class _StorageScreenState extends State<StorageScreen>{
   }
 
   Future<int> psswdConfigs(int i) async{
-    // print('i: $i');
+    List<String> listConfigs = await getConfigs(keyConfig);
+    configs = listConfigs.length;
     if (i<0){
       return 0;
     }
     try{
-      final a = await getConfigs(keyConfig);
+      
 
-      if (a.length == 0){
+      if (configs == 0){
         setState(() {
-          encryptedConfig = 'Нет Конфигов';
+          encryptedConfig = 'Нет конфигов';
           service = 'Нет названия сервиса';
         });
         return 0;
       }
-      
-      if (i==a.length){
+      if (i==configs){
         if (i != 1){
           return 0;
         }
       }
       setState(() {
-        thisConfig = a[i];
+        thisConfig = listConfigs[i];
         final servicename = thisConfig.split('.')[0];
         final shortname = thisConfig.substring(servicename.length+1, 25);
         encryptedConfig = '$shortname...';
         service = servicename==''?'Нет названия сервиса':servicename;
         id = i;
       });
+
       return 1;
     }
     catch (exception){
       return 0;
     }
-
-
   }
 
   void nextConfig() async{
@@ -75,6 +79,32 @@ class _StorageScreenState extends State<StorageScreen>{
   }
   void trueConfig() async{
     await psswdConfigs(id);
+  }
+
+  void copyPsswd() async{
+    final psswd = await getPsswd(id);
+    if (psswd == 'Error'){
+      showDialogWindow1('Ошибка!', 'Неверный пароль или же конфиг. Попробуйте поменять ключ на странице "Генератор"', context);
+    }
+    else{
+    Clipboard.setData(ClipboardData(text:psswd));
+    showDialogWindow1('Скопировано', 'Пароль скопирован в буфер обмена', context);
+    }
+  }
+  void copySecret() async{
+    Clipboard.setData(ClipboardData(text:thisConfig));
+    showDialogWindow1('Скопировано', 'Шифр скопирован в буфер обмена', context);
+  }
+  void copyEncryptedConfig(){
+    showDialogWindow2(
+      'Скопировать', 
+      'Вы хотите скопировать шифр или пароль?', 
+      context, 
+      'Пароль', 
+      copyPsswd, 
+      'Шифр', 
+      copySecret
+    );
   }
 
   Future<void> deleteConfig() async{
@@ -113,127 +143,37 @@ class _StorageScreenState extends State<StorageScreen>{
       ),
       child: Center(
         child: ListView(
-          padding: const EdgeInsets.only(top: 100.0, right: 20, left: 20, bottom: 20),
+          padding: setPadding(),
           children: [
-            const SizedBox(height: 48),
-            GestureDetector(
-              onTap: () async {
-                showCupertinoDialog(
-                  context: context,
-                  builder: (_) => CupertinoAlertDialog(
-                    title: const Text('Скопировать'),
-                    content: Text('Вы хотите скопировать шифр или пароль?'),
-                    actions: [
-                      CupertinoDialogAction(
-                        child: const Text('Пароль'),
-                        onPressed: () async{
-                          final psswd = await getPsswd(id);
-                          // print(psswd);
-                          // ignore: use_build_context_synchronously
-                          Navigator.of(context, rootNavigator: true).pop();
-                          if (psswd == 'Error'){
-                            showCupertinoDialog(
-                              context: context,
-                              builder: (_) => CupertinoAlertDialog(
-                                title: const Text('Ошибка!'),
-                                content: Text('Неверный пароль или же конфиг. Попробуйте поменять ключ на странице "Генератор"'),
-                                actions: [
-                                  CupertinoDialogAction(
-                                    child: const Text('OK'),
-                                    onPressed: () async{
-                                      Navigator.of(context, rootNavigator: true).pop();
-                                    },
-                                  )
-                                ],
-                              ),
-                            );
-                          }
-                          else{
-                          Clipboard.setData(ClipboardData(text:
-                           '${await getPsswd(id)}'
-                           ));
-                          showCupertinoDialog(
-                            context: context,
-                            builder: (_) => CupertinoAlertDialog(
-                              title: const Text('Скопировано'),
-                              content: Text('Пароль скопирован в буфер обмена.'),
-                              actions: [
-                                CupertinoDialogAction(
-                                  child: const Text('OK'),
-                                  onPressed: () async{
-                                    Navigator.of(context, rootNavigator: true).pop();
-                                  },
-                                )
-                              ],
-                            ),
-                            );
-                          }
-                        },
-                      ),
-                      CupertinoDialogAction(
-                        child: const Text('Шифр'),
-                        onPressed: () async{
-                          Navigator.of(context, rootNavigator: true).pop();
-                          Clipboard.setData(ClipboardData(text:
-                           thisConfig
-                           ));
-                          showCupertinoDialog(
-                            context: context,
-                            builder: (_) => CupertinoAlertDialog(
-                              title: const Text('Скопировано'),
-                              content: Text('Шифр скопирован в буфер обмена.'),
-                              actions: [
-                                CupertinoDialogAction(
-                                  child: const Text('OK'),
-                                  onPressed: () async{
-                                    Navigator.of(context, rootNavigator: true).pop();
-                                  },
-                                )
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                );
-                },
-
-                  child: Center(
-                    child: Text(encryptedConfig),
-                  ),
-                ),
-const SizedBox(height: 48),
-
+            buildCopyOnTap('Конфиг генерации пароля', encryptedConfig, copyEncryptedConfig),
+            SizedBox(height: 48),
+            
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                 Center(
-                  child: CupertinoButton.filled(
-                  padding: const EdgeInsets.all(16.0),
-                  onPressed: prevConfig,
-                  child: const Text('<'),
-                    )),
+                  child: buildButton('<', prevConfig)
+                ),
 
-                const SizedBox(height: 48),
-            Center(
-              child: Text('$service (${id+1})'),
+                const SizedBox(width: 64),
+
+                Text('${id+1}/$configs'),
+
+                const SizedBox(width: 64),
+                Center(
+                  child: buildButton('>', nextConfig)
+                ),
+              ]
             ),
 
-            const SizedBox(height: 48),
+            SizedBox(height: 48),
             Center(
-              child: CupertinoButton.filled(
-              padding: const EdgeInsets.all(16.0),
-              onPressed: nextConfig,
-              child: const Text('>'),
-            )),
-
-            const SizedBox(height: 48),
-            Center(
-              child: CupertinoButton.filled(
-              padding: const EdgeInsets.all(16.0),
-              onPressed: deleteConfig ,
-              child: const Text('Удалить')
-              ),
+              child: Text(service),
             ),
-            const SizedBox(height: 48),
+
+            SizedBox(height: 48),
+
+            buildButton('Удалить', deleteConfig),
           ]
         ),
       ),

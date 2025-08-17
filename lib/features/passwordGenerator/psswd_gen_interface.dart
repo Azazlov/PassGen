@@ -1,5 +1,5 @@
 import 'package:secure_pass/modules/encryptobara.dart' as encryptobara;
-import 'package:secure_pass/modules/psswdGenModule.dart';
+import 'package:secure_pass/modules/psswd_gen_module.dart';
 
 class PasswordGenerationInterface {
   String generatedPassword = '';
@@ -92,31 +92,10 @@ class PasswordGenerationInterface {
     required bool useSpec3,
     required String secretPsswd
   }) async {
-
-    // if (lastQuery == master+key+service+length+useUpper.toString()+useLower.toString()+useDigits.toString()+useSpec1.toString()+useSpec2.toString()+useSpec3.toString()){
-    //   error = 'Уже выполненный запрос';
-    //   return [generatedPassword, secret];
-    // }
-
-    // lastQuery = master+key+service+length+useUpper.toString()+useLower.toString()+useDigits.toString()+useSpec1.toString()+useSpec2.toString()+useSpec3.toString();
-
-    // if (master.isEmpty || service.isEmpty) {
-    //   error = 'Поля не могут быть пустыми';
-    //   return [error, ''];
-    // }
-    // if (master.length < 8 || master.length > 64) {
-    //   error = 'Мастер-пароль должен быть от 8 до 64 символов';
-    //   return [error, ''];
-    // }
-    // if (!(useUpper || useLower || useDigits || useSpec1 || useSpec2 || useSpec3)) {
-    //   error = 'Выберите хотя бы один тип символов';
-    //   return [error, ''];
-    // }
-
-    dynamic mssg = '${master}.${length}.${useUpper.toString()}.${useLower.toString()}.${useDigits.toString()}.${useSpec1.toString()}.${useSpec2.toString()}.${useSpec3.toString()}';
+    dynamic mssg = '$master.$length.${useUpper.toString()}.${useLower.toString()}.${useDigits.toString()}.${useSpec1.toString()}.${useSpec2.toString()}.${useSpec3.toString()}';
     mssg += '.${mssg.hashCode}';
     final generatedPassword = await generatePsswd(master: master, key: key, masterKey: masterKey, service: service, length: length, useUpper: useUpper, useLower: useLower, useDigits: useDigits, useSpec1: useSpec1, useSpec2: useSpec2, useSpec3: useSpec3, secretPsswd: secretPsswd);
-    final secret = '${service}.${await generateSecret(mssg: mssg, key: key, masterKey: masterKey)}';
+    final secret = '$service.${await generateSecret(mssg: mssg, key: key, masterKey: masterKey)}';
 
     return [generatedPassword, secret];
   }
