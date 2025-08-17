@@ -52,7 +52,7 @@ class _StorageScreenState extends State<StorageScreen>{
         thisConfig = a[i];
         final servicename = thisConfig.split('.')[0];
         final shortname = thisConfig.substring(servicename.length+1, 25);
-        encryptedConfig = '${shortname}...';
+        encryptedConfig = '$shortname...';
         service = servicename==''?'Нет названия сервиса':servicename;
         id = i;
       });
@@ -234,6 +234,7 @@ const SizedBox(height: 48),
               child: const Text('Удалить')
               ),
             ),
+            const SizedBox(height: 48),
           ]
         ),
       ),

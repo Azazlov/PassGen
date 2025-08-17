@@ -55,6 +55,64 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   }
 
   Future<void> generatePassword() async {
+    // print(RegExp('[0-9]').hasMatch(lengthController.text));
+    try{
+      if (int.parse(lengthController.text) < 1){
+        showCupertinoDialog(
+          context: context,
+          builder: (_) => CupertinoAlertDialog(
+            title: const Text('Ошибка!'),
+            content: Text('Длина должна быть любым положительным числом от 1'),
+            actions: [
+              CupertinoDialogAction(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.of(context, rootNavigator: true).pop();
+                },
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    }
+    catch (exception){
+      showCupertinoDialog(
+        context: context,
+        builder: (_) => CupertinoAlertDialog(
+          title: const Text('Ошибка!'),
+          content: Text('Длина должна быть любым положительным числом от 1'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (!(useUpper || useLower || useDigits || useSpec1 || useSpec2 || useSpec3)){
+      showCupertinoDialog(
+        context: context,
+        builder: (_) => CupertinoAlertDialog(
+          title: const Text('Ошибка!'),
+          content: Text('Должен быть включен хоть 1 параметр допустимых символов'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+              },
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
     if (serviceController.text.contains('.')){
       showCupertinoDialog(
@@ -290,8 +348,8 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             // buildSwitch('Рандомный мастер-пароль', useRand, (v) => setState(() => useRand = v)),
             buildInput('Ключ шифрования', 'СОХРАНИТЕ ЕГО!', keyController, true, TextInputType.text),
             // buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text),
-            buildInput('Сервис', 'Название сервиса', serviceController, false, TextInputType.text),
-            buildInput('Длина пароля', '24', lengthController, false, TextInputType.number),
+            buildInput('Сервис', 'Без точек', serviceController, false, TextInputType.text),
+            buildInput('Длина пароля', 'от 1', lengthController, false, TextInputType.number),
 
             const SizedBox(height: 20,),
             buildSwitch('Заглавные буквы', useUpper, (v) => setState(() => useUpper = v)),
