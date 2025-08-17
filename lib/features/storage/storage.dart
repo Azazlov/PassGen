@@ -90,9 +90,8 @@ class _StorageScreenState extends State<StorageScreen>{
               Navigator.of(context, rootNavigator: true).pop();
               await removeConfig(keyConfig, id);
 
-              await psswdConfigs(id+1);
-              await psswdConfigs(id-1);
-              await psswdConfigs(id+1);
+              nextConfig();
+              prevConfig();
             },
           ),
           CupertinoDialogAction(
