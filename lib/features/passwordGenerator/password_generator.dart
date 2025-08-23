@@ -33,7 +33,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
 
   String generatedPassword = '';
   String secret = '';
-  String randomMaster = '';
+  int randomMaster = 0;
   String lastConfig = '';
 
   @override 
@@ -102,45 +102,46 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     }
 
     randomMaster = await generator.generateMaster();
+    // randomMaster = 0;
     final check = masterController.text.split('.');
 
-    if (check.length == 4){
-        final config = await generator.getConfig(
+    if (check.length == 2){
+        try {
+          await generator.getConfig(
           config: masterController.text, 
           key: keyController.text, 
-          masterKey: masterKeyController.text
         );
-        final params = config.split('.');
-
-        if (params.length == 9){          
-          String checkConfig = '';
-          for (int i = 0; i < 8; i++){
-            i !=7 ? checkConfig+='${params[i]}.' : checkConfig+=params[i];
-          }
-          if (checkConfig.hashCode.toString() == params[8]){
-            serviceController.text = check[0];
-            randomMaster = params[0];
-            lengthController.text = params[1];
-            useUpper = params[2]=='true'?true:false;
-            useLower = params[3]=='true'?true:false;
-            useDigits = params[4]=='true'?true:false;
-            useSpec1 = params[5]=='true'?true:false;
-            useSpec2 = params[6]=='true'?true:false;
-            useSpec3 = params[7]=='true'?true:false;
-
-            lastConfig = masterController.text;
-          }
         }
-        else{
+        on Exception{
           showDialogWindow1('Ошибка!', 'Неправильный конфиг или пароль от конфига', context);
           return;
         }
+        final config = await generator.getConfig(
+        config: masterController.text, 
+        key: keyController.text
+        );
+        final params = config.split('.');
+         
+        String checkConfig = '';
+        for (int i = 0; i < 8; i++){
+          i !=7 ? checkConfig+='${params[i]}.' : checkConfig+=params[i];
+        }
+          serviceController.text = check[0];
+          randomMaster = int.parse(params[0]);
+          lengthController.text = params[1];
+          useUpper = params[2]=='true'?true:false;
+          useLower = params[3]=='true'?true:false;
+          useDigits = params[4]=='true'?true:false;
+          useSpec1 = params[5]=='true'?true:false;
+          useSpec2 = params[6]=='true'?true:false;
+          useSpec3 = params[7]=='true'?true:false;
+
+          lastConfig = masterController.text;
     }
 
     final success = await generator.generatePsswdSecret(
       master: randomMaster, 
       key: keyController.text,
-      masterKey: masterKeyController.text,
       service: serviceController.text, 
       length: lengthController.text, 
       useUpper: useUpper, 
@@ -149,10 +150,6 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       useSpec1: useSpec1, 
       useSpec2: useSpec2, 
       useSpec3: useSpec3,
-      secretPsswd: 'RH2RFC@u054+ERrWIao8dhJ4WB&THPhihXC()VYZY#SIX6^Y&DB1^b6WO)Y5#QlhG\$Y5U@DscggM(Crw!(CJ^Wl1YXR\$^Q&gg=gV^SUavI!Dr2XP&tCVaEiY1KE7Al30' 
-      // secretPsswd для личного секретного пароля для генерации пароля
-      // ПРИ ИЗМЕНЕНИИ МЕНЯЕТ ЛОГИКУ ФОРМИРОВАНИЯ ПАРОЛЯ
-      // ПРИЛОЖЕНИЯ С РАЗНЫМИ ПАРОЛЯМИ НЕСОВМЕСТИМЫ ДЛЯ ГЕНЕРАЦИИ ОДИНАКОВЫХ ПАРОЛЕЙ ПРИ ОДИНАКОВЫХ КОНФИГАХ
     );
 
     await saveConfig('psswdGen', [

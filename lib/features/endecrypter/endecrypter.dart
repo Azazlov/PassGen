@@ -39,22 +39,23 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
       mssg = 'Перевод...';
     });
 
+    if (textController.text == ''){
+      mssg = 'Сообщение или код не должно быть пустым';
+      return;
+    }
+
     dynamic result = 'Неизвестная ошибка';
 
     try{
       result = await generator.generateMssg(
         secret: textController.text, 
         key: keyController.text, 
-        masterKey: 
-        masterKeyController.text
       );
     }
-    on FormatException{
+    on Exception{
       result = await generator.generateSecret(
         mssg: textController.text, 
         key: keyController.text, 
-        masterKey: 
-        masterKeyController.text
       );
     }
       
@@ -89,7 +90,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
           children: [
             buildInput('Сообщение/код', 'Текст/шифр', textController, false, TextInputType.text, context),
             buildInput('Ключ шифрования', 'mum{gse24}', keyController, true, TextInputType.text, context),
-            buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text, context),
+            // buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text, context),
             
             const SizedBox(height: 40),
             buildButton('(Де)шифрование', deEncrypt),

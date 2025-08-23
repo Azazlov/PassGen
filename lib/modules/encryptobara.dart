@@ -1,389 +1,124 @@
-// Dart port of the Python encoder module (logic preserved, not bit-for-bit compatible)
-// Constraints: prioritize working behavior and performance over strict back-compat.
-// No RSA. Includes conv/deconv with custom alphabet.
-
-import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-// ignore: constant_identifier_names
-const standartAlphabet = "!%&\$()*+,-/0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_abcdefghijklmnopqrstuvwxyz{|}~";
+import 'package:crypto/crypto.dart';
 
-/// ===================== Utilities =====================
+String bytesToRad(Uint8List bytes, int rad){
+  return bytes.map((b) => b.toRadixString(rad).padLeft(2, '0')).join('');
+}
 
-/// Simple SplitMix64 for deterministic seeding from 64-bit value.
-class _SplitMix64 {
-  int _state; // use unsigned 64-bit via masking
-  _SplitMix64(this._state);
-
-  int _next() {
-    // Returns 64-bit unsigned in a Dart int (mask to 64 bits)
-    _state = (_state + 0x9E3779B97F4A7C15) & _mask64;
-    int z = _state;
-    z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9 & _mask64;
-    z = (z ^ (z >> 27)) * 0x94D049BB133111EB & _mask64;
-    return z ^ (z >> 31) & _mask64;
+Uint8List radToBytes(String str, int rad) {
+  if (str.length % 2 != 0) {
+    throw FormatException('Длина строки должна быть кратна 2, так как каждый байт кодируется 2 символами');
   }
 
-  /// next int in [0, upper)
-  int nextInt(int upper) {
-    if (upper <= 0) throw ArgumentError('upper must be > 0');
-    // Use 64-bit to produce unbiased range via rejection sampling
-    while (true) {
-      final v = _next() >>> 1; // 63-bit non-negative
-      final m = v % upper;
-      if (v - m + (upper - 1) >= 0) return m;
+  final List<int> bytes = [];
+  for (int i = 0; i < str.length; i += 2) {
+    final String byteStr = str.substring(i, i + 2);
+    final int byte = int.parse(byteStr, radix: rad);
+    if (byte < 0 || byte > 255) {
+      throw FormatException('Некорректное значение байта: $byte из "$byteStr" при rad=$rad');
     }
-  }
-}
-
-const int _mask64 = 0xFFFFFFFFFFFFFFFF;
-
-int _u64FromBytes(Uint8List bytes) {
-  // Take first 8 bytes as little-endian u64 (or pad if shorter)
-  int v = 0;
-  final len = min(8, bytes.length);
-  for (int i = 0; i < len; i++) {
-    v |= (bytes[i] & 0xFF) << (8 * i);
-  }
-  return v & _mask64;
-}
-
-Uint8List randomBytes(int length, [Random? rng]) {
-  final r = rng ?? Random.secure();
-  final out = Uint8List(length);
-  for (int i = 0; i < length; i++) {
-    out[i] = r.nextInt(256);
-  }
-  return out;
-}
-
-/// Deterministic shuffle based on SplitMix64 seeded from a 64-bit value
-void shuffleDeterministic<T>(List<T> list, int seed64) {
-  final rng = _SplitMix64(seed64 & _mask64);
-  for (int i = list.length - 1; i > 0; i--) {
-    final j = rng.nextInt(i + 1);
-    final tmp = list[i];
-    list[i] = list[j];
-    list[j] = tmp;
-  }
-}
-
-/// SHA-256 digest of string (UTF-8) -> bytes
-Uint8List sha256Bytes(String s) {
-  // Avoid external packages; basic SHA-256 is not in dart:convert, so we use a tiny
-  // local implementation would be heavy. If you use Flutter/Dart with package:crypto,
-  // replace this stub with it. For now, fall back to a simple insecure hash to keep
-  // code self-contained. If you need real security, import package:crypto.
-  //
-  // import 'package:crypto/crypto.dart' as crypto;
-  // return Uint8List.fromList(crypto.sha256.convert(utf8.encode(s)).bytes);
-  //
-  // Lightweight fallback (NOT CRYPTO): FNV-1a 64 repeated 4 times for 32 bytes.
-  const int fnvOffset = 0xcbf29ce484222325;
-  const int fnvPrime = 0x100000001b3;
-  int h = fnvOffset;
-  final b = utf8.encode(s);
-  for (final x in b) {
-    h ^= x;
-    h = (h * fnvPrime) & _mask64;
-  }
-  // expand to 32 bytes by mixing
-  final out = BytesBuilder();
-  int x = h;
-  for (int i = 0; i < 4; i++) {
-    // SplitMix rounds to mix further
-    final sm = _SplitMix64(x);
-    final v = sm._next();
-    final chunk = Uint8List(8);
-    for (int j = 0; j < 8; j++) chunk[j] = (v >> (8 * j)) & 0xFF;
-    out.add(chunk);
-    x = v;
-  }
-  return out.toBytes();
-}
-
-/// UTF-16LE encode with BOM (like Python's 'utf-16')
-Uint8List utf16leWithBomEncode(String s) {
-  final units = s.codeUnits; // UTF-16 code units already
-  final out = Uint8List(2 + units.length * 2);
-  out[0] = 0xFF; out[1] = 0xFE; // BOM for UTF-16LE
-  int o = 2;
-  for (final u in units) {
-    out[o++] = u & 0xFF;
-    out[o++] = (u >> 8) & 0xFF;
-  }
-  return out;
-}
-
-String utf16leWithBomDecode(Uint8List bytes) {
-  int offset = 0;
-  if (bytes.length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE) offset = 2;
-  final len = (bytes.length - offset) ~/ 2;
-  final units = List<int>.generate(len, (i) {
-    final lo = bytes[offset + 2 * i];
-    final hi = bytes[offset + 2 * i + 1];
-    return (hi << 8) | lo;
-  });
-  return String.fromCharCodes(units);
-}
-
-/// BigInt <-> bytes (big endian)
-BigInt bigIntFromBytesBE(Uint8List bytes) {
-  BigInt result = BigInt.zero;
-  for (final b in bytes) {
-    result = (result << 8) | BigInt.from(b);
-  }
-  return result;
-}
-
-Uint8List bigIntToBytesBE(BigInt value) {
-  if (value.isNegative) throw ArgumentError('value must be non-negative');
-  if (value == BigInt.zero) return Uint8List.fromList([0]);
-  var v = value;
-  final bytes = <int>[];
-  while (v > BigInt.zero) {
-    bytes.add((v & BigInt.from(0xFF)).toInt());
-    v = v >> 8;
-  }
-  return Uint8List.fromList(bytes.reversed.toList());
-}
-
-/// ===================== conv / deconv =====================
-
-String conv(BigInt value, String alphabet) {
-  if (value < BigInt.zero) throw ArgumentError('value must be >= 0');
-  final base = BigInt.from(alphabet.length);
-  if (value == BigInt.zero) return alphabet[0];
-  final buf = StringBuffer();
-  var v = value;
-  while (v > BigInt.zero) {
-    final rem = (v % base).toInt();
-    buf.write(alphabet[rem]);
-    v = v ~/ base;
-  }
-  return buf.toString().split('').reversed.join();
-}
-
-BigInt deconv(String s, String alphabet) {
-  final base = BigInt.from(alphabet.length);
-  final index = <int, int>{};
-  for (int i = 0; i < alphabet.length; i++) {
-    index[alphabet.codeUnitAt(i)] = i;
-  }
-  BigInt v = BigInt.zero;
-  for (int i = 0; i < s.length; i++) {
-    final cu = s.codeUnitAt(i);
-    final idx = index[cu];
-    if (idx == null) {
-      throw ArgumentError('Character not in alphabet: ${String.fromCharCode(cu)}');
-    }
-    v = v * base + BigInt.from(idx);
-  }
-  return v;
-}
-
-/// ===================== Core functions =====================
-
-/// Generate deterministic alphabet by two seeded shuffles.
-String generateDeterministicAlphabet({
-  required String key,
-  required String master,
-  required String alphabet
-}) {
-  final az = alphabet.split('');
-  final seedMaster = _u64FromBytes(sha256Bytes(master));
-  final seedKey = _u64FromBytes(sha256Bytes(key));
-  shuffleDeterministic(az, seedMaster);
-  shuffleDeterministic(az, seedKey);
-  return az.join();
-}
-
-/// Generate random master by shuffling a deterministic alphabet with secure randomness.
-String generateRandomMaster({required String alphabet}) {
-  final randKey = hexFromBytes(randomBytes(32));
-  final randMaster = hexFromBytes(randomBytes(32));
-  final base = generateDeterministicAlphabet(key: randKey, master: randMaster, alphabet: alphabet);
-  final list = base.split('');
-  list.shuffle(Random.secure());
-  return list.join();
-}
-
-String hexFromBytes(Uint8List b) {
-  const chars = '0123456789abcdef';
-  final out = StringBuffer();
-  for (final x in b) {
-    out.write(chars[(x >> 4) & 0xF]);
-    out.write(chars[x & 0xF]);
-  }
-  return out.toString();
-}
-
-/// Generate secure key by appending len(key) chars from alphabet based on UTF-8 bytes of key.
-String generateSecureKey(String key, String alphabet) {
-  // print(alphabet);
-  final bytes = utf8.encode(key);
-  final lenalphabet = alphabet.length;
-  final sb = StringBuffer(key);
-  for (int i = 0; i < key.length; i++) {
-    final b = bytes[i % bytes.length];
-    sb.write(alphabet[b % lenalphabet]);
-  }
-  final derived = sb.toString().substring(key.length);
-  // print(alphabet);
-  return encryptString(derived, alphabet: alphabet, key: key);
-}
-
-/// Encrypt string using shift over custom alphabet.
-String encryptString(String string, {required String alphabet, required String key}) {
-  final lenkey = key.length;
-  final lenalpha = alphabet.length;
-  if (lenkey == 0) throw ArgumentError('key must not be empty');
-
-  // Build index map for performance
-  final index = <int, int>{};
-  for (int i = 0; i < lenalpha; i++) {
-    index[alphabet.codeUnitAt(i)] = i;
+    bytes.add(byte);
   }
 
-  final idxKey = List<int>.generate(lenkey, (i) {
-    final cu = key.codeUnitAt(i);
-    final pos = index[cu];
-    // print(cu);
-    // print(index);
-    // print(i);
-    // print(key);
-    // print(alphabet);
-    // print(lenalpha);
-    if (pos == null) throw ArgumentError('Key contains char not in alphabet');
-    return pos;
-  });
-
-  final out = StringBuffer();
-  int j = 0;
-  for (int i = 0; i < string.length; i++) {
-    final cu = string.codeUnitAt(i);
-    final pos = index[cu];
-    if (pos == null) {
-      // skip chars not in alphabet (to mirror Python's continue)
-      continue;
-    }
-    final k = idxKey[j % lenkey];
-    int newIndex = pos - k;
-    newIndex %= lenalpha; // proper wrap
-    out.write(alphabet[newIndex]);
-    j++;
-  }
-  return out.toString();
+  return Uint8List.fromList(bytes);
 }
 
-String decryptString(String string, {required String alphabet, required String key}) {
-  final lenkey = key.length;
-  final lenalpha = alphabet.length;
-  if (lenkey == 0) throw ArgumentError('key must not be empty');
+Uint8List random({int len = 0x10}){
+  final random = Random.secure();
+  final bytesList = Uint8List(len);
 
-  final index = <int, int>{};
-  for (int i = 0; i < lenalpha; i++) index[alphabet.codeUnitAt(i)] = i;
-  final idxKey = List<int>.generate(lenkey, (i) {
-    final cu = key.codeUnitAt(i);
-    final pos = index[cu];
-    if (pos == null) throw ArgumentError('Key contains char not in alphabet');
-    return pos;
-  });
-
-  final out = StringBuffer();
-  int j = 0;
-  for (int i = 0; i < string.length; i++) {
-    final cu = string.codeUnitAt(i);
-    final pos = index[cu];
-    if (pos == null) continue;
-    final k = idxKey[j % lenkey];
-    int newIndex = pos + k;
-    newIndex %= lenalpha;
-    out.write(alphabet[newIndex]);
-    j++;
-  }
-  return out.toString();
-}
-
-/// High-level encrypt: returns "saltKey.saltMaster.cipher"
-String encrypt(
-  String mssg, {
-  required String key,
-  required String master,
-  required String alphabet,
-}) {
-  // salts as 128 random bytes each -> base-N via conv
-  final saltKeyBytes = randomBytes(128);
-  final saltMasterBytes = randomBytes(128);
-  final saltKey = conv(bigIntFromBytesBE(saltKeyBytes), standartAlphabet);
-  final saltMaster = conv(bigIntFromBytesBE(saltMasterBytes), standartAlphabet);
-  // print(alphabet);
-  final detAlpha = generateDeterministicAlphabet(
-    key: key + saltKey,
-    master: master + saltMaster,
-    alphabet: alphabet,
-  );
-
-  final skey = generateSecureKey(key + saltKey, generateDeterministicAlphabet(
-    key: key + saltKey,
-    master: master + saltMaster,
-    alphabet: alphabet,
-  ));
-
-  final streamAlpha = generateDeterministicAlphabet(
-    key: key + saltKey,
-    master: master + saltMaster,
-    alphabet: detAlpha,
-  );
-
-  final mEnc = encryptString(mssg, alphabet: streamAlpha, key: skey + saltKey);
-
-  // bytes(utf-16) -> BigInt -> conv
-  final bytes = utf16leWithBomEncode(mEnc);
-  final asInt = bigIntFromBytesBE(bytes);
-  final encrypted = conv(asInt, standartAlphabet);
-
-  return '$saltKey.$saltMaster.$encrypted';
-}
-
-String decrypt(String secret, {
-  required String key,
-  required String master,
-  required String alphabet,
-}) {
-  final parts = secret.split('.');
-  if (parts.length != 3) throw FormatException('Неправильный формат шифра');
-  final saltKey = parts[0];
-  final saltMaster = parts[1];
-  final body = parts[2];
-
-  final detAlpha = generateDeterministicAlphabet(
-    key: key + saltKey,
-    master: master + saltMaster,
-    alphabet: alphabet,
-  );
-  // print(detAlpha);
-  final skey = generateSecureKey(key + saltKey, generateDeterministicAlphabet(
-    key: key + saltKey,
-    master: master + saltMaster,
-    alphabet: alphabet,
-  ));
-  final streamAlpha = generateDeterministicAlphabet(
-    key: key + saltKey,
-    master: master + saltMaster,
-    alphabet: detAlpha,
-  );
-
-  final asInt = deconv(body, standartAlphabet);
-  final bytes = bigIntToBytesBE(asInt);
-  String mEnc;
-  try {
-    mEnc = utf16leWithBomDecode(bytes);
-  } catch (_) {
-    throw FormatException('Неверный шифртекст или какой-либо из ключей');
+  for (int i=0; i<bytesList.length; i++){
+    bytesList[i] = random.nextInt(0x100);
   }
 
-  final plain = decryptString(mEnc, alphabet: streamAlpha, key: skey + saltKey);
-  return plain;
+  return bytesList;
+}
+
+Uint8List encrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}){
+
+  Uint8List hashKey = Uint8List.fromList(sha256.convert(key).bytes);
+  // print(bytesToRad(hashKey, 16));
+  int lenkey = hashKey.length;
+  Uint8List salt = random(len: byteLength);
+  Uint8List iv = random(len: byteLength);
+
+  Uint8List newData = Uint8List(data.length);
+  // ignore: non_constant_identifier_names
+  int ASCII = 256;
+  
+
+  for (int i=0; i<data.length; i++){
+    // print('---$i---\n${data[i]}\n${hashKey[i%lenkey]}\n${salt[i%byteLength]}\n${iv[i%byteLength]}\n$ASCII\n---$i---');
+    newData[i] = (data[i]^(hashKey[i%lenkey]^salt[i%byteLength]^iv[i%byteLength])%ASCII);
+  }
+  
+  final secret = BytesBuilder();
+  secret.add(salt);
+  secret.add(iv);
+  secret.add(newData);
+  secret.add(hashKey);
+  // print(secret.toBytes());
+  final encr = BytesBuilder();
+  encr.add(secret.toBytes());
+  Uint8List hashSecret = Uint8List.fromList(sha256.convert(secret.toBytes()).bytes);
+  encr.add(hashSecret);
+  // print('___ENCRYPT___\nsalt: ${bytesToRad(salt, 16)}\niv: ${bytesToRad(iv, 16)}\nnewData: ${bytesToRad(newData, 16)}\nhashKey: ${bytesToRad(hashKey, 16)}\n\n');
+  // print('__ENCRDATA___\n${bytesToRad(encr.toBytes(), 16)}\n');
+  // print('${bytesToRad(secret.toBytes(), 16)}\n${bytesToRad(hashSecret, 16)}\n');
+  // if (decrypt(encr.toBytes(), key) == data){
+  //   return encr.toBytes();
+  // }
+  // print(bytesToRad(encr.toBytes(), 0x10));
+
+  // print(lenkey);
+  // print(key.toString());
+  // print(BigInt.parse(key.toString(), radix: 16).toRadixString(36));
+  return encr.toBytes();
+}
+
+Uint8List decrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}){
+  key = Uint8List.fromList(sha256.convert(key).bytes);
+  int lenkey = key.length;
+  Uint8List salt = Uint8List(16);
+  for (int i=0; i<salt.length; i++){
+    salt[i] = data[i];
+  }
+  Uint8List iv = Uint8List(16);
+  for (int i=0; i<iv.length; i++){
+    iv[i] = data[i+iv.length];
+  }
+  Uint8List hashData = Uint8List(32);
+  for (int i=0; i<32; i++){
+    hashData[i] = data[data.length-32+i];
+  }
+  Uint8List newData = Uint8List(data.length-16-16-64);
+  for (int i=0; i<data.length-16-16-64; i++){
+    newData[i] = data[i+32];
+  }
+  final secret = BytesBuilder();
+  secret.add(salt);
+  secret.add(iv);
+  secret.add(newData);
+  secret.add(key);
+  // print('___DECRYPT___\nsalt: ${bytesToRad(salt, 16)}\niv: ${bytesToRad(iv, 16)}\nnewData: ${bytesToRad(newData, 16)}\nkey: ${bytesToRad(key, 16)}\n\n');
+  // print(bytesToRad(secret.toBytes(), 16));
+
+  // print('___DECRYPT___\nsalt: ${bytesToRad(salt, 16)}\niv: ${bytesToRad(iv, 16)}\nnewData: ${bytesToRad(newData, 16)}\nhashKey: ${bytesToRad(key, 16)}\n\n');
+  // print('__hash__\n${bytesToRad((Uint8List.fromList(sha256.convert(secret.toBytes()).bytes)), 16)}\n');
+  // print('__hashdata__\n${bytesToRad(hashData, 16)}\n');
+  // print(bytesToRad((Uint8List.fromList(sha256.convert(secret.toBytes()).bytes)), 16)==bytesToRad(hashData, 16));
+  if (bytesToRad((Uint8List.fromList(sha256.convert(secret.toBytes()).bytes)), 16)!=bytesToRad(hashData, 16)){
+    throw Exception('Ошибка целостности');
+  }
+
+  // ignore: non_constant_identifier_names
+  int ASCII = 256;
+  data = newData;
+  for (int i=0; i<data.length; i++){
+    // print('---$i---\n${data[i]}\n${key[i%lenkey]}\n${salt[i%byteLength]}\n${iv[i%byteLength]}\n$ASCII\n---$i---');
+    newData[i] = (data[i]^(key[i%lenkey]^salt[i%byteLength]^iv[i%byteLength])%ASCII);
+  }
+  return newData;
 }
