@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'dart:typed_data';
-
 import 'package:crypto/crypto.dart';
 
 String bytesToRad(Uint8List bytes, int rad){
@@ -64,18 +63,19 @@ Uint8List encrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}){
   encr.add(secret.toBytes());
   Uint8List hashSecret = Uint8List.fromList(sha256.convert(secret.toBytes()).bytes);
   encr.add(hashSecret);
-  // print('___ENCRYPT___\nsalt: ${bytesToRad(salt, 16)}\niv: ${bytesToRad(iv, 16)}\nnewData: ${bytesToRad(newData, 16)}\nhashKey: ${bytesToRad(hashKey, 16)}\n\n');
-  // print('__ENCRDATA___\n${bytesToRad(encr.toBytes(), 16)}\n');
-  // print('${bytesToRad(secret.toBytes(), 16)}\n${bytesToRad(hashSecret, 16)}\n');
-  // if (decrypt(encr.toBytes(), key) == data){
-  //   return encr.toBytes();
-  // }
+    // print('___ENCRYPT___\nsalt: ${bytesToRad(salt, 16)}\niv: ${bytesToRad(iv, 16)}\nnewData: ${bytesToRad(newData, 16)}\nhashKey: ${bytesToRad(hashKey, 16)}\n\n');
+    // print('__ENCRDATA___\nencr: ${bytesToRad(encr.toBytes(), 16)}\n');
+    // print('secret: ${bytesToRad(secret.toBytes(), 16)}\nhashSecret: ${bytesToRad(hashSecret, 16)}\n');
+  // print('$data $key ${decrypt(encr.toBytes(), key)}');
+  if (bytesToRad(decrypt(encr.toBytes(), key), 36) == bytesToRad(data, 36)){
+    return encr.toBytes();
+  }
   // print(bytesToRad(encr.toBytes(), 0x10));
 
   // print(lenkey);
   // print(key.toString());
   // print(BigInt.parse(key.toString(), radix: 16).toRadixString(36));
-  return encr.toBytes();
+ throw Error();
 }
 
 Uint8List decrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}){
