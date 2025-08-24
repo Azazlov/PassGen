@@ -1,12 +1,16 @@
 // ignore_for_file: use_build_context_synchronously
-
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:secure_pass/features/storage/storage_service.dart';
-import 'package:secure_pass/features/passwordGenerator/psswd_gen_interface.dart';
-import 'package:secure_pass/features/storage/storage_interface.dart';
-import 'package:secure_pass/shared/dialog.dart';
-import 'package:secure_pass/shared/interface.dart';
+import 'package:pass_gen/features/storage/storage_service.dart';
+import 'package:pass_gen/features/passwordGenerator/psswd_gen_interface.dart';
+import 'package:pass_gen/features/storage/storage_interface.dart';
+import 'package:pass_gen/shared/dialog.dart';
+import 'package:pass_gen/shared/interface.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 
 class StorageScreen extends StatefulWidget {
   const StorageScreen({super.key});
@@ -33,7 +37,10 @@ class _StorageScreenState extends State<StorageScreen>{
   }
 
   Future<int> psswdConfigs(int i) async{
-    List<String> listConfigs = await getConfigs(keyConfig);
+    final listConfigs = await getConfigs(keyConfig);
+    if (listConfigs == null){
+      return 0;
+    }
     configs = listConfigs.length;
     if (i<0){
       return 0;
@@ -107,6 +114,116 @@ class _StorageScreenState extends State<StorageScreen>{
     );
   }
 
+  void saveConfigs(){
+    showDialogWindow2(
+      'Сохранить', 
+      'Скопировать в буфер или сохранить файлом?', 
+      context, 
+      'Буфер', 
+      saveJSON, 
+      'Файл', 
+      saveFile
+    );
+  }
+  void saveJSON() async{
+    final configs = await getConfigs(keyConfig);
+    if (configs == null){
+      showDialogWindow1('Ошибка', 'Хранилище пустое', context);
+      return;
+    }
+    String json = jsonEncode(configs);
+    Clipboard.setData(ClipboardData(text: json));
+    showDialogWindow1('Сохранено', 'Скопировано в буфер обмена', context);
+  }
+  void saveFile() async{
+    try{
+      List<String> configs = await getConfigs(keyConfig);
+      String json = jsonEncode(configs);
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/psswdConfigs.json');
+      await file.writeAsString(json);
+      await Share.shareXFiles(
+        [XFile('${directory.path}/psswdConfigs.json')]
+      );
+    }
+    catch (e){
+      showDialogWindow1('Ошибка', '$e', context);
+    }
+  }
+  void recoveryFile() async {
+  try {
+  // 1. Открываем диалог выбора файла
+  final result = await FilePicker.platform.pickFiles(
+  type: FileType.custom,
+  allowedExtensions: ['json'],
+  dialogTitle: 'Выберите файл конфигураций',
+  withData: true
+  );
+
+  // 2. Пользователь отменил выбор
+  if (result == null || result.files.isEmpty) {
+    showDialogWindow1('Ошибка', 'Файл не выбран', context);
+  return;
+  }
+
+  // 3. Берём первый файл
+  final file = result.files.first;
+
+  // 4. Читаем содержимое как строку
+  final String jsonString = utf8.decode(file.bytes as List<int>);
+
+  // 5. Парсим JSON
+  final List<dynamic> decoded = jsonDecode(jsonString);
+
+    // 6. Проверяем, что это список строк
+  if (decoded.every((e) => e is String)) {
+    final List<String> configs = decoded.cast<String>();
+    
+    // ✅ Успешно импортировано!
+    showDialogWindow1('Импортировано', 'Успешно импортировано ${configs.length} конфигураций', context);
+    saveConfig(keyConfig, configs);
+    nextConfig();
+    prevConfig();
+  } else {
+    showDialogWindow1('Ошибка', 'Файл содержит не только строки', context);
+  }
+  } catch (e) {
+    showDialogWindow1('Ошибка', 'При импорте файла произошла ошибка', context);
+  }
+  }
+
+  void recoveryConfigs(){
+    showDialogWindow2(
+      'Восстановить', 
+      'Взять из буфера обмена или файла?', 
+      context, 
+      'Буфер', 
+      recoveryJSON, 
+      'Файл', 
+      recoveryFile
+    );
+  }
+  void recoveryJSON() async{
+    final clip = await Clipboard.getData(Clipboard.kTextPlain);
+    try{
+      if (clip == null || clip.text == null){
+        showDialogWindow1('Буфер обмена пуст', 'ОК', context);
+        return;
+      }
+      else{
+        final clipText = clip.text;
+        List<String> configs = (jsonDecode(clipText!) as List).cast<String>();
+        saveConfig(keyConfig, configs);
+        nextConfig();
+        prevConfig();
+        showDialogWindow1('Импортировано', 'Успешно импортировано ${configs.length} конфигураций', context);
+      }
+    }
+    on Exception{
+      showDialogWindow1('Ошибка', 'Неправильный конфиг или не конфиг вовсе', context);
+    }
+  }
+
   Future<void> deleteConfig() async{
     showCupertinoDialog(
       context: context,
@@ -118,10 +235,14 @@ class _StorageScreenState extends State<StorageScreen>{
             child: const Text('Да'),
             onPressed: () async{
               Navigator.of(context, rootNavigator: true).pop();
-              await removeConfig(keyConfig, id);
-
-              nextConfig();
-              prevConfig();
+              try{
+                await removeConfig(keyConfig, id);
+                nextConfig();
+                prevConfig();
+              }
+              catch (e){
+                showDialogWindow1('Ошибка', 'Хранилище пустое', context);
+              }
             },
           ),
           CupertinoDialogAction(
@@ -171,9 +292,16 @@ class _StorageScreenState extends State<StorageScreen>{
               child: Text(service),
             ),
 
-            SizedBox(height: 48),
+            SizedBox(height: 32),
 
             buildButton('Удалить', deleteConfig),
+
+            SizedBox(height: 48),
+            buildButton('Сохранить', saveConfigs),
+
+            SizedBox(height: 48),
+            buildButton('Восстановить', recoveryConfigs),
+
           ]
         ),
       ),

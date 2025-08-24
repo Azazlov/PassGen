@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:secure_pass/app/app.dart';
+import 'package:pass_gen/app/app.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

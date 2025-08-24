@@ -1,4 +1,4 @@
-# secure_pass
+# pass_gen
 
 A new Flutter project.
 

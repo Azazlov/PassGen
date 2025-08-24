@@ -3,9 +3,10 @@ import 'dart:typed_data';
 class PasswordGenerator{
   int seed = 0;
 
-  int lcg({int a=0x19660C, int c=0x3C6EF35F, int m=0x40000000}){
-    seed = (a+seed+c)%m;
-    seed = (0x41C64E71+seed+0x3039DA)%m;
+  int lcg({int a=1664525, int c=1013904223, int m=1<<32}){
+    seed = (a*seed+c)%m;
+    seed = (seed*(seed+1))%m;
+    seed = (seed^(seed>>16))%m;
 
     return seed;
   }
@@ -47,9 +48,4 @@ class PasswordGenerator{
   String bytesToRad(Uint8List bytes, int rad){
   return bytes.map((b) => b.toRadixString(rad).padLeft(2, '0')).join('');
   }
-}
-
-void main(){
-  final a = PasswordGenerator().generatePassword(24, 64, 'abcdefghijklmnopqrstuvwxyz');
-  print(a);
 }

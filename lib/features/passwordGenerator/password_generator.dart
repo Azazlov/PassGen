@@ -1,12 +1,10 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:secure_pass/features/passwordGenerator/psswd_gen_interface.dart';
-import 'package:flutter/services.dart';
-import 'package:secure_pass/features/storage/storage_service.dart';
-import 'package:secure_pass/shared/dialog.dart';
-import 'package:secure_pass/shared/interface.dart';
+import 'package:pass_gen/features/passwordGenerator/psswd_gen_interface.dart';
+import 'package:pass_gen/features/storage/storage_service.dart';
+import 'package:pass_gen/shared/dialog.dart';
+import 'package:pass_gen/shared/interface.dart';
 
 class PasswordGeneratorScreen extends StatefulWidget {
   const PasswordGeneratorScreen({super.key});

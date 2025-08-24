@@ -1,9 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'package:secure_pass/features/passwordGenerator/psswd_gen_interface.dart';
-import 'package:flutter/services.dart';
-import 'package:secure_pass/features/storage/storage_service.dart';
-import 'package:secure_pass/shared/interface.dart';
-import 'package:secure_pass/shared/dialog.dart';
+import 'package:pass_gen/features/passwordGenerator/psswd_gen_interface.dart';
+import 'package:pass_gen/features/storage/storage_service.dart';
+import 'package:pass_gen/shared/interface.dart';
+import 'package:pass_gen/shared/dialog.dart';
 
 class EndecrypterScreen extends StatefulWidget {
   const EndecrypterScreen({super.key});
@@ -29,9 +28,12 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
   }
 
   Future<void> setupConfigs() async{
-    dynamic configs = await getConfigs('endecrypter');
-    keyController.text = configs[0];
-    masterKeyController.text = configs[1];
+    try{
+      dynamic configs = await getConfigs('endecrypter');
+      keyController.text = configs[0];
+      masterKeyController.text = configs[1];
+    }
+    catch (e){e;}
   }
 
   Future<void> deEncrypt() async {

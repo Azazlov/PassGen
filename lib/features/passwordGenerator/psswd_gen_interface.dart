@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:secure_pass/modules/encryptobara.dart' as encryptobara;
-import 'package:secure_pass/modules/psswd_gen_module.dart';
+import 'package:pass_gen/modules/encryptobara.dart' as encryptobara;
+import 'package:pass_gen/modules/psswd_gen_module.dart';
 
 class PasswordGenerationInterface {
   String generatedPassword = '';
@@ -72,7 +72,7 @@ class PasswordGenerationInterface {
   }
 
   Future<int> generateMaster() async{
-    return Random.secure().nextInt(1<<32-2);
+    return Random.secure().nextInt((1<<32)-2);
   }
 
   Future<List> generatePsswdSecret({

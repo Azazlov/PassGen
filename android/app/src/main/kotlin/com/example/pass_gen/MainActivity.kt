@@ -1,4 +1,4 @@
-package com.example.secure_pass
+package com.example.pass_gen
 
 import io.flutter.embedding.android.FlutterActivity
 
