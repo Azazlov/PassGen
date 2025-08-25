@@ -1,14 +1,17 @@
 import 'dart:typed_data';
 
 class PasswordGenerator{
+  int a= 1966696451771256657;
+  int c= 2194867269497829361;
+  int m= 1<<63;
   int seed = 0;
 
-  int lcg({int a=1664525, int c=1013904223, int m=1<<32}){
+  int lcg(){
     seed = (a*seed+c)%m;
-    seed = (seed*(seed+1))%m;
+    seed = (seed*(seed))%m;
     seed = (seed^(seed>>16))%m;
 
-    return seed;
+    return seed+3;
   }
 
   String generatePassword(int seed, int length, String alphabet){
@@ -25,7 +28,7 @@ class PasswordGenerator{
   }
 
   String getPassword(
-    int masterpsswd, 
+    Uint64List seed,
     String service, 
     int psswdlen, 
     bool upper, 
@@ -42,10 +45,16 @@ class PasswordGenerator{
     spec1?az+='!@#\$%^&*()_+-=':false;
     spec2?az+='"\'`,./;:[]}{<>\\|':false;
     spec3?az+='~?':false;
-    return generatePassword(masterpsswd, psswdlen, az);
-  }
+    String psswd = '';
 
-  String bytesToRad(Uint8List bytes, int rad){
-  return bytes.map((b) => b.toRadixString(rad).padLeft(2, '0')).join('');
+    for (int i=0; i<psswdlen; i++){
+      psswd += generatePassword(seed[i%seed.length], psswdlen, az)[(seed[i%seed.length]-i)%psswdlen];
+    }
+    return psswd;
   }
+}
+
+void main(){
+  String a = PasswordGenerator().generatePassword(2194867269497829361, 32, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+  print(a);
 }

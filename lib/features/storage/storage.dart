@@ -89,13 +89,13 @@ class _StorageScreenState extends State<StorageScreen>{
   }
 
   void copyPsswd() async{
-    final psswd = await getPsswd(id);
-    if (psswd == 'Error'){
-      showDialogWindow1('Ошибка!', 'Неверный пароль или же конфиг. Попробуйте поменять ключ на странице "Генератор"', context);
+    try{
+      final psswd = await getPsswd(id);
+      Clipboard.setData(ClipboardData(text:psswd));
+      showDialogWindow1('Скопировано', 'Пароль скопирован в буфер обмена', context);
     }
-    else{
-    Clipboard.setData(ClipboardData(text:psswd));
-    showDialogWindow1('Скопировано', 'Пароль скопирован в буфер обмена', context);
+    catch (e){
+      showDialogWindow1('Ошибка!', 'Неверный пароль или же конфиг. Попробуйте поменять ключ на странице "Генератор"', context);
     }
   }
   void copySecret() async{

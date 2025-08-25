@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:typed_data';
+
 import 'package:flutter/cupertino.dart';
 import 'package:pass_gen/features/passwordGenerator/psswd_gen_interface.dart';
 import 'package:pass_gen/features/storage/storage_service.dart';
@@ -31,7 +33,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
 
   String generatedPassword = '';
   String secret = '';
-  int randomMaster = 0;
+  Uint64List randomMaster = Uint64List(16);
   String lastConfig = '';
 
   @override 
@@ -99,8 +101,10 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       return;
     }
 
-    randomMaster = await generator.generateMaster();
-    // randomMaster = 0;
+    for (int i=0; i<randomMaster.length; i++){
+      randomMaster[i] = await generator.generateMaster();
+    }
+
     final check = masterController.text.split('.');
 
     if (check.length == 2){
@@ -119,22 +123,21 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
         key: keyController.text
         );
         final params = config.split('.');
-         
-        String checkConfig = '';
-        for (int i = 0; i < 8; i++){
-          i !=7 ? checkConfig+='${params[i]}.' : checkConfig+=params[i];
-        }
-          serviceController.text = check[0];
-          randomMaster = int.parse(params[0]);
-          lengthController.text = params[1];
-          useUpper = params[2]=='true'?true:false;
-          useLower = params[3]=='true'?true:false;
-          useDigits = params[4]=='true'?true:false;
-          useSpec1 = params[5]=='true'?true:false;
-          useSpec2 = params[6]=='true'?true:false;
-          useSpec3 = params[7]=='true'?true:false;
+        final paramlen = params.length;
 
-          lastConfig = masterController.text;
+        serviceController.text = check[0];
+        for (int i=0; i<paramlen-7; i++){
+          randomMaster[i] = int.parse(params[i], radix: 36);
+        }
+        lengthController.text = params[paramlen-7];
+        useUpper = params[paramlen-6]=='t'?true:false;
+        useLower = params[paramlen-5]=='t'?true:false;
+        useDigits = params[paramlen-4]=='t'?true:false;
+        useSpec1 = params[paramlen-3]=='t'?true:false;
+        useSpec2 = params[paramlen-2]=='t'?true:false;
+        useSpec3 = params[paramlen-1]=='t'?true:false;
+
+        lastConfig = masterController.text;
     }
 
     final success = await generator.generatePsswdSecret(
@@ -179,10 +182,10 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
         child: ListView(
           padding: setPadding(),
           children: [
-            buildInput('Шифр конфига', 'сервис.****.****.****', masterController, false, TextInputType.text, generatePassword),
+            buildInput('Шифр конфига', 'сервис.****', masterController, false, TextInputType.text, generatePassword),
             buildInput('Ключ шифрования', 'СОХРАНИТЕ ЕГО!', keyController, true, TextInputType.text, generatePassword),
             buildInput('Сервис', 'Без точек', serviceController, false, TextInputType.text, generatePassword),
-            buildInput('Длина пароля', 'от 1', lengthController, false, TextInputType.number, generatePassword),
+            buildInput('Длина пароля', 'от 1 до 1<<16', lengthController, false, TextInputType.number, generatePassword),
 
             SizedBox(height: 40),
             buildSwitch('Заглавные буквы', useUpper, (v) => setState(() => useUpper = v)),

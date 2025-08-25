@@ -90,12 +90,19 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
         child: ListView(
           padding: setPadding(),
           children: [
+            buildInput('Ваш RSA ключ', 'mum{gse24}', keyController, true, TextInputType.text, context),
             buildInput('Сообщение/код', 'Текст/шифр', textController, false, TextInputType.text, context),
             buildInput('Ключ шифрования', 'mum{gse24}', keyController, true, TextInputType.text, context),
+            
             // buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text, context),
             
             const SizedBox(height: 40),
-            buildButton('(Де)шифрование', deEncrypt),
+            buildButton('Шифрование', deEncrypt),
+            const SizedBox(height: 40),
+            buildButton('Дешифрование', deEncrypt),
+            const SizedBox(height: 40),
+            buildButton('Получить ключ', deEncrypt),
+            const SizedBox(height: 40),
             buildCopyOnTap('Сообщение/шифр', mssg, copySecret),
           ],
         ),
