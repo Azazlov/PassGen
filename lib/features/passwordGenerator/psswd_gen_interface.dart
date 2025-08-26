@@ -24,7 +24,6 @@ class PasswordGenerationInterface {
   }) async {
     generatedPassword = PasswordGenerator().getPassword(
       seed,
-      service,
       int.parse(length),
       useUpper,
       useLower,

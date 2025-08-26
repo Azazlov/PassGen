@@ -126,8 +126,10 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
         final paramlen = params.length;
 
         serviceController.text = check[0];
-        for (int i=0; i<paramlen-7; i++){
+        for (int i=0; i<paramlen-8; i++){
+          // print(i);
           randomMaster[i] = int.parse(params[i], radix: 36);
+          // print(randomMaster[i]);
         }
         lengthController.text = params[paramlen-7];
         useUpper = params[paramlen-6]=='t'?true:false;
