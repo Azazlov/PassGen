@@ -1,15 +1,12 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text('О программе'),
-      ),
-      child: Center(
+    return const Scaffold(
+      body: Center(
         child: Padding(
           padding: EdgeInsets.all(20),
           child: Text(

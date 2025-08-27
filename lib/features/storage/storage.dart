@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pass_gen/features/storage/storage_service.dart';
 import 'package:pass_gen/features/passwordGenerator/psswd_gen_interface.dart';
@@ -225,14 +225,14 @@ class _StorageScreenState extends State<StorageScreen>{
   }
 
   Future<void> deleteConfig() async{
-    showCupertinoDialog(
+    showDialog(
       context: context,
-      builder: (_) => CupertinoAlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text('Удалить'),
         content: Text('Вы точно хотите удалить выбранный конфиг?'),
         actions: [
-          CupertinoDialogAction(
-            child: const Text('Да'),
+            TextButton(
+            child: Text('Да'),
             onPressed: () async{
               Navigator.of(context, rootNavigator: true).pop();
               try{
@@ -245,8 +245,8 @@ class _StorageScreenState extends State<StorageScreen>{
               }
             },
           ),
-          CupertinoDialogAction(
-            child: const Text('Нет'),
+            TextButton( 
+            child: Text('Нет'),
             onPressed: () async{
               Navigator.of(context, rootNavigator: true).pop();
             },
@@ -258,11 +258,11 @@ class _StorageScreenState extends State<StorageScreen>{
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold (
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Хранилище ваших паролей'),
-      ),
-      child: Center(
+    return Scaffold (
+      // navigationBar: const CupertinoNavigationBar(
+      //   middle: Text('Хранилище ваших паролей'),
+      // ),
+      body: Center(
         child: ListView(
           padding: setPadding(),
           children: [

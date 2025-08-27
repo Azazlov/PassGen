@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:pass_gen/features/passwordGenerator/psswd_gen_interface.dart';
 import 'package:pass_gen/features/storage/storage_service.dart';
 import 'package:pass_gen/shared/interface.dart';
@@ -80,18 +80,18 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
+    return Scaffold(
 
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Шифратор/Дешифратор'),
-      ),
+      // appBar: const NavigationBarTheme(
+      //   child: Text('Шифратор/Дешифратор'),
+      // ),
 
-      child: Center(
+      body: Center(
         child: ListView(
           padding: setPadding(),
           children: [
-            buildInput('Сообщение/код', 'Текст/шифр', textController, false, TextInputType.text, context),
-            buildInput('Ключ шифрования', 'mum{gse24}', keyController, true, TextInputType.text, context),
+            buildInput('Сообщение/код', 'Текст/шифр', textController, false, TextInputType.text, pass),
+            buildInput('Ключ шифрования', 'mum{gse24}', keyController, true, TextInputType.text, pass),
             // buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text, context),
             
             const SizedBox(height: 40),

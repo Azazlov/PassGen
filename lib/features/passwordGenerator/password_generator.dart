@@ -2,7 +2,7 @@
 
 import 'dart:typed_data';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:pass_gen/features/passwordGenerator/psswd_gen_interface.dart';
 import 'package:pass_gen/features/storage/storage_service.dart';
 import 'package:pass_gen/shared/dialog.dart';
@@ -176,11 +176,11 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   @override
   Widget build(BuildContext context) {
     return 
-    CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text('Генератор паролей'),
-      ),
-      child: Center(
+    Scaffold(
+      // navigationBar: CupertinoNavigationBar(
+      //   middle: Text('Генератор паролей'),
+      // ),
+      body: Center(
         child: ListView(
           padding: setPadding(),
           children: [

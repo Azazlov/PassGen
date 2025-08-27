@@ -1,44 +1,60 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+// Переключатель
 Widget buildSwitch(String label, bool value, void Function(bool) onChanged) {
-  return CupertinoFormRow(
-    padding: EdgeInsets.all(10),
-    prefix: Text(label),
-    child: CupertinoSwitch(value: value, onChanged: onChanged),
+  return ListTile(
+    title: Text(label),
+    trailing: Switch(
+      value: value,
+      onChanged: onChanged,
+    ),
   );
 }
 
-Widget buildInput(String label, String placeholder, controller, hidden, symbols, submFunction){
-  return 
-  ListBody(
+// Поле ввода
+Widget buildInput(String label, String placeholder, TextEditingController controller,
+    bool hidden, TextInputType symbols, Function submFunction) {
+  return Column(
     children: [
-    const SizedBox(height: 18,),
-    Text(label),
-    CupertinoTextField(
-      padding: const EdgeInsets.all(12.0),
-      controller: controller,
-      placeholder: placeholder,
-      obscureText: hidden,
-      keyboardType: symbols,
-      onSubmitted: (_) => submFunction()
-    )
+      const SizedBox(height: 18),
+      Text(label),
+      TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          filled: true,
+          // fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          contentPadding: const EdgeInsets.all(12),
+          hintText: placeholder,
+        ),
+        obscureText: hidden,
+        keyboardType: symbols,
+        onSubmitted: (_) => submFunction(),
+      ),
     ],
   );
 }
 
-Widget buildButton(label, function){
-  return
-  CupertinoButton.filled(
-    padding: EdgeInsets.all(16.0),
+// Кнопка
+Widget buildButton(String label, VoidCallback function) {
+  return ElevatedButton(
     onPressed: function,
+    style: ElevatedButton.styleFrom(
+      padding: EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
     child: Text(label),
   );
 }
 
-Widget buildBigText(text){
-  return
-  Container(
+// Большой текст
+Widget buildBigText(String text) {
+  return Container(
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(8),
@@ -54,28 +70,28 @@ Widget buildBigText(text){
   );
 }
 
-Widget buildCopyOnTap(label, text1, function){
-  return
-  ListBody(
+// Текст с копированием
+Widget buildCopyOnTap(String label, String text1, Function function) {
+  return Column(
     children: [
       SizedBox(height: 48),
       Text(
-        label, 
-        style: TextStyle(fontSize: 20)
+        label,
+        style: TextStyle(fontSize: 20),
       ),
-      text1!='' && text1 != "Нет конфигов"?
-      GestureDetector(
-          onTap: () {
-            Clipboard.setData(ClipboardData(text: text1));
-            function();
-          },
-          child: buildBigText(text1)
-      ):
-      buildBigText(text1)
+      text1 != '' && text1 != "Нет конфигов"
+          ? GestureDetector(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: text1));
+                function();
+              },
+              child: buildBigText(text1),
+            )
+          : buildBigText(text1),
     ],
   );
 }
 
-EdgeInsets setPadding(){
+EdgeInsets setPadding() {
   return EdgeInsets.only(top: 88, right: 30, left: 30, bottom: 88);
 }

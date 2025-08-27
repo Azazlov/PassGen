@@ -1,13 +1,14 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
-void showDialogWindow1(String label, String text, dynamic context){
-  showCupertinoDialog(
+// Диалог с одной кнопкой
+void showDialogWindow1(String label, String text, BuildContext context) {
+  showDialog(
     context: context,
-    builder: (_) => CupertinoAlertDialog(
+    builder: (_) => AlertDialog(
       title: Text(label),
       content: Text(text),
       actions: [
-        CupertinoDialogAction(
+        TextButton(
           child: const Text('Ок'),
           onPressed: () {
             Navigator.of(context, rootNavigator: true).pop();
@@ -18,21 +19,29 @@ void showDialogWindow1(String label, String text, dynamic context){
   );
 }
 
-void showDialogWindow2(label, text, context, text1, function1, text2, function2) async{
-  showCupertinoDialog(
+// Диалог с двумя кнопками
+void showDialogWindow2(
+    String label,
+    String text,
+    BuildContext context,
+    String text1,
+    Function function1,
+    String text2,
+    Function function2) async {
+  showDialog(
     context: context,
-    builder: (_) => CupertinoAlertDialog(
+    builder: (_) => AlertDialog(
       title: Text(label),
       content: Text(text),
       actions: [
-        CupertinoDialogAction(
+        TextButton(
           child: Text(text1),
           onPressed: () {
             Navigator.of(context, rootNavigator: true).pop();
             function1();
           },
         ),
-        CupertinoDialogAction(
+        TextButton(
           child: Text(text2),
           onPressed: () {
             Navigator.of(context, rootNavigator: true).pop();
@@ -44,6 +53,5 @@ void showDialogWindow2(label, text, context, text1, function1, text2, function2)
   );
 }
 
-void pass(){
-  
-}
+// Пустая функция осталась без изменений
+void pass() {}
