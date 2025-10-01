@@ -53,12 +53,17 @@ class PasswordGenerationInterface {
     required String key
   }) async {
     secret = secret.trim();
-    Uint8List mssgBytes = encryptobara.decrypt(
+    try{
+      Uint8List mssgBytes = encryptobara.decrypt(
       base64Decode(secret),
       utf8.encode(key)
-    );
-    String mssg = utf8.decode(mssgBytes);
-    return mssg;
+      );
+      String mssg = utf8.decode(mssgBytes);
+      return mssg;
+    }
+    on Exception{
+      throw Exception('Ошибка');
+    }
   }
 
   Future<String> getConfig({

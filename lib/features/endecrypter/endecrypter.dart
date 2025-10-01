@@ -38,7 +38,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
 
   Future<void> deEncrypt() async {
     setState(() {
-      mssg = 'Перевод...';
+      // mssg = 'Перевод...';
     });
 
     if (textController.text == ''){
@@ -46,7 +46,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
       return;
     }
 
-    dynamic result = 'Неизвестная ошибка';
+    dynamic result;
 
     try{
       result = await generator.generateMssg(
@@ -60,6 +60,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
         key: keyController.text, 
       );
     }
+    
       
     await saveConfig(
       'endecrypter', 
