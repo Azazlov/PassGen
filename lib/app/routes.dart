@@ -36,9 +36,9 @@ class _TabScaffoldState extends State<TabScaffold> {
         });
       },
       // Настраиваем параметры для корректного отображения
-      backgroundColor: theme.colorScheme.background,  // Цвет фона
+      backgroundColor: theme.colorScheme.surface,  // Цвет фона
       selectedItemColor: theme.colorScheme.primary,    // Цвет выбранной вкладки
-      unselectedItemColor: theme.colorScheme.onBackground.withOpacity(0.6),  // Цвет неактивных вкладок
+      unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),  // Цвет неактивных вкладок
       type: BottomNavigationBarType.fixed,
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(

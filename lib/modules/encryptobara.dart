@@ -81,9 +81,11 @@ Uint8List encrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}){
 Uint8List decrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}){
   key = Uint8List.fromList(sha256.convert(key).bytes);
   int lenkey = key.length;
+  int lendata = data.length;
   Uint8List salt = Uint8List(16);
+
   for (int i=0; i<salt.length; i++){
-    salt[i] = data[i];
+    salt[i] = data[i%lendata];
   }
   Uint8List iv = Uint8List(16);
   for (int i=0; i<iv.length; i++){
