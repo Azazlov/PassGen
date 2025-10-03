@@ -1,7 +1,8 @@
-import 'package:flutter/cupertino.dart';
-import 'package:secure_pass/features/passwordGenerator/domain/psswdGenInterface.dart';
-import 'package:flutter/services.dart';
-import 'package:secure_pass/features/storage/storageService.dart';
+import 'package:flutter/material.dart';
+import 'package:pass_gen/features/passwordGenerator/psswd_gen_interface.dart';
+import 'package:pass_gen/features/storage/storage_service.dart';
+import 'package:pass_gen/shared/interface.dart';
+import 'package:pass_gen/shared/dialog.dart';
 
 class EndecrypterScreen extends StatefulWidget {
   const EndecrypterScreen({super.key});
@@ -27,133 +28,79 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
   }
 
   Future<void> setupConfigs() async{
-    dynamic configs = await getConfigs('endecrypter');
-    // print(configs);
-    keyController.text = configs[0];
-    masterKeyController.text = configs[1];
+    try{
+      dynamic configs = await getConfigs('endecrypter');
+      keyController.text = configs[0];
+      masterKeyController.text = configs[1];
+    }
+    catch (e){e;}
   }
 
-  Future<void> generatePassword() async {
+  Future<void> deEncrypt() async {
     setState(() {
-      mssg = 'Перевод...';
+      // mssg = 'Перевод...';
     });
 
-    dynamic result = 'Неизвестная ошибка';
+    if (textController.text == ''){
+      mssg = 'Сообщение или код не должно быть пустым';
+      return;
+    }
+
+    dynamic result;
 
     try{
-      result = await generator.generateMssg(secret: textController.text, key: keyController.text, masterKey: masterKeyController.text);
+      result = await generator.generateMssg(
+        secret: textController.text, 
+        key: keyController.text, 
+      );
     }
-    on FormatException{
-      result = await generator.generateSecret(mssg: textController.text, key: keyController.text, masterKey: masterKeyController.text);
+    on Exception{
+      result = await generator.generateSecret(
+        mssg: textController.text, 
+        key: keyController.text, 
+      );
     }
+    
       
-    await saveConfig('endecrypter', [keyController.text, masterKeyController.text]);
+    await saveConfig(
+      'endecrypter', 
+      [
+        keyController.text, 
+        masterKeyController.text
+      ]
+    );
 
     setState(() {
       mssg = result;
     });
   }
 
-  Widget buildInput(String label, String placeholder, controller, hidden, symbols){
-    return 
-    ListBody(
-      children: [
-      const SizedBox(height: 18,),
-      Text(label),
-      CupertinoTextField(
-        padding: const EdgeInsets.all(12.0),
-        controller: controller,
-        placeholder: placeholder,
-        obscureText: hidden,
-        keyboardType: symbols,
-        onSubmitted: (_) => generatePassword()
-      )
-      ],
-    );
-  }
-
-  Widget buildCopy(String label, String data, bool isCopied){
-    return ListBody(
-      children: [
-        const SizedBox(height: 48),
-        Text(label, style: const TextStyle(fontSize: 20),),
-        GestureDetector(
-          onTap: () {
-            if (isCopied){
-              Clipboard.setData(ClipboardData(text: data));
-              showCupertinoDialog(
-                context: context,
-                builder: (_) => CupertinoAlertDialog(
-                  title: const Text('Скопировано'),
-                  content: Text('$label скопирован в буфер обмена.'),
-                  actions: [
-                    CupertinoDialogAction(
-                      child: const Text('OK'),
-                      onPressed: () {
-                        Navigator.of(context, rootNavigator: true).pop();
-                      },
-                    )
-                  ],
-                ),
-              );
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 214, 214, 214),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color.fromARGB(255, 90, 90, 90)),
-            ),
-            child: Center(
-              child: Text(
-                data,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 32, fontFamily: 'segoe UI', color: Color.fromARGB(255, 21, 21, 21)),
-              ),
-            ),
-          ),
-        )
-      ],
-    );
+  void copySecret(){
+    showDialogWindow1('Скопировано', 'Сообщение/шифр скопирован в буфер обмена', context);
   }
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
+    return Scaffold(
 
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Шифратор/Дешифратор'),
-      ),
-      child: Center(
-        // child: ConstrainedBox(
-        //   constraints: const BoxConstraints(
-        //     minWidth: 400,
-        //     maxWidth: 600,
-        //     minHeight: 600,
-        //   ),
+      // appBar: const NavigationBarTheme(
+      //   child: Text('Шифратор/Дешифратор'),
+      // ),
+
+      body: Center(
         child: ListView(
-          padding: const EdgeInsets.only(top: 100.0, right: 20, left: 20, bottom: 20),
+          padding: setPadding(),
           children: [
-            ConstrainedBox(constraints: const BoxConstraints(
-              maxWidth: 400
-            )),
-            buildInput('Сообщение/код', 'Текст/шифр', textController, false, TextInputType.text),
-            buildInput('Ключ шифрования', 'mum{gse24}', keyController, true, TextInputType.text),
-            buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text),
+            buildInput('Сообщение/код', 'Текст/шифр', textController, false, TextInputType.text, pass),
+            buildInput('Ключ шифрования', 'mum{gse24}', keyController, true, TextInputType.text, pass),
+            // buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text, context),
             
-            const SizedBox(height: 24),
-            CupertinoButton.filled(
-              padding: const EdgeInsets.all(16.0),
-              onPressed: generatePassword,
-              child: const Text('Сгенерировать'),
-            ),
-            buildCopy('Сообщение/шифр', mssg, true),
-
-            const SizedBox(height: 48),
+            const SizedBox(height: 40),
+            buildButton('(Де)шифрование', deEncrypt),
+            buildCopyOnTap('Сообщение/шифр', mssg, copySecret),
           ],
         ),
-      
-    ));
+      )
+    );
   }
 }

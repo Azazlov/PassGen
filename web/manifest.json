@@ -1,6 +1,6 @@
 {
-    "name": "secure_pass",
-    "short_name": "secure_pass",
+    "name": "pass_gen",
+    "short_name": "pass_gen",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
