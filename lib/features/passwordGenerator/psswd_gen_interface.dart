@@ -40,6 +40,7 @@ class PasswordGenerationInterface {
     required String key
   }) async {
     mssg = mssg.trim();
+    // print(utf8.encode(mssg));
     Uint8List secretBytes = encryptobara.encrypt(
       utf8.encode(mssg),
       utf8.encode(key)
@@ -54,6 +55,7 @@ class PasswordGenerationInterface {
   }) async {
     secret = secret.trim();
     try{
+      // print('secret: ${base64Decode(secret)}');
       Uint8List mssgBytes = encryptobara.decrypt(
       base64Decode(secret),
       utf8.encode(key)

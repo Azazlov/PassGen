@@ -54,7 +54,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
         key: keyController.text, 
       );
     }
-    on Exception{
+    catch (exception){
       result = await generator.generateSecret(
         mssg: textController.text, 
         key: keyController.text, 

@@ -1,6 +1,7 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pass_gen/features/storage/storage_service.dart';
@@ -25,7 +26,7 @@ class _StorageScreenState extends State<StorageScreen>{
   String service = 'Нет названия сервиса';
   String keyConfig = 'encryptedConfigs';
   String thisConfig = '';
-  int configs = 0;
+  int cfgsLen = 0;
 
   int id = 0;
   late PasswordGenerationInterface generator;
@@ -34,31 +35,34 @@ class _StorageScreenState extends State<StorageScreen>{
   void initState(){
     super.initState();
     psswdConfigs(0);
+    // инициализация пароля из хранилища
   }
 
   Future<int> psswdConfigs(int i) async{
     final listConfigs = await getConfigs(keyConfig);
+    if (kDebugMode){
+      print('i: $i');
+      print('configs: $listConfigs');
+    }
+    // получение списка конфигов
     if (listConfigs == null){
       return 0;
     }
-    configs = listConfigs.length;
+    cfgsLen = listConfigs.length;
     if (i<0){
       return 0;
     }
     try{
       
-
-      if (configs == 0){
+      if (cfgsLen == 0){
         setState(() {
           encryptedConfig = 'Нет конфигов';
           service = 'Нет названия сервиса';
         });
         return 0;
       }
-      if (i==configs){
-        if (i != 1){
-          return 0;
-        }
+      if (i==cfgsLen && i != 1){
+        return 0;
       }
       setState(() {
         thisConfig = listConfigs[i];
@@ -76,12 +80,15 @@ class _StorageScreenState extends State<StorageScreen>{
     }
   }
 
+  // тут беда, что при длинном названии сервиса дальше не листает, надо исправить 
+  // (как-то, хз как. Мб кодировать в b64 название конфига для избежания конфликтов)
+
   void nextConfig() async{
-    trueConfig();
+    // trueConfig();
     await psswdConfigs(id+1);
   }
   void prevConfig() async{
-    trueConfig();
+    // trueConfig();
     await psswdConfigs(id-1);
   }
   void trueConfig() async{
@@ -140,16 +147,17 @@ class _StorageScreenState extends State<StorageScreen>{
       List<String> configs = await getConfigs(keyConfig);
       String json = jsonEncode(configs);
       final directory = await getTemporaryDirectory();
-      final file = File('${directory.path}/psswdConfigs.json');
-      await file.writeAsString(json);
+      await File('${newMethod(directory)}\\psswdConfigs.json').writeAsString(json);
       await Share.shareXFiles(
-        [XFile('${directory.path}/psswdConfigs.json')]
+        [XFile('${directory.path}\\psswdConfigs.json')]
       );
     }
     catch (e){
       showDialogWindow1('Ошибка', '$e', context);
     }
   }
+
+  String newMethod(Directory directory) => directory.path;
   void recoveryFile() async {
   try {
   // 1. Открываем диалог выбора файла
@@ -240,7 +248,7 @@ class _StorageScreenState extends State<StorageScreen>{
                 nextConfig();
                 prevConfig();
               }
-              catch (e){
+              catch (exception){
                 showDialogWindow1('Ошибка', 'Хранилище пустое', context);
               }
             },
@@ -278,7 +286,7 @@ class _StorageScreenState extends State<StorageScreen>{
 
                 const SizedBox(width: 64),
 
-                Text('${id+1}/$configs'),
+                Text('${id+1}/$cfgsLen'),
 
                 const SizedBox(width: 64),
                 Center(

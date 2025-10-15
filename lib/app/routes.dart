@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:pass_gen/features/about/about.dart';
 import 'package:pass_gen/features/storage/storage.dart';

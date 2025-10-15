@@ -10,7 +10,7 @@ class AboutScreen extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.all(20),
           child: Text(
-            'Secure Pass\n\nПростой и безопасный генератор паролей.\n\nСоздан во Flutter с использованием темы Cupertino.',
+            'Secure Pass\n\nПростой и безопасный генератор паролей.\n\nСоздан во Flutter с использованием темы Material Dart.',
             style: TextStyle(fontSize: 18),
             textAlign: TextAlign.center,
           ),

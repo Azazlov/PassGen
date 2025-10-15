@@ -52,6 +52,7 @@ Uint8List encrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}){
 }
 
 Uint8List decrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}){
+
   key = Uint8List.fromList(sha256.convert(key).bytes);
   int lenkey = key.length;
   // print('\n==================CRYPTO==================');
@@ -59,6 +60,7 @@ Uint8List decrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}){
   // print(data);
   Uint8List salt = Uint8List(byteLength);
 
+  // print('$salt, $data');
   for (int i=0; i<salt.length; i++){
     salt[i] = data[i];
   }
@@ -105,8 +107,8 @@ Uint8List decrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}){
 }
 
 // void main(){
-//   String data = 'lol';
-//   String key = 'what?';
+//   String data = '1234';
+//   String key = '1234';
 //   String encryptData = base64Encode(encrypt(utf8.encode(data), utf8.encode(key))) ;
-//   print(encryptData);
+//   // print(encryptData);
 // }
