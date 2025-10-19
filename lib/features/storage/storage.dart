@@ -39,12 +39,13 @@ class _StorageScreenState extends State<StorageScreen>{
   }
 
   Future<int> psswdConfigs(int i) async{
-    final listConfigs = await getConfigs(keyConfig);
-    if (kDebugMode){
-      print('i: $i');
-      print('configs: $listConfigs');
-    }
     // получение списка конфигов
+    final listConfigs = await getConfigs(keyConfig);
+    // if (kDebugMode){
+    //   print('i: $i');
+    //   print('configs: $listConfigs');
+    // }
+    
     if (listConfigs == null){
       return 0;
     }
@@ -84,11 +85,11 @@ class _StorageScreenState extends State<StorageScreen>{
   // (как-то, хз как. Мб кодировать в b64 название конфига для избежания конфликтов)
 
   void nextConfig() async{
-    // trueConfig();
+    trueConfig();
     await psswdConfigs(id+1);
   }
   void prevConfig() async{
-    // trueConfig();
+    trueConfig();
     await psswdConfigs(id-1);
   }
   void trueConfig() async{
@@ -286,7 +287,7 @@ class _StorageScreenState extends State<StorageScreen>{
 
                 const SizedBox(width: 64),
 
-                Text('${id+1}/$cfgsLen'),
+                cfgsLen!=0?Text('${id+1}/$cfgsLen'):Text('Нет конфигов'),
 
                 const SizedBox(width: 64),
                 Center(
