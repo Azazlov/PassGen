@@ -7,32 +7,43 @@ import 'package:uuid/uuid.dart';
 import 'dart:typed_data';
 
 void main(){
-  print(DateTime.now().millisecondsSinceEpoch);
-  print(int64ToBytes(256));
-  final template = 'версия.сервис.время_последнего_использования.uuid.категория.срок_действия.ШИФР';
+  String newConfig = getConfig();
+  print(newConfig);
+  Map<String, String> decodedConfig = decodeConfig(newConfig);
+  print(decodedConfig);
+}
 
-  List<String> confTemp = [
-    '1.0', 
-    'apple', 
-    minificateDate(DateTime.now()), 
-    Uuid().v8(), 'category', 
-    '50', 
-    'мегашифр'
-  ];
+String getConfig(){
+  Map<String, String> confTemp = {
+    'Version': '1.0', 
+    'Service':encodeBase64('apple'), 
+    'Last time usage':minificateDate(DateTime.now()), 
+    'UUID':Uuid().v8(), 
+    'Category':'category', 
+    'Ex':'50', 
+    'Encr':'мегашифр'
+  };
+  String confString = '';
+  confTemp.forEach((key, value) => key!='ШИФР'? confString += '$value ': confString += value);
+  return encodeBase64(confString);
+}
 
-  String config = '';
-  int fall = 0;
+Map<String, String> decodeConfig(String configB64){
+  String config = decodeBase64(configB64);
+  List<String> configElements = config.split(' ');
+  print(configElements);
+  Map<String, String> configMap = {
+    'Vers':configElements[0], 
+    'LUT':configElements[2], 
+    'UUID':configElements[3], 
+    'Cat':configElements[4], 
+    'ET':configElements[5], 
+    'Encr':configElements[6]
+  };
+  // String configDecoded = '';
+  // configMap.forEach((key, value) => configDecoded += '$key: $value\n');
 
-  for (int i = 0; i < template.split('.').length; i++){
-    print('-----\n${template.split('.')[i]}: ${confTemp[i]}');
-    if (i < template.split('.').length-1){
-      config += confTemp[i];
-    }
-    fall = i;
-  }
-  config = '${encodeBase64(config)}.${confTemp[fall]}';
-
-  print(config);
+  return configMap;
 }
 
 String encodeBase64(String text) {
@@ -77,8 +88,4 @@ Uint8List int64ToBytes(int value) {
 
 int isExpired(){
   return 0;
-}
-
-String generateUUID() {
-  return Uuid().v4();
 }
