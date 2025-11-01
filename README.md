@@ -35,19 +35,19 @@ Dart — основной язык программирования
 
 ## Скриншоты приложения
 <p align=“center”>
-<img width=“400” src=“https://github.com/user-attachments/assets/14a34147-1253-48c0-8d60-885460029e98” alt=“Страница генератора паролей”>
+  <img width="1266" height="713" alt="{75EB6F53-B3E6-4F62-8DC6-511C67AD509D}" src="https://github.com/user-attachments/assets/250c4701-9b52-422e-aa9b-01ea13a7b651" alt=“Страница генератора паролей”/>
 <br>
 <b>Страница генератора паролей</b>
 </p>
 
 <p align=“center”>
-<img width=“400” src=“https://github.com/user-attachments/assets/52e260ef-6d28-4072-a428-7be329bf7283” alt=“Страница шифрования сообщений”>
+  <img width="1266" height="713" alt="{A42D9769-6009-442C-864A-5097F6551BBD}" src="https://github.com/user-attachments/assets/a14d553a-49e3-4c73-93a1-4544e29fe703" alt=“Страница шифрования сообщений”/>
 <br>
 <b>Страница шифрования сообщений</b>
 </p>
 
 <p align=“center”>
-<img width=“400” src=“https://github.com/user-attachments/assets/4d1e9460-feed-42c0-92ee-1f1c75d7e753” alt=“Страница хранилища”>
+  <img width="1266" height="713" alt="{26A77419-FADF-4A8F-B7CE-763CF7AE5618}" src="https://github.com/user-attachments/assets/247888c0-3910-4f81-888e-e09cb59d2ef0" alt=“Страница хранилища”/>
 <br>
 <b>Страница хранилища конфигураций</b>
 </p>
