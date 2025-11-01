@@ -1,31 +1,51 @@
 import 'dart:convert';
 import 'dart:core';
-import 'dart:typed_data';
 import 'package:uuid/uuid.dart';
 import 'shared.dart';
 
-class EncryptConfig{
-  late int version = 0;
-  late String service = 'None';
-  late dynamic lastUsageDate = false;
-  late String uuid = Uuid().v8();
-  late String category = 'None';
-  late int expireDays = 30;
+class EncryptedConfig{
+  late int version;
+  late String service;
+  late dynamic lastUsageDate;
+  late String uuid;
+  late String category;
+  late int expireDays;
   late String encr;
-  EncryptConfig(
-    this.encr, 
+  EncryptedConfig(
     {
+      this.version = 0,
       this.service = 'None',
+      this.lastUsageDate = false,
+      this.uuid = '',
       this.category = 'None',
-      this.expireDays = 30
+      this.expireDays = 30,
+      this.encr = 'Test'
     }
-  );
+  ){
+    uuid = Uuid().v8();
+  }
 
   String getConfigMini(){
-    dynamic lud = lastUsageDate == false? 'Not used': minificateDate(lastUsageDate);
+    dynamic lud = lastUsageDate == false? 'Not used': _minificateDate(lastUsageDate);
     String splitedParams = '$version.${encodeBase64(service)}.$lud.$uuid.$category.$expireDays';
     // print(splitedParams);
-    String config = '${encodeBase64(splitedParams)}.$encr';
+    String miniConfig = '${encodeBase64(splitedParams)}.$encr';
+    return miniConfig;
+  }
+
+  EncryptedConfig getConfigFromMini(String miniConfig){
+    String splitedParams = decodeBase64(miniConfig.split('.')[0]);
+    List<String> params = splitedParams.split('.');
+    String encrypted = miniConfig.split('.')[1];
+    EncryptedConfig config = EncryptedConfig(
+      version: int.parse(params[0]),
+      service: decodeBase64(params[1]),
+      lastUsageDate: params[2],
+      uuid: params[3],
+      category: params[4],
+      expireDays: int.parse(params[5]),  
+      encr: encrypted
+    );
     return config;
   }
 
@@ -71,83 +91,17 @@ class EncryptConfig{
 
     return date;
   }
+
+  // минифицировать дату
+  String _minificateDate(dynamic nowDate){
+    return '${nowDate.year.toString()}${nowDate.month.toString().padLeft(2, '0')}${nowDate.day.toString().padLeft(2, '0')}${nowDate.hour.toString().padLeft(2, '0')}${nowDate.minute.toString().padLeft(2, '0')}${nowDate.second.toString().padLeft(2, '0')}';
+  }
 }
 
-// void testCrypto(){
-//   String newConfig = getConfig();
+// // преобразовать большое число в массив байтов (8 байтов)
+// Uint8List int64ToBytes(int value) {
+//   var byteData = ByteData(8);
+//   byteData.setInt64(0, value, Endian.little); 
   
-//   Map<String, String> decodedConfig = decodeConfig(newConfig);
-  
-//   print(newConfig);
-//   print(decodedConfig);
+//   return byteData.buffer.asUint8List();
 // }
-
-// // получить пример сида
-// String getConfig(){
-//   Map<String, String> confTemp = {
-//     'Version': '1.0', 
-//     'Service':encodeBase64('apple'), 
-//     'Last time usage':minificateDate(DateTime.now()), 
-//     'UUID':Uuid().v8(), 
-//     'Category':'category', 
-//     'Ex':'50', 
-//     'Encr':'мегашифр'
-//   };
-//   String confString = '';
-//   confTemp.forEach((key, value) => key!='ШИФР'? confString += '$value ': confString += value);
-//   return encodeBase64(confString);
-// }
-
-// декодировать пример сида
-Map<String, String> decodeConfig(String configB64){
-  String config = decodeBase64(configB64);
-  List<String> configElements = config.split(' ');
-
-  print(configElements);
-  
-  Map<String, String> configMap = {
-    'Vers':configElements[0], 
-    'LUT':configElements[2], 
-    'UUID':configElements[3], 
-    'Cat':configElements[4], 
-    'ET':configElements[5], 
-    'Encr':configElements[6]
-  };
-  // String configDecoded = '';
-  // configMap.forEach((key, value) => configDecoded += '$key: $value\n');
-
-  return configMap;
-}
-
-// минифицировать дату
-String minificateDate(dynamic nowDate){
-  return '${nowDate.year.toString()}${nowDate.month.toString().padLeft(2, '0')}${nowDate.day.toString().padLeft(2, '0')}${nowDate.hour.toString().padLeft(2, '0')}${nowDate.minute.toString().padLeft(2, '0')}${nowDate.second.toString().padLeft(2, '0')}';
-}
-
-// восстановить минифицированную дату
-dynamic deMinificateDate(String miniDate){
-  Map date= {
-  'year': miniDate.substring(0, 4), 
-  'month': miniDate.substring(4, 6), 
-  'day': miniDate.substring(6, 8), 
-  'hour': miniDate.substring(8, 10),
-  'minute': miniDate.substring(10, 12),
-  'second': miniDate.substring(12, 14),
-  };
-  return DateTime(
-      int.parse(date['year']), 
-      int.parse(date['month']),
-      int.parse(date['day']),
-      int.parse(date['hour']),
-      int.parse(date['minute']),
-      int.parse(date['second'])
-    );
-}
-
-// преобразовать большое число в массив байтов (8 байтов)
-Uint8List int64ToBytes(int value) {
-  var byteData = ByteData(8);
-  byteData.setInt64(0, value, Endian.little); 
-  
-  return byteData.buffer.asUint8List();
-}
