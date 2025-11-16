@@ -8,7 +8,7 @@ void main() {
   // Для теста encrypt_template.dart раскомментировать
   // testEncryptTemplate();
 
-  getPsswd(masterPsswd: '');
+  getPsswd();
 }
 
 void printFormatString(String text){
@@ -32,6 +32,6 @@ void testCryptoTemplate(){
 
 void testEncryptTemplate() async{
   HashGenerator generator = HashGenerator(strength: HashStrength.high);
-  String hash = await generator.getHash(hashedPassword: 'hashedPassword', salt: 'salt');
-  print(hash);
+  List<int> hash = await generator.getHash(cipherText: []);
+  print('$hash');
 }
