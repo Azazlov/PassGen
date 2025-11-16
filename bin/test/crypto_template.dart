@@ -68,18 +68,16 @@ class EncryptedConfig{
     return isEx;
   }
 
-  dynamic upToDateLUD(){
+  void upToDateLUD(){
     lastUsageDate = DateTime.timestamp();
-    return lastUsageDate;
   }
 
-  String upToDateUUID(){
+  void upToDateUUID(){
     uuid = Uuid().v8();
-    return uuid;
   }
 
-  dynamic getDateFromUUID(){
-    dynamic date = DateTime(
+  DateTime getDateFromUUID(){
+    DateTime date = DateTime(
       int.parse(uuid.substring(0, 4)),
       int.parse(uuid.substring(4, 6)),
       int.parse(uuid.substring(6, 8)),
@@ -97,6 +95,10 @@ class EncryptedConfig{
     return '${nowDate.year.toString()}${nowDate.month.toString().padLeft(2, '0')}${nowDate.day.toString().padLeft(2, '0')}${nowDate.hour.toString().padLeft(2, '0')}${nowDate.minute.toString().padLeft(2, '0')}${nowDate.second.toString().padLeft(2, '0')}';
   }
 }
+
+// EncryptedConfig getConfigFromMini(){
+
+// }
 
 // // преобразовать большое число в массив байтов (8 байтов)
 // Uint8List int64ToBytes(int value) {

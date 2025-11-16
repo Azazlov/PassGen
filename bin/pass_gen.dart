@@ -2,11 +2,13 @@ import 'test/crypto_template.dart';
 import 'test/encrypt_template.dart';
 
 void main() {
-  // // Для теста crypto_template.dart раскомментировать
+  // Для теста crypto_template.dart раскомментировать
   // testCryptoTemplate();
 
   // Для теста encrypt_template.dart раскомментировать
-  testEncryptTemplate();
+  // testEncryptTemplate();
+
+  getPsswd(masterPsswd: '');
 }
 
 void printFormatString(String text){
@@ -17,14 +19,15 @@ void printFormatString(String text){
 }
 
 void testCryptoTemplate(){
-  dynamic config = EncryptedConfig();
+  EncryptedConfig config = EncryptedConfig();
+  printFormatString('$config');
   printFormatString('config: ${config.getConfigMini()}');
   printFormatString('isExpired: ${config.isExpired()}');
-  printFormatString('upToDateLUD: ${config.upToDateLUD()}');
-  printFormatString('upToDateUUID: ${config.upToDateUUID()}');
+  printFormatString('upToDateLUD: ${config.lastUsageDate}');
+  printFormatString('upToDateUUID: ${config.uuid}');
   printFormatString('getDateFromUUID: ${config.getDateFromUUID()}');
   printFormatString('getConfigJSON: ${config.getConfigJSON()}');
-  printFormatString('${EncryptedConfig().getConfigFromMini(config.getConfigMini()).getConfigJSON()}');
+  printFormatString('${EncryptedConfig().getConfigFromMini(config.getConfigMini())}');
 }
 
 void testEncryptTemplate() async{
