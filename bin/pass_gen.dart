@@ -1,14 +1,18 @@
 import 'test/crypto_template.dart';
-import 'test/encrypt_template.dart';
+import 'test/encrypt_password.dart';
 
-void main() {
+void main() async{
   // Для теста crypto_template.dart раскомментировать
   // testCryptoTemplate();
 
   // Для теста encrypt_template.dart раскомментировать
   // testEncryptTemplate();
 
-  getPsswd();
+  final psswd = EncryptedPassword();
+  final encr = await psswd.getEncr(message: [1, 2, 1, 2, 1, 2, 1, 2], passwd: [1, 2]);
+  final mssg = await psswd.getDeEncr(passwd: [1, 2]);
+
+  print('$encr, $mssg');
 }
 
 void printFormatString(String text){
@@ -30,8 +34,8 @@ void testCryptoTemplate(){
   printFormatString('${EncryptedConfig().getConfigFromMini(config.getConfigMini())}');
 }
 
-void testEncryptTemplate() async{
-  HashGenerator generator = HashGenerator(strength: HashStrength.high);
-  List<int> hash = await generator.getHash(cipherText: []);
-  print('$hash');
-}
+// void testEncryptTemplate() async{
+//   HashGenerator generator = HashGenerator(strength: HashStrength.high);
+//   List<int> hash = await generator.getHash(cipherText: []);
+//   print('$hash');
+// }

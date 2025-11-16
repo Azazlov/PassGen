@@ -1,0 +1,72 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart' hide Hmac;
+import 'package:cryptography/cryptography.dart';
+
+List<int> random({int len = 32}){
+  Random random = Random.secure();
+  List<int> bytesList = [];
+
+  for (int i = 0; i < len; i++){
+    bytesList.add(random.nextInt(255));
+  }
+
+  return bytesList;
+}
+
+class EncryptedPassword {
+  late List<int> _nonce;
+  late List<int> _nonceBox;
+  late List<int> _cipherText;
+  late Mac _mac;
+  late final Chacha20 _algorithm = Chacha20.poly1305Aead();
+
+  EncryptedPassword({String? encrJSON}){
+    if (encrJSON != null) {    
+      Map<String, dynamic> encr = jsonDecode(encrJSON);
+      _nonce = List<int>.from(base64Decode(encr['nonce']!));
+      _nonceBox = List<int>.from(base64Decode(encr['nonceBox']!));
+      _cipherText = List<int>.from(base64Decode(encr['cipherText']!));
+      _mac = Mac(List<int>.from(base64Decode(encr['mac']!)));
+    }
+  }
+
+  Future<SecretKey> _getSecretKey({required List<int> password, List<int>? nonce}) async {
+    Pbkdf2 pbkdf2 = Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: 10000, bits: 256);
+
+    nonce == null? nonce = random():1;
+
+    SecretKey secretKey = await pbkdf2.deriveKeyFromPassword(password: base64Encode(password), nonce: nonce);
+    
+    return secretKey;
+  }
+
+  Future<List<int>> getEncr({required List<int> message, required List<int> passwd}) async{
+    List<int> nonce = random();
+    SecretKey secretKey = await _getSecretKey(password: passwd, nonce: nonce);
+    SecretBox secretBox = await _algorithm.encrypt(message, secretKey: secretKey);
+
+    _nonce = nonce;
+    _nonceBox = secretBox.nonce;
+    _cipherText = secretBox.cipherText;
+    _mac = secretBox.mac;
+
+    return _cipherText;
+  }
+
+  Future<List<int>> getDeEncr({required List<int> passwd}) async{
+    SecretBox secretBox = SecretBox(_cipherText, nonce: _nonceBox, mac: _mac);
+    SecretKey secretKey = await _getSecretKey(password: passwd, nonce: _nonce);
+    return await _algorithm.decrypt(secretBox, secretKey: secretKey);
+  }
+
+  String getEncrJSON(){
+    Map<String, String> passwd = {
+      'nonce': base64Encode(_nonce),
+      'nonceBox': base64Encode(_nonceBox),
+      'cipherText': base64Encode(_cipherText),
+      'mac': base64Encode(_mac.bytes),
+    };
+    return jsonEncode(passwd);
+  }
+}
