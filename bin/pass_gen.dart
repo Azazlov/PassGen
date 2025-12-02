@@ -6,15 +6,7 @@ void main() async{
   // testCryptoTemplate();
 
   // Для теста encrypt_template.dart раскомментировать
-  // testEncryptTemplate();
-
-  final psswd = EncryptedPassword();
-  final encr = await psswd.getEncr(message: [1, 2, 1, 2, 1, 2, 1, 2], passwd: [1, 2]);
-  final mssg = await psswd.getDeEncr(passwd: [1, 2]);
-  final json = psswd.getEncrJSON();
-  print(json);
-
-  print('$encr, $mssg');
+  await testCryptoTemplate();
 }
 
 void printFormatString(String text){
@@ -24,7 +16,7 @@ void printFormatString(String text){
   print('$spaceBefore$text$spaceAfter');
 }
 
-void testCryptoTemplate(){
+Future<void> testCryptoTemplate() async{
   EncryptedConfig config = EncryptedConfig();
   printFormatString('$config');
   printFormatString('config: ${config.getConfigMini()}');
@@ -34,6 +26,13 @@ void testCryptoTemplate(){
   printFormatString('getDateFromUUID: ${config.getDateFromUUID()}');
   printFormatString('getConfigJSON: ${config.getConfigJSON()}');
   printFormatString('${EncryptedConfig().getConfigFromMini(config.getConfigMini())}');
+  final psswd = EncryptedPassword();
+  final encr = await psswd.getEncr(message: [1, 2, 1, 2, 1, 2, 1, 2], passwd: [1, 2]);
+  final mssg = await psswd.getDeEncr(passwd: [1, 2]);
+  final json = psswd.getEncrJSON();
+  print(json);
+
+  print('$encr, $mssg');
 }
 
 // void testEncryptTemplate() async{

@@ -12,6 +12,8 @@ class EncryptedConfig{
   late String category;
   late int expireDays;
   late String encr;
+
+  // Генератор конфига с инициализацией UUID при создании объекта
   EncryptedConfig(
     {
       this.version = 0,
@@ -26,18 +28,21 @@ class EncryptedConfig{
     uuid = Uuid().v8();
   }
 
+  // Минификация конфига
   String getConfigMini(){
     dynamic lud = lastUsageDate == false? 'Not used': _minificateDate(lastUsageDate);
     String splitedParams = '$version.${encodeBase64(service)}.$lud.$uuid.$category.$expireDays';
-    // print(splitedParams);
     String miniConfig = '${encodeBase64(splitedParams)}.$encr';
     return miniConfig;
   }
 
+  // Восстановление объекта из минифицированного конфига
   EncryptedConfig getConfigFromMini(String miniConfig){
+    // параметры.зашифрованный_конфиг -> [параметры, зашифрованный_конфиг]
     String splitedParams = decodeBase64(miniConfig.split('.')[0]);
     List<String> params = splitedParams.split('.');
     String encrypted = miniConfig.split('.')[1];
+    // генерация конфига по декодированными параметрам и зашифрованному конфигу
     EncryptedConfig config = EncryptedConfig(
       version: int.parse(params[0]),
       service: decodeBase64(params[1]),
@@ -50,7 +55,9 @@ class EncryptedConfig{
     return config;
   }
 
+  // Получить конфиг генерации в виде JSON
   String getConfigJSON(){
+    // Создание словаря параметров
     Map<String, dynamic> configMap = {
       'version': version,
       'service': service,
@@ -60,23 +67,34 @@ class EncryptedConfig{
       'expireDays': expireDays,
       'encr': encr
     };
+    // Кодирование словаря в JSON-строку
     String configJSON = jsonEncode(configMap);
     return configJSON;
   }
 
+  // Вычисляет просрочен ли пароль
   bool isExpired(){
-    bool isEx = getDateFromUUID().isAfter(DateTime.now().add(Duration(days: expireDays)));
+    bool isEx = getDateFromUUID().isAfter(
+      DateTime.now().add(
+        Duration(
+          days: expireDays
+        )
+      )
+    );
     return isEx;
   }
 
+  // Обновляет время последнего использования пароля у объекта
   void upToDateLUD(){
     lastUsageDate = DateTime.timestamp();
   }
 
+  // Обновляет информацию об UUID устройства
   void upToDateUUID(){
     uuid = Uuid().v8();
   }
 
+  // Получение даты генерации из UUID
   DateTime getDateFromUUID(){
     DateTime date = DateTime(
       int.parse(uuid.substring(0, 4)),
