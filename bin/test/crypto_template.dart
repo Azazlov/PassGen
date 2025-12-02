@@ -3,6 +3,7 @@ import 'dart:core';
 import 'package:uuid/uuid.dart';
 import 'shared.dart';
 
+// Объект зашифрованного конфига генерации пароля
 class EncryptedConfig{
   late int version;
   late String service;

@@ -11,6 +11,8 @@ void main() async{
   final psswd = EncryptedPassword();
   final encr = await psswd.getEncr(message: [1, 2, 1, 2, 1, 2, 1, 2], passwd: [1, 2]);
   final mssg = await psswd.getDeEncr(passwd: [1, 2]);
+  final json = psswd.getEncrJSON();
+  print(json);
 
   print('$encr, $mssg');
 }

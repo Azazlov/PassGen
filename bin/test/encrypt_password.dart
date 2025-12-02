@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart' hide Hmac;
 import 'package:cryptography/cryptography.dart';
 
+// Функция создания рандомных байтов (Стандартно - 32 байта)
 List<int> random({int len = 32}){
   Random random = Random.secure();
   List<int> bytesList = [];
@@ -14,6 +15,10 @@ List<int> random({int len = 32}){
   return bytesList;
 }
 
+// Объект шифра с методами:
+// 1. Экспорт конфига
+// 2. Шифрование сообщения с записью данных в свойства
+// 3. Дешифрование хранимого сообщение по ключу
 class EncryptedPassword {
   late List<int> _nonce;
   late List<int> _nonceBox;
@@ -21,6 +26,7 @@ class EncryptedPassword {
   late Mac _mac;
   late final Chacha20 _algorithm = Chacha20.poly1305Aead();
 
+  // Создает шифр по JSON конфигу, либо просто инициализирует
   EncryptedPassword({String? encrJSON}){
     if (encrJSON != null) {    
       Map<String, dynamic> encr = jsonDecode(encrJSON);
@@ -31,20 +37,46 @@ class EncryptedPassword {
     }
   }
 
-  Future<SecretKey> _getSecretKey({required List<int> password, List<int>? nonce}) async {
-    Pbkdf2 pbkdf2 = Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: 10000, bits: 256);
+  // Внутренняя функция, создает ключ шифрования
+  Future<SecretKey> _getSecretKey({
+    required List<int> password,
+    List<int>? nonce
+    }) async {
+
+    Pbkdf2 pbkdf2 = Pbkdf2(
+      macAlgorithm: Hmac.sha256(),
+      iterations: 10000, 
+      bits: 256
+    );
 
     nonce == null? nonce = random():1;
 
-    SecretKey secretKey = await pbkdf2.deriveKeyFromPassword(password: base64Encode(password), nonce: nonce);
+    SecretKey secretKey = 
+    await pbkdf2.deriveKeyFromPassword(
+      password: base64Encode(password), 
+      nonce: nonce
+    );
     
     return secretKey;
   }
 
-  Future<List<int>> getEncr({required List<int> message, required List<int> passwd}) async{
+  // Выдает шифр в виде последовательности байтов
+  Future<List<int>> getEncr({
+    required List<int> message, 
+    required List<int> passwd
+    }) async{
+
     List<int> nonce = random();
-    SecretKey secretKey = await _getSecretKey(password: passwd, nonce: nonce);
-    SecretBox secretBox = await _algorithm.encrypt(message, secretKey: secretKey);
+    SecretKey secretKey = 
+    await _getSecretKey(
+      password: passwd,
+      nonce: nonce
+    );
+    SecretBox secretBox =
+    await _algorithm.encrypt(
+      message,
+      secretKey: secretKey
+    );
 
     _nonce = nonce;
     _nonceBox = secretBox.nonce;
@@ -54,19 +86,39 @@ class EncryptedPassword {
     return _cipherText;
   }
 
-  Future<List<int>> getDeEncr({required List<int> passwd}) async{
-    SecretBox secretBox = SecretBox(_cipherText, nonce: _nonceBox, mac: _mac);
-    SecretKey secretKey = await _getSecretKey(password: passwd, nonce: _nonce);
+  // Выдает исходное сообщение в виде последовательности байтов
+  Future<List<int>> getDeEncr({
+    required List<int> passwd
+    }) async{
+
+    SecretBox secretBox = SecretBox(
+      _cipherText, 
+      nonce: _nonceBox, 
+      mac: _mac
+    );
+    SecretKey secretKey = 
+    await _getSecretKey(
+      password: passwd, 
+      nonce: _nonce
+    );
+    
     return await _algorithm.decrypt(secretBox, secretKey: secretKey);
   }
 
+  // Выдает конфиг шифра в виде JSON-строки
   String getEncrJSON(){
-    Map<String, String> passwd = {
-      'nonce': base64Encode(_nonce),
-      'nonceBox': base64Encode(_nonceBox),
-      'cipherText': base64Encode(_cipherText),
-      'mac': base64Encode(_mac.bytes),
-    };
-    return jsonEncode(passwd);
+    try{
+      Map<String, String> passwd = {
+        'nonce': base64Encode(_nonce),
+        'nonceBox': base64Encode(_nonceBox),
+        'cipherText': base64Encode(_cipherText),
+        'mac': base64Encode(_mac.bytes),
+      };
+      return jsonEncode(passwd);
+    }
+    catch (e){
+      print('Ошибка, пароль не был сгенерирован и не имеет конфига\n$e');
+      return '';
+    }
   }
 }
