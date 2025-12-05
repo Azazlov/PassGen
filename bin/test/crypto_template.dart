@@ -22,7 +22,7 @@ class EncryptedConfig{
       this.uuid = '',
       this.category = 'None',
       this.expireDays = 30,
-      this.encr = 'Test'
+      this.encr = 'NotSet'
     }
   ){
     uuid = Uuid().v8();

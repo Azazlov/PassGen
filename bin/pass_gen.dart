@@ -18,14 +18,14 @@ void printFormatString(String text){
 
 Future<void> testCryptoTemplate() async{
   EncryptedConfig config = EncryptedConfig();
-  printFormatString('$config');
+  // printFormatString('$config');
   printFormatString('config: ${config.getConfigMini()}');
   printFormatString('isExpired: ${config.isExpired()}');
   printFormatString('upToDateLUD: ${config.lastUsageDate}');
   printFormatString('upToDateUUID: ${config.uuid}');
   printFormatString('getDateFromUUID: ${config.getDateFromUUID()}');
   printFormatString('getConfigJSON: ${config.getConfigJSON()}');
-  printFormatString('${EncryptedConfig().getConfigFromMini(config.getConfigMini())}');
+  // printFormatString('${EncryptedConfig().getConfigFromMini(config.getConfigMini())}');
   final psswd = EncryptedPassword();
   final encr = await psswd.getEncr(message: [1, 2, 1, 2, 1, 2, 1, 2], passwd: [1, 2]);
   final mssg = await psswd.getDeEncr(passwd: [1, 2]);
