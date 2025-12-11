@@ -1,4 +1,4 @@
-import 'test/configure_parameters.dart';
+import 'test/configure_password.dart';
 import 'test/encrypt_password.dart';
 
 void main() async{

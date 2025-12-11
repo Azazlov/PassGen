@@ -18,7 +18,7 @@ List<int> random({int len = 32}){
 // 1. Экспорт конфига
 // 2. Шифрование сообщения с записью данных в свойства
 // 3. Дешифрование хранимого сообщения по ключу
-class EncryptedPassword {
+class Encrypted{
   late List<int> _nonce;
   late List<int> _nonceBox;
   late List<int> _cipherText;
@@ -26,7 +26,7 @@ class EncryptedPassword {
   late final Chacha20 _algorithm = Chacha20.poly1305Aead();
 
   // Создает шифр по JSON конфигу, либо просто инициализирует
-  EncryptedPassword({String? encrJSON}){
+  Encrypted({String? encrJSON}){
     if (encrJSON != null) {    
       Map<String, dynamic> encr = jsonDecode(encrJSON);
       _nonce = List<int>.from(base64Decode(encr['nonce']!));
@@ -34,6 +34,11 @@ class EncryptedPassword {
       _cipherText = List<int>.from(base64Decode(encr['cipherText']!));
       _mac = Mac(List<int>.from(base64Decode(encr['mac']!)));
     }
+  }
+
+  String getPassword(){
+    
+    return '';
   }
 
   // Внутренняя функция, создает ключ шифрования
