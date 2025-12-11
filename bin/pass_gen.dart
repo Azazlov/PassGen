@@ -1,4 +1,4 @@
-import 'test/crypto_template.dart';
+import 'test/configure_parameters.dart';
 import 'test/encrypt_password.dart';
 
 void main() async{
@@ -29,6 +29,7 @@ Future<void> testCryptoTemplate() async{
   final psswd = EncryptedPassword();
   final encr = await psswd.getEncr(message: [1, 2, 1, 2, 1, 2, 1, 2], passwd: [1, 2]);
   final mssg = await psswd.getDeEncr(passwd: [1, 2]);
+  // final trymssg = await psswd.getDeEncr(passwd: [3, 2]); // попытка расшифровки неверным паролем
   final json = psswd.getEncrJSON();
   print(json);
 

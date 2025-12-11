@@ -100,8 +100,13 @@ class EncryptedPassword {
       password: passwd, 
       nonce: _nonce
     );
-    
-    return await _algorithm.decrypt(secretBox, secretKey: secretKey);
+
+    try{
+      return await _algorithm.decrypt(secretBox, secretKey: secretKey);
+    }
+    catch (e){
+      throw 'Не удалось расшифровать сообщение. Проверьте пароль и данные.';
+    }
   }
 
   // Выдает конфиг шифра в виде JSON-строки
@@ -116,8 +121,7 @@ class EncryptedPassword {
       return jsonEncode(passwd);
     }
     catch (e){
-      print('Ошибка, пароль не был сгенерирован и не имеет конфига\n$e');
-      return '';
+      throw 'Ошибка, пароль не был сгенерирован и не имеет конфига\n$e';
     }
   }
 }
