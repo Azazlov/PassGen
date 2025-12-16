@@ -1,4 +1,5 @@
-import 'package:pass_gen/modules/configure_password.dart';
+import 'package:pass_gen/modules/password_generation_config.dart';
+import 'package:pass_gen/modules/password_generation_config.dart';
 
 class PsswdGenInterface {
   late String psswd;
@@ -18,9 +19,9 @@ class PsswdGenInterface {
     String category,
     int expireDays,
   );
-  Future<EncryptedConfig> getConfig() async{
+  Future<PasswordGenerationConfig> getConfig() async{
     
-    return EncryptedConfig(
+    return PasswordGenerationConfig(
       version: version,
       service: service,
       lastUsageDate: lastUsageDate,

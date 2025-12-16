@@ -36,11 +36,6 @@ class Encrypted{
     }
   }
 
-  String getPassword(){
-    
-    return '';
-  }
-
   // Внутренняя функция, создает ключ шифрования
   Future<SecretKey> _getSecretKey({
     required List<int> password,

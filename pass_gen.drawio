@@ -1,59 +1,13 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
   <diagram name="Страница-1" id="4n8Y8iYagkRjlBGxJg53">
-    <mxGraphModel dx="439" dy="259" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1409" dy="343" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="luCANBRTCONJDslJxWZN-36" value="" style="group" vertex="1" connectable="0" parent="1">
-          <mxGeometry x="10" width="460" height="320" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="luCANBRTCONJDslJxWZN-36" source="luCANBRTCONJDslJxWZN-1" target="luCANBRTCONJDslJxWZN-21">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="luCANBRTCONJDslJxWZN-36" source="luCANBRTCONJDslJxWZN-1" target="luCANBRTCONJDslJxWZN-23">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="luCANBRTCONJDslJxWZN-36" source="luCANBRTCONJDslJxWZN-1" target="luCANBRTCONJDslJxWZN-25">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="luCANBRTCONJDslJxWZN-36" source="luCANBRTCONJDslJxWZN-1" target="luCANBRTCONJDslJxWZN-27">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="luCANBRTCONJDslJxWZN-36" source="luCANBRTCONJDslJxWZN-1" target="luCANBRTCONJDslJxWZN-30">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-33" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="luCANBRTCONJDslJxWZN-36" source="luCANBRTCONJDslJxWZN-1" target="luCANBRTCONJDslJxWZN-32">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-35" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="luCANBRTCONJDslJxWZN-36" source="luCANBRTCONJDslJxWZN-1" target="luCANBRTCONJDslJxWZN-34">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-1" value="EncryptedConfig" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="luCANBRTCONJDslJxWZN-36">
-          <mxGeometry x="170" y="120" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-21" value="version" style="ellipse;whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="luCANBRTCONJDslJxWZN-36">
-          <mxGeometry x="50" y="240" width="80" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-23" value="service" style="ellipse;whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="luCANBRTCONJDslJxWZN-36">
-          <mxGeometry x="190" width="80" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-25" value="lastUsageDate" style="ellipse;whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="luCANBRTCONJDslJxWZN-36">
-          <mxGeometry x="330" y="240" width="80" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-27" value="uuid" style="ellipse;whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="luCANBRTCONJDslJxWZN-36">
-          <mxGeometry x="330" width="80" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-30" value="category" style="ellipse;whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="luCANBRTCONJDslJxWZN-36">
-          <mxGeometry x="380" y="110" width="80" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-32" value="expireDays" style="ellipse;whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="luCANBRTCONJDslJxWZN-36">
-          <mxGeometry x="190" y="240" width="80" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-34" value="encr" style="ellipse;whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="luCANBRTCONJDslJxWZN-36">
-          <mxGeometry y="110" width="80" height="80" as="geometry" />
-        </mxCell>
         <mxCell id="luCANBRTCONJDslJxWZN-48" value="Encrypted" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="160" y="520" width="200" height="240" as="geometry" />
+          <mxGeometry x="-240" y="120" width="200" height="300" as="geometry">
+            <mxRectangle x="160" y="520" width="200" height="30" as="alternateBounds" />
+          </mxGeometry>
         </mxCell>
         <mxCell id="luCANBRTCONJDslJxWZN-49" value="- _nonce: List&amp;lt;int&amp;gt;,&lt;div&gt;- _nonceBox: List&amp;lt;int&amp;gt;,&lt;/div&gt;&lt;div&gt;- _cipherText: List&amp;lt;int&amp;gt;,&lt;/div&gt;&lt;div&gt;- _mac: Mac,&lt;/div&gt;&lt;div&gt;- _algorithm: Chacha20&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="luCANBRTCONJDslJxWZN-48">
           <mxGeometry y="26" width="200" height="84" as="geometry" />
@@ -61,8 +15,156 @@
         <mxCell id="luCANBRTCONJDslJxWZN-50" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="luCANBRTCONJDslJxWZN-48">
           <mxGeometry y="110" width="200" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="luCANBRTCONJDslJxWZN-51" value="- _getSecretKey(&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;password: List&amp;lt;int&amp;gt;, nonce?: &lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;List&amp;lt;int&amp;gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;)&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;: Future&amp;lt;SecretKey&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;+ getEncr(&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;message: List&amp;lt;int&amp;gt;,&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;passwd: List&amp;lt;int&amp;gt;,&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;):Future&amp;lt;List&amp;lt;int&amp;gt;&amp;gt;&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="luCANBRTCONJDslJxWZN-48">
-          <mxGeometry y="118" width="200" height="122" as="geometry" />
+        <mxCell id="luCANBRTCONJDslJxWZN-51" value="- _getSecretKey(&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;password: List&amp;lt;int&amp;gt;,&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;nonce?:&amp;nbsp;List&amp;lt;int&amp;gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;) async&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;: Future&amp;lt;SecretKey&amp;gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;div&gt;+ getEncr(&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;message: List&amp;lt;int&amp;gt;,&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;passwd: List&amp;lt;int&amp;gt;,&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;) async:Future&amp;lt;List&amp;lt;int&amp;gt;&amp;gt;&lt;/div&gt;&lt;/div&gt;&lt;div&gt;+ getDeEncr(&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;passwd: List&amp;lt;int&amp;gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;) async: Future&amp;lt;List&amp;lt;int&amp;gt;&amp;gt;&lt;/div&gt;&lt;div&gt;+getEncrJSON(&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;): String&lt;/span&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="luCANBRTCONJDslJxWZN-48">
+          <mxGeometry y="118" width="200" height="182" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-52" value="PasswordGenerationConfig" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-800" y="120" width="160" height="400" as="geometry">
+            <mxRectangle width="160" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-53" value="+ version: int = 1.0&lt;div&gt;+ service: String 0...1 = &lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;&quot;None&quot;&lt;/div&gt;&lt;div&gt;+ lastUsageDate: dynamic &lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;0...1 = false&lt;/div&gt;&lt;div&gt;+ uuid: String 0...1 = uuid()&lt;/div&gt;&lt;div&gt;+ category: String 0...1 = &lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;&quot;None&quot;&lt;/div&gt;&lt;div&gt;+ expireDays: int 0...1 = 30&lt;/div&gt;&lt;div&gt;+ encr: String 1&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="luCANBRTCONJDslJxWZN-52">
+          <mxGeometry y="26" width="160" height="154" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-54" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="luCANBRTCONJDslJxWZN-52">
+          <mxGeometry y="180" width="160" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-55" value="&lt;div&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;- _minificateDate(&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;nowDate: dynamic&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;): String&lt;/div&gt;+ configToBase64Mini(&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;): String&lt;div&gt;+ fromBase64ToConfig(&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;miniConfig: String&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;): EncryptedConfig&lt;br&gt;&lt;/div&gt;&lt;div&gt;+ configToJSON(): String&lt;/div&gt;&lt;div&gt;+ isExpired(): bool&lt;/div&gt;&lt;div&gt;+ upToDateLUD(): void&lt;/div&gt;&lt;div&gt;+ upToDateUUID(): void&lt;/div&gt;&lt;div&gt;+ getDateFromUUID():&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&#x9;&lt;/span&gt;DateTime&lt;/div&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="luCANBRTCONJDslJxWZN-52">
+          <mxGeometry y="188" width="160" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-69" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;&quot;&gt;&lt;i&gt;&amp;lt;&amp;lt;Interface&amp;gt;&amp;gt;&lt;/i&gt;&lt;br&gt;&lt;b&gt;getPasswordInteface&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot; style=&quot;border-style:solid;&quot;&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ category: String 0...1 = &quot;None&quot;&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ expireDays: int 0...1 = 30&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ length: int 0...1 = 16&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;+ service: String 0...1 = &quot;None&quot;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;+ isUniq: bool 0...1 = false&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ useUpper: bool 0...1 = true&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ useLower: bool 0...1 = true&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ useDigits: bool 0...1 = true&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ useSpec1: bool 0...1 = false&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ useSpec2: bool 0...1 = false&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ useSpec3: bool 0...1 = false&lt;/p&gt;&lt;hr size=&quot;1&quot; style=&quot;border-style:solid;&quot;&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;+ getPassword(): String&lt;br&gt;&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;- isPasswordStrength(): bool&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:4px;&quot;&gt;&lt;br&gt;&lt;/p&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="190" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-76" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="luCANBRTCONJDslJxWZN-70" target="luCANBRTCONJDslJxWZN-74">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-77" value="Ввод данных" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="luCANBRTCONJDslJxWZN-76">
+          <mxGeometry x="-0.097" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-70" value="Пользователь" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="920" y="330" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-71" value="&lt;font style=&quot;font-size: 36px;&quot;&gt;Объекты&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-510" y="100" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-72" value="&lt;font style=&quot;font-size: 36px;&quot;&gt;Интерфейсы&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="340" y="40" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-73" value="&lt;font style=&quot;font-size: 36px;&quot;&gt;Генерация пароля&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="20" width="360" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-79" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="luCANBRTCONJDslJxWZN-74" target="luCANBRTCONJDslJxWZN-78">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-90" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=0;" edge="1" parent="1" source="luCANBRTCONJDslJxWZN-74" target="luCANBRTCONJDslJxWZN-89">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-106" value="Генерация&lt;div&gt;пароля&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="luCANBRTCONJDslJxWZN-90">
+          <mxGeometry x="-0.0816" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-74" value="getPasswordInterface" style="html=1;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="335" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-111" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="luCANBRTCONJDslJxWZN-78">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-78" value="Пароль&lt;div&gt;не&amp;nbsp;&lt;/div&gt;&lt;div&gt;противоречив&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="420" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-80" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="luCANBRTCONJDslJxWZN-78" target="luCANBRTCONJDslJxWZN-70">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-82" value="Повторный запрос данных" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="luCANBRTCONJDslJxWZN-80">
+          <mxGeometry x="-0.0638" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-81" value="Нет" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="440" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-83" value="PasswordGenerator" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-560" y="160" width="160" height="140" as="geometry">
+            <mxRectangle x="-560" y="160" width="160" height="30" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-84" value="- alphabet: String 1&lt;div&gt;- length: int 1&lt;/div&gt;&lt;div&gt;- isUniq: bool 1&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="luCANBRTCONJDslJxWZN-83">
+          <mxGeometry y="26" width="160" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-85" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="luCANBRTCONJDslJxWZN-83">
+          <mxGeometry y="80" width="160" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-86" value="+ getPassword(): String&lt;div&gt;+ getParameters(): List&amp;lt;List&amp;lt;int&amp;gt;&amp;gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="luCANBRTCONJDslJxWZN-83">
+          <mxGeometry y="88" width="160" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-89" value="PasswordGenerator" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="330" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-91" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" target="luCANBRTCONJDslJxWZN-92" source="luCANBRTCONJDslJxWZN-89">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1420" y="360" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-107" value="Шифрование&lt;div&gt;параметров&lt;/div&gt;&lt;div&gt;генерации&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="luCANBRTCONJDslJxWZN-91">
+          <mxGeometry x="-0.0684" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-92" value="Encrypted" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="330" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-93" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" target="luCANBRTCONJDslJxWZN-94" source="luCANBRTCONJDslJxWZN-92">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1400" y="460" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-108" value="Составление данных для конфигурации" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="luCANBRTCONJDslJxWZN-93">
+          <mxGeometry x="-0.0379" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-98" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="luCANBRTCONJDslJxWZN-94" target="luCANBRTCONJDslJxWZN-70">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1290" y="250" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-99" value="ConfigToJSON()" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="luCANBRTCONJDslJxWZN-98">
+          <mxGeometry x="-0.1239" y="-1" relative="1" as="geometry">
+            <mxPoint x="-78" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-109" value="Сохранение&lt;div&gt;и форматирование&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="luCANBRTCONJDslJxWZN-98">
+          <mxGeometry x="-0.8142" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-94" value="PasswordGenerationConfig" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1465" y="220" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-103" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="luCANBRTCONJDslJxWZN-100" target="luCANBRTCONJDslJxWZN-102">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1390.0000000000005" y="200.00000000000057" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-100" value="Сохранить&lt;div&gt;&amp;nbsp;в БД&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="210" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-102" value="БД" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1275" y="120" width="70" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-104" value="Да" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="190" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-105" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="luCANBRTCONJDslJxWZN-102" target="luCANBRTCONJDslJxWZN-70">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="luCANBRTCONJDslJxWZN-110" value="ConfigToJSON()" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="1">
+          <mxGeometry x="1120" y="150" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

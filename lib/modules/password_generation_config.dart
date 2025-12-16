@@ -4,7 +4,7 @@ import 'package:uuid/uuid.dart';
 import 'shared.dart';
 
 // Объект зашифрованного конфига генерации пароля
-class EncryptedConfig{
+class PasswordGenerationConfig{
   late int version;
   late String service;
   late dynamic lastUsageDate;
@@ -14,7 +14,7 @@ class EncryptedConfig{
   late String encr;
 
   // Генератор конфига с инициализацией UUID при создании объекта
-  EncryptedConfig(
+  PasswordGenerationConfig(
     {
       this.version = 0,
       this.service = 'None',
@@ -22,14 +22,14 @@ class EncryptedConfig{
       this.uuid = '',
       this.category = 'None',
       this.expireDays = 30,
-      this.encr = 'NotSet'
+      required this.encr
     }
   ){
     uuid = Uuid().v8();
   }
 
   // Минификация конфига
-  String getConfigMini(){
+  String configToBase64Mini(){
     dynamic lud = lastUsageDate == false? 'Not used': _minificateDate(lastUsageDate);
     String splitedParams = '$version.${encodeBase64(service)}.$lud.$uuid.$category.$expireDays';
     String miniConfig = '${encodeBase64(splitedParams)}.$encr';
@@ -37,13 +37,13 @@ class EncryptedConfig{
   }
 
   // Восстановление объекта из минифицированного конфига
-  EncryptedConfig getConfigFromMini(String miniConfig){
+  PasswordGenerationConfig fromBase64MiniToConfig(String miniConfig){
     // параметры.зашифрованный_конфиг -> [параметры, зашифрованный_конфиг]
     String splitedParams = decodeBase64(miniConfig.split('.')[0]);
     List<String> params = splitedParams.split('.');
     String encrypted = miniConfig.split('.')[1];
     // генерация конфига по декодированными параметрам и зашифрованному конфигу
-    EncryptedConfig config = EncryptedConfig(
+    PasswordGenerationConfig config = PasswordGenerationConfig(
       version: int.parse(params[0]),
       service: decodeBase64(params[1]),
       lastUsageDate: params[2],
@@ -56,7 +56,7 @@ class EncryptedConfig{
   }
 
   // Получить конфиг генерации в виде JSON
-  String getConfigJSON(){
+  String configToJSON(){
     // Создание словаря параметров
     Map<String, dynamic> configMap = {
       'version': version,
@@ -114,15 +114,3 @@ class EncryptedConfig{
     return '${nowDate.year.toString()}${nowDate.month.toString().padLeft(2, '0')}${nowDate.day.toString().padLeft(2, '0')}${nowDate.hour.toString().padLeft(2, '0')}${nowDate.minute.toString().padLeft(2, '0')}${nowDate.second.toString().padLeft(2, '0')}';
   }
 }
-
-// EncryptedConfig getConfigFromMini(){
-
-// }
-
-// // преобразовать большое число в массив байтов (8 байтов)
-// Uint8List int64ToBytes(int value) {
-//   var byteData = ByteData(8);
-//   byteData.setInt64(0, value, Endian.little); 
-  
-//   return byteData.buffer.asUint8List();
-// }
