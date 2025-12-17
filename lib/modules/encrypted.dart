@@ -3,15 +3,20 @@ import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 
 // Функция создания рандомных байтов (Стандартно - 32 байта)
-List<int> random({int len = 32}){
+List<int> random({int len = 32, List<int> range = const [0, 255]}){
   Random random = Random.secure();
   List<int> bytesList = [];
 
   for (int i = 0; i < len; i++){
-    bytesList.add(random.nextInt(255));
+    bytesList.add(random.nextInt(range.last-range.first) + range.first);
   }
 
   return bytesList;
+}
+
+int randomInt({int min = 0, int max = 100}){
+  Random random = Random.secure();
+  return random.nextInt(max - min) + min;
 }
 
 // Объект шифра с методами:
