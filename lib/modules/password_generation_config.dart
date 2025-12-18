@@ -114,3 +114,17 @@ class PasswordGenerationConfig{
     return '${nowDate.year.toString()}${nowDate.month.toString().padLeft(2, '0')}${nowDate.day.toString().padLeft(2, '0')}${nowDate.hour.toString().padLeft(2, '0')}${nowDate.minute.toString().padLeft(2, '0')}${nowDate.second.toString().padLeft(2, '0')}';
   }
 }
+
+void main(){
+  // Example usage of PasswordGenerationConfig
+  PasswordGenerationConfig config = PasswordGenerationConfig(
+    version: 1,
+    service: "Example Service",
+    lastUsageDate: DateTime.now(),
+    category: "Personal",
+    expireDays: 30,
+    encr: "encrypted_data_here"
+  );
+  String miniConfig = config.configToBase64Mini();
+  print("Mini Config: $miniConfig");
+}

@@ -130,3 +130,23 @@ class Encrypted{
     }
   }
 }
+
+void main() async {
+  String message = "This is a secret message.";
+  String password = "strongpassword";
+  List<int> messageBytes = utf8.encode(message);
+  List<int> passwordBytes = utf8.encode(password);
+  Encrypted encrypter = Encrypted();
+  await encrypter.getEncr(
+    message: messageBytes, 
+    passwd: passwordBytes
+  );
+  String encrJSON = encrypter.getEncrJSON();
+  print("Encrypted JSON: $encrJSON");
+  Encrypted decrypter = Encrypted(encrJSON: encrJSON);
+  List<int> decryptedBytes = await decrypter.getDeEncr(
+    passwd: passwordBytes
+  );
+  String decryptedMessage = utf8.decode(decryptedBytes);
+  print("Decrypted Message: $decryptedMessage");
+}
