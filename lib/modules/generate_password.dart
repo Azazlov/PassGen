@@ -1,5 +1,14 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:pass_gen/modules/encrypted.dart';
 import 'package:pass_gen/modules/passwd_strength.dart';
+
+// Bit masks for categories and flags
+const int _DIGITS = 1 << 0;    // bit 0
+const int _LOWER = 1 << 1;     // bit 1
+const int _UPPER = 1 << 2;     // bit 2
+const int _SYMBOL = 1 << 3;    // bit 3
+const int _IS_UNIQ = 1 << 4;   // bit 4
 
 class PasswordGenerator{
   late Map<String, List<dynamic>> includedSymbols; // {'digits': [...], 'lowercase': [...], ...}
@@ -46,6 +55,48 @@ class PasswordGenerator{
       tempList.removeAt(randIndex);
     }
     return shuffled;
+  }
+
+  // Encode categories and isUniq flag into bitmask
+  int encodeCategoriesMask() {
+    int mask = 0;
+    if (includedSymbols.containsKey('digits')) mask |= _DIGITS;
+    if (includedSymbols.containsKey('lowercase')) mask |= _LOWER;
+    if (includedSymbols.containsKey('uppercase')) mask |= _UPPER;
+    if (includedSymbols.containsKey('symbols')) mask |= _SYMBOL;
+    if (isUniq) mask |= _IS_UNIQ;
+    return mask;
+  }
+
+  // Convert mask to human-readable octal string
+  static String maskToOctal(int mask) => mask.toRadixString(8);
+
+  // Convert octal string back to mask
+  static int octalToMask(String octal) => int.parse(octal, radix: 8);
+
+  // Serialize generator state to compact binary format then base64
+  String serializeToBase64() {
+    int mask = encodeCategoriesMask();
+    int minLen = lengthRange[0];
+    int maxLen = lengthRange[1];
+
+    final bytes = Uint8List(3 + _rands.length);
+    bytes[0] = mask & 0xFF;
+    bytes[1] = minLen & 0xFF;
+    bytes[2] = maxLen & 0xFF;
+    for (int i = 0; i < _rands.length; i++) {
+      bytes[3 + i] = _rands[i] & 0xFF;
+    }
+    return base64.encode(bytes);
+  }
+
+  // Deserialize from base64 to restore internal state
+  void deserializeFromBase64(String b64) {
+    final bytes = base64.decode(b64);
+    int mask = bytes[0];
+    lengthRange = [bytes[1], bytes[2]];
+    _rands = bytes.sublist(3).toList();
+    isUniq = (mask & _IS_UNIQ) != 0;
   }
 }
 
