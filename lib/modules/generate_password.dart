@@ -12,7 +12,7 @@ class PasswordGenerator{
     this.isUniq
   );
 
-  List<dynamic> generatePassword(){
+  Map<String, String> generatePassword(){
     int length = randomInt(min: lengthRange[0], max: lengthRange[1]+1);
     _rands = random(len: length);
     String password = '';
@@ -34,7 +34,7 @@ class PasswordGenerator{
     password = shuffleList(List.from(password.split(''))).join('');
 
     double psswdStrength = getPasswdStrength(password);
-    return [password, psswdStrength];
+    return {'password': password, 'strength': psswdStrength.toString()};
   }
   
   List<String> shuffleList(List<String> list){
@@ -64,9 +64,9 @@ void main(){
   };
 
   PasswordGenerator generator = PasswordGenerator(alphabet, [12, 16], true);
-  List<dynamic> passwordInfo = generator.generatePassword(); 
-  String password = passwordInfo[0];
-  double passwordStrength = passwordInfo[1];
+  Map<String, String> passwordInfo = generator.generatePassword(); 
+  String password = passwordInfo['password']!;
+  double passwordStrength = double.parse(passwordInfo['strength']!);
   print('Пароль: $password');
   print('Надежность пароля: ${passwordStrength}');
 }

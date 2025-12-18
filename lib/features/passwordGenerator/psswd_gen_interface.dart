@@ -11,6 +11,8 @@ class PsswdGenInterface {
   late int expireDays;
   late List<bool> includedSymbols; // [digits, lowercase, uppercase, symbols]
   late Map<String, List<dynamic>> alphabet = {};
+  late List<int> passwordLength = [12];
+  late bool isUniq = false;
   String includeDigits = '0123456789';
   String includeLowercase = 'abcdefghijklmnopqrstuvwxyz';
   String includeUppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -35,7 +37,7 @@ class PsswdGenInterface {
     this.expireDays = expireDays;
     this.includedSymbols = includedSymbols;
 
-    includedSymbols.forEach((bool isIncluded){
+    for (bool isIncluded in includedSymbols){
       if (isIncluded){
         switch (includedSymbols.indexOf(isIncluded)){
           case 0:
@@ -52,10 +54,13 @@ class PsswdGenInterface {
             break;
         }
       }
-    });
+    };
   }
   Future<PasswordGenerationConfig> getConfig() async{
-    String encr = PasswordGenerator().generatePassword();
+    PasswordGenerator generator = PasswordGenerator(alphabet, passwordLength, isUniq);
+    List<dynamic> passwordData = await generator.generatePassword();
+    String password = passwordData[0];
+    double passwordStrength = passwordData[1];
     
     return PasswordGenerationConfig(
       version: version,

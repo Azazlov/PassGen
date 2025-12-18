@@ -44,6 +44,7 @@ dependencies:
   cryptography: ^2.7.0
   password_strength: ^0.2.0
   zxcvbn: ^1.0.0
+  flutter_test: any
 
 dev_dependencies:
   flutter_test:
