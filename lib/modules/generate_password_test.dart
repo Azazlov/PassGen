@@ -25,6 +25,8 @@ void main() {
 
       expect(result.containsKey('password'), true);
       expect(result.containsKey('strength'), true);
+      expect(result['password']!.length, greaterThan(11));
+      expect(result['password']!.length, lessThan(17));
     });
 
     test('generatePassword creates password within length range', () {

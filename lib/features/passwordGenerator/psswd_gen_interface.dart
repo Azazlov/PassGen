@@ -58,10 +58,10 @@ class PsswdGenInterface {
   }
   Future<PasswordGenerationConfig> getConfig() async{
     PasswordGenerator generator = PasswordGenerator(alphabet, passwordLength, isUniq);
-    List<dynamic> passwordData = await generator.generatePassword();
-    String password = passwordData[0];
-    double passwordStrength = passwordData[1];
-    
+    Map<String, String> passwordData = await generator.generatePassword();
+    String password = passwordData['password']!;
+    String passwordStrength = passwordData['strength']!;
+
     return PasswordGenerationConfig(
       version: version,
       service: service,
