@@ -98,6 +98,22 @@ class PasswordGenerator{
     _rands = bytes.sublist(3).toList();
     isUniq = (mask & _IS_UNIQ) != 0;
   }
+  String privatePasswordGenerationConfig(){
+    String config = '';
+    includedSymbols.forEach((key, value) {
+      for (int i = 0; i < _rands.length; i++){
+        if (_rands[i] % includedSymbols.length == includedSymbols.keys.toList().indexOf(key)){
+          config += _rands[i].toRadixString(36) + '.';
+        }
+      }
+    });
+    config += lengthRange[1].toString() + '.';
+    config += (includedSymbols.containsKey('uppercase') ? 't' : 'f') + '.';
+    config += (includedSymbols.containsKey('lowercase') ? 't' : 'f') + '.';
+    config += (includedSymbols.containsKey('digits') ? 't' : 'f') + '.';
+    config += (includedSymbols.containsKey('symbols') ? 't' : 'f');
+    return config;
+  }
 }
 
 void main(){
@@ -120,4 +136,5 @@ void main(){
   double passwordStrength = double.parse(passwordInfo['strength']!);
   print('Пароль: $password');
   print('Надежность пароля: ${passwordStrength}');
+  print('Приватный конфиг генерации: ${generator.privatePasswordGenerationConfig()}');
 }

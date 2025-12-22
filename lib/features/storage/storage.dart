@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pass_gen/features/storage/storage_service.dart';
-import 'package:pass_gen/features/passwordGenerator/psswd_gen_interface.dart';
+import 'package:pass_gen/features/passwordGenerator/password_generator_interface.dart';
 import 'package:pass_gen/features/storage/storage_interface.dart';
 import 'package:pass_gen/shared/dialog.dart';
 import 'package:pass_gen/shared/interface.dart';

@@ -10,8 +10,13 @@ class PsswdGenInterface {
   late String category;
   late int expireDays;
   late List<bool> includedSymbols; // [digits, lowercase, uppercase, symbols]
-  late Map<String, List<dynamic>> alphabet = {};
-  late List<int> passwordLength = [12];
+  late Map<String, List<dynamic>> alphabet = {
+    'digits': [[], false],
+    'lowercase': [[], false],
+    'uppercase': [[], false],
+    'symbols': [[], false],
+  };
+  late List<int> passwordLength = [12, 16];
   late bool isUniq = false;
   String includeDigits = '0123456789';
   String includeLowercase = 'abcdefghijklmnopqrstuvwxyz';
@@ -28,15 +33,6 @@ class PsswdGenInterface {
     int expireDays,
     List<bool> includedSymbols
   ){
-    this.password = password;
-    this.version = version;
-    this.service = service;
-    this.lastUsageDate = lastUsageDate;
-    this.uuid = uuid;
-    this.category = category;
-    this.expireDays = expireDays;
-    this.includedSymbols = includedSymbols;
-
     for (bool isIncluded in includedSymbols){
       if (isIncluded){
         switch (includedSymbols.indexOf(isIncluded)){
