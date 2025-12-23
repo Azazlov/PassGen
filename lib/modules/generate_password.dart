@@ -79,13 +79,14 @@ class PasswordGenerator{
     int mask = encodeCategoriesMask();
     int minLen = lengthRange[0];
     int maxLen = lengthRange[1];
+    print('mask: $mask\nminLen: $minLen\nmaxLen: $maxLen\nrands: $_rands');
 
     final bytes = Uint8List(3 + _rands.length);
-    bytes[0] = mask & 0xFF;
-    bytes[1] = minLen & 0xFF;
-    bytes[2] = maxLen & 0xFF;
+    bytes[0] = mask & 255;
+    bytes[1] = minLen & 255;
+    bytes[2] = maxLen & 255;
     for (int i = 0; i < _rands.length; i++) {
-      bytes[3 + i] = _rands[i] & 0xFF;
+      bytes[3 + i] = _rands[i] & 255;
     }
     return base64.encode(bytes);
   }
@@ -99,19 +100,7 @@ class PasswordGenerator{
     isUniq = (mask & _IS_UNIQ) != 0;
   }
   String privatePasswordGenerationConfig(){
-    String config = '';
-    includedSymbols.forEach((key, value) {
-      for (int i = 0; i < _rands.length; i++){
-        if (_rands[i] % includedSymbols.length == includedSymbols.keys.toList().indexOf(key)){
-          config += _rands[i].toRadixString(36) + '.';
-        }
-      }
-    });
-    config += lengthRange[1].toString() + '.';
-    config += (includedSymbols.containsKey('uppercase') ? 't' : 'f') + '.';
-    config += (includedSymbols.containsKey('lowercase') ? 't' : 'f') + '.';
-    config += (includedSymbols.containsKey('digits') ? 't' : 'f') + '.';
-    config += (includedSymbols.containsKey('symbols') ? 't' : 'f');
+    String config = base64Encode(_rands);
     return config;
   }
 }
@@ -136,5 +125,6 @@ void main(){
   double passwordStrength = double.parse(passwordInfo['strength']!);
   print('Пароль: $password');
   print('Надежность пароля: ${passwordStrength}');
+  print('Сериализация в base64: ${generator.serializeToBase64()}');
   print('Приватный конфиг генерации: ${generator.privatePasswordGenerationConfig()}');
 }
