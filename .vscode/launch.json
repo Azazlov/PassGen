@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Dart: Launch file",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/modules/generate_password.dart"
+    }
+  ]
+}

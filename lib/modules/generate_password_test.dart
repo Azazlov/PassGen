@@ -3,27 +3,22 @@ import 'package:pass_gen/modules/generate_password.dart';
 
 void main() {
   group('PasswordGenerator', () {
-    late Map<String, List<dynamic>> alphabet;
+    late SymbolAlphabet symbolAlphabet;
 
     setUp(() {
-      String includeDigits = '0123456789';
-      String includeLowercase = 'abcdefghijklmnopqrstuvwxyz';
-      String includeUppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      String includeSymbols = '!@#\$%^&*()_+-=[]{}|;:,.<>?';
-
-      alphabet = {
-        'digits': [includeDigits.split(''), true],
-        'lowercase': [includeLowercase.split(''), true],
-        'uppercase': [includeUppercase.split(''), true],
-        'symbols': [includeSymbols.split(''), false]
-      };
+      symbolAlphabet = SymbolAlphabet();
     });
 
     test('generatePassword returns map with password and strength keys', () {
       print('\u001b[1;36m=== Тест: generatePassword (возвращает карту с ключами password и strength) ===\u001b[0m');
-      print('Входные значения: lengthRange=[12, 16], isUniq=false');
+      int flags = digits | lowercase | uppercase | symbols;
+      print('Входные значения: lengthRange=[12, 16], flags=$flags');
       
-      final generator = PasswordGenerator(alphabet, [12, 16], false);
+      final generator = PasswordGenerator(
+        symbolAlphabet: symbolAlphabet,
+        range: [12, 16],
+        flags: flags,
+      );
       final result = generator.generatePassword();
 
       print('Выходные значения:');
@@ -65,10 +60,10 @@ void main() {
       print('Выходные значения:');
       print('  password: ${result['password']}');
       print('  strength: $strength');
-      print('  в диапазоне [0, 100]: ${strength >= 0 && strength <= 100}');
+      print('  в диапазоне [0, 1]: ${strength >= 0 && strength <= 1}');
 
       expect(strength, greaterThanOrEqualTo(0));
-      expect(strength, lessThanOrEqualTo(100));
+      expect(strength, lessThanOrEqualTo(1));
     });
 
     test('shuffleList returns same length list', () {
