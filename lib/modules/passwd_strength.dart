@@ -9,9 +9,3 @@ double getPasswdStrength(String password) {
 
   return 0.8 * zxcvbnScore + 0.2 * strength;
 }
-
-void main() {
-  String password = "examplePassword123!";
-  double strength = getPasswdStrength(password);
-  print("Password strength: $strength");
-}
