@@ -1,117 +1,104 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pass_gen/modules/generate_password.dart';
+import 'package:pass_gen/modules/generate_password.dart' show SymbolAlphabet, PasswordGenerator, digits, lowercase, uppercase, allIsUniq, digitsIsReq, uppercaseIsReq, symbols;
 
 void main() {
   group('PasswordGenerator', () {
-    late SymbolAlphabet symbolAlphabet;
+    
+test('isCategoryEnabled returns true for enabled categories', () {
+  print('\u001b[1;36m=== Тест: isCategoryEnabled (возвращает true для включенных категорий) ===\u001b[0m');
+  int flags = digits | lowercase | uppercase;
+  print('Входные значения: flags=$flags');
+  
+  final generator = PasswordGenerator(
+  symbolAlphabet: SymbolAlphabet(),
+  range: [12, 16],
+  flags: flags,
+  );
 
-    setUp(() {
-      symbolAlphabet = SymbolAlphabet();
-    });
+  print('Проверка категорий:');
+  print('  digits включен: ${generator.isCategoryEnabled(digits)}');
+  print('  lowercase включен: ${generator.isCategoryEnabled(lowercase)}');
+  print('  uppercase включен: ${generator.isCategoryEnabled(uppercase)}');
+  print('  symbols включен: ${generator.isCategoryEnabled(symbols)}');
 
-    test('generatePassword returns map with password and strength keys', () {
-      print('\u001b[1;36m=== Тест: generatePassword (возвращает карту с ключами password и strength) ===\u001b[0m');
-      int flags = digits | lowercase | uppercase | symbols;
-      print('Входные значения: lengthRange=[12, 16], flags=$flags');
-      
-      final generator = PasswordGenerator(
-        symbolAlphabet: symbolAlphabet,
-        range: [12, 16],
-        flags: flags,
-      );
-      final result = generator.generatePassword();
+  expect(generator.isCategoryEnabled(digits), true);
+  expect(generator.isCategoryEnabled(lowercase), true);
+  expect(generator.isCategoryEnabled(uppercase), true);
+  expect(generator.isCategoryEnabled(symbols), false);
+});
 
-      print('Выходные значения:');
-      print('  password: ${result['password']}');
-      print('  strength: ${result['strength']}');
-      print('  length: ${result['password']!.length}');
+test('isCategoryRequired returns true for required categories', () {
+  print('\u001b[1;33m=== Тест: isCategoryRequired (возвращает true для обязательных категорий) ===\u001b[0m');
+  int flags = digits | digitsIsReq | lowercase | uppercase | uppercaseIsReq;
+  print('Входные значения: flags=$flags');
+  
+  final generator = PasswordGenerator(
+  symbolAlphabet: SymbolAlphabet(),
+  range: [12, 16],
+  flags: flags,
+  );
 
-      expect(result.containsKey('password'), true);
-      expect(result.containsKey('strength'), true);
-      expect(result['password']!.length, greaterThan(11));
-      expect(result['password']!.length, lessThan(17));
-    });
+  print('Проверка обязательности:');
+  print('  digits обязателен: ${generator.isCategoryRequired(digits)}');
+  print('  lowercase обязателен: ${generator.isCategoryRequired(lowercase)}');
+  print('  uppercase обязателен: ${generator.isCategoryRequired(uppercase)}');
 
-    test('generatePassword creates password within length range', () {
-      print('\u001b[1;32m=== Тест: generatePassword (создает пароль в диапазоне длин) ===\u001b[0m');
-      print('Входные значения: lengthRange=[10, 20], isUniq=false');
-      
-      final generator = PasswordGenerator(alphabet, [10, 20], false);
-      final result = generator.generatePassword();
-      final password = result['password']!;
+  expect(generator.isCategoryRequired(digits), true);
+  expect(generator.isCategoryRequired(lowercase), false);
+  expect(generator.isCategoryRequired(uppercase), true);
+});
 
-      print('Выходные значения:');
-      print('  password: $password');
-      print('  length: ${password.length}');
-      print('  в диапазоне [10, 20]: ${password.length >= 10 && password.length <= 20}');
+test('shouldBeUnique returns true when allIsUniq flag is set', () {
+  print('\u001b[1;35m=== Тест: shouldBeUnique (возвращает true когда установлен флаг allIsUniq) ===\u001b[0m');
+  int flagsWithUniq = digits | lowercase | allIsUniq;
+  int flagsWithoutUniq = digits | lowercase;
+  print('Входные значения: flagsWithUniq=$flagsWithUniq, flagsWithoutUniq=$flagsWithoutUniq');
+  
+  final generatorWithUniq = PasswordGenerator(
+  symbolAlphabet: SymbolAlphabet(),
+  range: [12, 16],
+  flags: flagsWithUniq,
+  );
+  final generatorWithoutUniq = PasswordGenerator(
+  symbolAlphabet: SymbolAlphabet(),
+  range: [12, 16],
+  flags: flagsWithoutUniq,
+  );
 
-      expect(password.length, greaterThanOrEqualTo(10));
-      expect(password.length, lessThanOrEqualTo(20));
-    });
+  print('Результаты: с уникальностью=${generatorWithUniq.shouldBeUnique()}, без=${generatorWithoutUniq.shouldBeUnique()}');
 
-    test('generatePassword returns valid strength value', () {
-      print('\u001b[1;33m=== Тест: generatePassword (возвращает корректное значение надежности) ===\u001b[0m');
-      print('Входные значения: lengthRange=[12, 16], isUniq=false');
-      
-      final generator = PasswordGenerator(alphabet, [12, 16], false);
-      final result = generator.generatePassword();
-      final strength = double.parse(result['strength']!);
+  expect(generatorWithUniq.shouldBeUnique(), true);
+  expect(generatorWithoutUniq.shouldBeUnique(), false);
+});
 
-      print('Выходные значения:');
-      print('  password: ${result['password']}');
-      print('  strength: $strength');
-      print('  в диапазоне [0, 1]: ${strength >= 0 && strength <= 1}');
+test('generateConfig and restoreConfig preserve state', () {
+  print('\u001b[1;32m=== Тест: generateConfig и restoreConfig (сохраняют состояние) ===\u001b[0m');
+  int flags = digits | lowercase | uppercase;
+  
+  final generator1 = PasswordGenerator(
+  symbolAlphabet: SymbolAlphabet(),
+  range: [12, 16],
+  flags: flags,
+  );
+  
+  final result1 = generator1.generatePassword();
+  final config = generator1.generateConfig();
+  print('Сгенерированный конфиг: $config');
+  
+  final generator2 = PasswordGenerator(
+  symbolAlphabet: SymbolAlphabet(),
+  range: [12, 16],
+  flags: flags,
+  );
+  generator2.restoreConfig(config);
+  final result2 = generator2.generatePassword();
+  
+  print('Пароль 1: ${result1['password']}');
+  print('Пароль 2: ${result2['password']}');
+  print('Пароли совпадают: ${result1['password'] == result2['password']}');
 
-      expect(strength, greaterThanOrEqualTo(0));
-      expect(strength, lessThanOrEqualTo(1));
-    });
-
-    test('shuffleList returns same length list', () {
-      print('\u001b[1;35m=== Тест: shuffleList (возвращает список той же длины) ===\u001b[0m');
-      final original = ['a', 'b', 'c', 'd', 'e'];
-      print('Входные значения: $original');
-      
-      final generator = PasswordGenerator(alphabet, [12, 16], false);
-      final shuffled = generator.shuffleList(original);
-
-      print('Выходные значения: $shuffled');
-      print('  исходная длина: ${original.length}');
-      print('  новая длина: ${shuffled.length}');
-      print('  длины совпадают: ${shuffled.length == original.length}');
-
-      expect(shuffled.length, equals(original.length));
-    });
-
-    test('shuffleList contains all original elements', () {
-      print('\u001b[1;36m=== Тест: shuffleList (содержит все исходные элементы) ===\u001b[0m');
-      final original = ['a', 'b', 'c', 'd', 'e'];
-      print('Входные значения: $original');
-      
-      final generator = PasswordGenerator(alphabet, [12, 16], false);
-      final shuffled = generator.shuffleList(original);
-
-      print('Выходные значения: $shuffled');
-      print('  все элементы совпадают: ${shuffled.toSet().toString()} == ${original.toSet().toString()}');
-
-      expect(shuffled.toSet(), equals(original.toSet()));
-    });
-
-    test('generatePassword with isUniq true handles unique characters', () {
-      print('\u001b[1;32m=== Тест: generatePassword (с isUniq=true обрабатывает уникальные символы) ===\u001b[0m');
-      print('Входные значения: lengthRange=[5, 10], isUniq=true');
-      
-      final generator = PasswordGenerator(alphabet, [5, 10], true);
-      final result = generator.generatePassword();
-      final password = result['password']!;
-
-      print('Выходные значения:');
-      print('  password: $password');
-      print('  length: ${password.length}');
-      print('  не пусто: ${password.isNotEmpty}');
-      print('  количество уникальных символов: ${password.split('').toSet().length}');
-
-      expect(password.isNotEmpty, true);
-      expect(password.length, greaterThan(0));
-    });
+  expect(result1['password'], equals(result2['password']));
+  expect(result1['strength'], equals(result2['strength']));
+});
   });
 }
