@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pass_gen/features/passwordGenerator/password_generator_interface.dart';
 import 'package:pass_gen/features/storage/storage_service.dart';
 import 'package:pass_gen/shared/interface.dart';
 import 'package:pass_gen/shared/dialog.dart';
+import 'package:pass_gen/features/endecrypter/endecrypter_interface.dart';
 
 class EndecrypterScreen extends StatefulWidget {
   const EndecrypterScreen({super.key});
@@ -16,14 +16,14 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
   final TextEditingController keyController = TextEditingController();
   final TextEditingController masterKeyController = TextEditingController();
 
-  late PasswordGenerationInterface generator;
+  late EndecrypterInterface generator;
 
   String mssg = '';
 
   @override 
   void initState(){
     super.initState();
-    generator = PasswordGenerationInterface();
+    generator = EndecrypterInterface();
     setupConfigs();
   }
 
@@ -36,31 +36,52 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
     catch (e){e;}
   }
 
-  Future<void> deEncrypt() async {
+  Future<void> encrypt() async {
     setState(() {
       // mssg = 'Перевод...';
     });
 
-    if (textController.text == ''){
+    if (textController.text.trim() == ''){
       mssg = 'Сообщение или код не должно быть пустым';
       return;
     }
 
     dynamic result;
 
-    try{
-      result = await generator.generateMssg(
-        secret: textController.text, 
-        key: keyController.text, 
-      );
+    result = await generator.encryptMessage(
+      message: textController.text, 
+      password: keyController.text
+    );
+      
+    await saveConfig(
+      'endecrypter', 
+      [
+        keyController.text, 
+        masterKeyController.text
+      ]
+    );
+
+    setState(() {
+      mssg = result;
+    });
+  }
+
+  Future<void> decrypt() async {
+    setState(() {
+      // mssg = 'Перевод...';
+    });
+
+    if (textController.text.trim() == ''){
+      mssg = 'Сообщение или код не должно быть пустым';
+      return;
     }
-    catch (exception){
-      result = await generator.generateSecret(
-        mssg: textController.text, 
-        key: keyController.text, 
-      );
-    }
-    
+
+    dynamic result;
+
+    result = await generator.decryptMessage(
+      encrJSON: textController.text, 
+      key: keyController.text
+    );
       
     await saveConfig(
       'endecrypter', 
@@ -96,7 +117,8 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
             // buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text, context),
             
             const SizedBox(height: 40),
-            buildButton('(Де)шифрование', deEncrypt),
+            buildButton('Шифрование', encrypt),
+            buildButton('Дешифрование', decrypt),
             buildCopyOnTap('Сообщение/шифр', mssg, copySecret),
           ],
         ),

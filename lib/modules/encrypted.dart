@@ -33,12 +33,36 @@ class Encrypted{
   // Создает шифр по JSON конфигу, либо просто инициализирует
   Encrypted({String? encrJSON}){
     if (encrJSON != null) {    
-      Map<String, dynamic> encr = jsonDecode(encrJSON);
-      _nonce = List<int>.from(base64Decode(encr['nonce']!));
-      _nonceBox = List<int>.from(base64Decode(encr['nonceBox']!));
-      _cipherText = List<int>.from(base64Decode(encr['cipherText']!));
-      _mac = Mac(List<int>.from(base64Decode(encr['mac']!)));
+      try{
+        _loadFromJSON(encrJSON);
+      }
+      catch (e){
+        try{
+          _loadFromMini(encrJSON);
+        }
+        catch (e){
+          throw 'Ошибка при загрузке шифра из Mini формата\n$e';
+        }
+        // throw 'Ошибка при загрузке шифра из JSON\n$e';
+      }
+
     }
+  }
+
+  void _loadFromJSON(String encrJSON){
+    Map<String, dynamic> passwd = jsonDecode(encrJSON);
+    _nonce = base64Decode(passwd['nonce']);
+    _nonceBox = base64Decode(passwd['nonceBox']);
+    _cipherText = base64Decode(passwd['cipherText']);
+    _mac = Mac(base64Decode(passwd['mac']));
+  }
+
+  void _loadFromMini(String miniEncr){
+    List<int> bytes = base64Decode(miniEncr);
+    _nonce = bytes.sublist(0, 32);
+    _nonceBox = bytes.sublist(32, 44);
+    _cipherText = bytes.sublist(44, bytes.length - 16);
+    _mac = Mac(bytes.sublist(bytes.length - 16, bytes.length));
   }
 
   // Внутренняя функция, создает ключ шифрования
@@ -124,6 +148,17 @@ class Encrypted{
         'mac': base64Encode(_mac.bytes),
       };
       return jsonEncode(passwd);
+    }
+    catch (e){
+      throw 'Ошибка, пароль не был сгенерирован и не имеет конфига\n$e';
+    }
+  }
+
+  String getMiniEncr(){
+    try{
+      print('_nonce: $_nonce, _nonceBox: $_nonceBox, _cipherText: $_cipherText, _mac: ${_mac.bytes}');
+      print(base64Encode(_nonce + _nonceBox + _cipherText + _mac.bytes));
+      return base64Encode(_nonce + _nonceBox + _cipherText + _mac.bytes);
     }
     catch (e){
       throw 'Ошибка, пароль не был сгенерирован и не имеет конфига\n$e';
