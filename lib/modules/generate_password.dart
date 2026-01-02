@@ -1,6 +1,7 @@
+import 'dart:convert';
 import 'package:pass_gen/modules/encrypted.dart';
 import 'package:pass_gen/modules/passwd_strength.dart';
-
+import 'package:pass_gen/modules/shared.dart';
 export 'package:pass_gen/modules/encrypted.dart' show randomInt, random;
 export 'package:pass_gen/modules/passwd_strength.dart' show getPasswdStrength;
 
@@ -83,14 +84,11 @@ class PasswordGenerator{
     
     List<int> enabledCategories = [];
     List<int> categoryFlags = [digits, lowercase, uppercase, symbols];
-    List<int> requiredCategories = [digitsIsReq, lowercaseIsReq, uppercaseIsReq, symbolsIsReq];
     Map<int, List<String>> availableSymbols = {};
-    String alphabets = '';
     String tempAlpha;
     // Определяем, какие категории включены
     for (int flag in categoryFlags) {
       if (isCategoryEnabled(flag)) {
-        alphabets += alphabet.getAlphabet(flag);
         enabledCategories.add(flag);
         if (isCategoryRequired(flag)){
           tempAlpha = alphabet.getAlphabet(flag);
@@ -138,7 +136,7 @@ class PasswordGenerator{
 
     double psswdStrength = getPasswdStrength(password);
     isRestored = false;
-    return {'password': password, 'strength': psswdStrength.toString()};
+    return {'password': password, 'strength': psswdStrength.toString(), 'config': generateConfig()};
   }
   
   List<String> shuffleList(List<String> list){
@@ -153,16 +151,16 @@ class PasswordGenerator{
   }
 
   String generateConfig(){
-    String config = '$_length.$_flags.$_rands';
+    String config = '${encodeBase64(_length.toString())}.${encodeBase64(_flags.toString())}.${base64Encode(_rands)}';
     return config;
   }
 
   void restoreConfig(String config) {
     List<String> parts = config.split('.');
     if (parts.length >= 3) {
-      _length = int.parse(parts[0]);
-      _flags = int.parse(parts[1]);
-      _rands = parts[2].split(',').map((e) => int.parse(e)).toList();
+      _length = (int.parse(decodeBase64(parts[0])));
+      _flags = int.parse(decodeBase64(parts[1]));
+      _rands = List<int>.from(base64Decode(parts[2]));
       isRestored = true;
     }
   }
@@ -188,6 +186,8 @@ void main(){
   String password = passwordInfo['password']!;
   double passwordStrength = double.parse(passwordInfo['strength']!);
   print('Пароль: $password');
-  print('Надежность пароля: ${passwordStrength}');
+  print('Надежность пароля: $passwordStrength');
   print('Конфиг: ${generator.generateConfig()}');
+  generator.restoreConfig(generator.generateConfig());
+  print('Восстановленный конфиг: ${generator._flags}, ${generator._length}, ${generator._rands}');
 }

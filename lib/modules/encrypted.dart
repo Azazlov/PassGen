@@ -91,13 +91,13 @@ class Encrypted{
   // Выдает шифр в виде последовательности байтов
   Future<List<int>> getEncr({
     required List<int> message, 
-    required List<int> passwd
+    required List<int> password
     }) async{
 
     List<int> nonce = random();
     SecretKey secretKey = 
     await _getSecretKey(
-      password: passwd,
+      password: password,
       nonce: nonce
     );
     SecretBox secretBox =
@@ -174,7 +174,7 @@ void main() async {
   Encrypted encrypter = Encrypted();
   await encrypter.getEncr(
     message: messageBytes, 
-    passwd: passwordBytes
+    password: passwordBytes
   );
   String encrJSON = encrypter.getEncrJSON();
   print("Encrypted JSON: $encrJSON");

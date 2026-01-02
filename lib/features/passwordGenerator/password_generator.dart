@@ -39,7 +39,6 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   @override 
   void initState(){
     super.initState();
-    generator = PasswordGenerationInterface();
     setupConfigs();
   }
 
@@ -66,115 +65,124 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   }
   void saveEncrypt() async{
     final encryptedconfigs = await getConfigs('encryptedConfigs');
-    await saveConfig('encryptedConfigs', encryptedconfigs==null?[secret]:encryptedconfigs+[secret]);
+    await saveConfig(
+      'encryptedConfigs',
+      encryptedconfigs==null?[secret]:encryptedconfigs+[secret]
+    );
   }
   void copyPsswd() {
-    showDialogWindow2('Скопировано', "Сохранить шифр в хранилище?", context, "Да", saveEncrypt, "Нет", pass);
-  }
-
-  Future<void> generatePassword() async {
-    try{
-      if (int.parse(lengthController.text) < 1){
-        showDialogWindow1('Ошибка!', "Длина должна быть любым положительным числом от 1", context);
-        return;
-      }
-    }
-    catch (exception){
-      showDialogWindow1('Ошибка!', "Длина должна быть любым положительным числом от 1", context);
-      return;
-    }
-
-    if (!(useUpper || useLower || useDigits || useSpec1 || useSpec2 || useSpec3)){
-      showDialogWindow1('Ошибка!', 'Должен быть включен хоть 1 параметр допустимых символов', context);
-      return;
-    }
-
-    if (serviceController.text.contains('.')){
-      showDialogWindow1('Ошибка!', "Попробуйте заменить или убрать точку в названии сервиса", context);
-      return;
-    }
-
-    changeConfig = true;
-
-    if (lastConfig == masterController.text && masterController.text != ''){
-      showDialogWindow2('Изменить', 'Хотите изменить конфигурацию генерации пароля?', context, 'Да', toChangeConfig, 'Нет', unChangeConfig);
-      return;
-    }
-
-    for (int i=0; i<randomMaster.length; i++){
-      randomMaster[i] = await generator.generateMaster();
-    }
-
-    final check = masterController.text.split('.');
-
-    if (check.length == 2){
-        try {
-          await generator.getConfig(
-          config: masterController.text, 
-          key: keyController.text, 
-        );
-        }
-        on Exception{
-          showDialogWindow1('Ошибка!', 'Неправильный конфиг или пароль от конфига', context);
-          return;
-        }
-        final config = await generator.getConfig(
-        config: masterController.text, 
-        key: keyController.text
-        );
-        final params = config.split('.');
-        final paramlen = params.length;
-
-        serviceController.text = check[0];
-        for (int i=0; i<paramlen-8; i++){
-          // print(i);
-          randomMaster[i] = int.parse(params[i], radix: 36);
-          // print(randomMaster[i]);
-        }
-        lengthController.text = params[paramlen-7];
-        useUpper = params[paramlen-6]=='t'?true:false;
-        useLower = params[paramlen-5]=='t'?true:false;
-        useDigits = params[paramlen-4]=='t'?true:false;
-        useSpec1 = params[paramlen-3]=='t'?true:false;
-        useSpec2 = params[paramlen-2]=='t'?true:false;
-        useSpec3 = params[paramlen-1]=='t'?true:false;
-
-        lastConfig = masterController.text;
-    }
-
-    final success = await generator.generatePsswdSecret(
-      master: randomMaster, 
-      key: keyController.text,
-      service: serviceController.text, 
-      length: lengthController.text, 
-      useUpper: useUpper, 
-      useLower: useLower, 
-      useDigits: useDigits, 
-      useSpec1: useSpec1, 
-      useSpec2: useSpec2, 
-      useSpec3: useSpec3,
+    showDialogWindow2(
+      'Скопировано',
+      "Сохранить шифр в хранилище?",
+      context, "Да",
+      saveEncrypt,
+      "Нет",
+      pass
     );
-
-    await saveConfig('psswdGen', [
-      keyController.text,  
-      lengthController.text,
-      useUpper.toString(),
-      useLower.toString(),
-      useDigits.toString(),
-      useSpec1.toString(),
-      useSpec2.toString(),
-      useSpec3.toString()
-      ]);
-
-    setState(() {
-      generatedPassword = success[0];
-      secret = success[1];
-      return;
-    });
   }
 
-  @override
-  Widget build(BuildContext context) {
+  // Future<void> generatePassword() async {
+  //   try{
+  //     if (int.parse(lengthController.text) < 1){
+  //       showDialogWindow1('Ошибка!', "Длина должна быть любым положительным числом от 1", context);
+  //       return;
+  //     }
+  //   }
+  //   catch (exception){
+  //     showDialogWindow1('Ошибка!', "Длина должна быть любым положительным числом от 1", context);
+  //     return;
+  //   }
+
+  //   if (!(useUpper || useLower || useDigits || useSpec1 || useSpec2 || useSpec3)){
+  //     showDialogWindow1('Ошибка!', 'Должен быть включен хоть 1 параметр допустимых символов', context);
+  //     return;
+  //   }
+
+  //   if (serviceController.text.contains('.')){
+  //     showDialogWindow1('Ошибка!', "Попробуйте заменить или убрать точку в названии сервиса", context);
+  //     return;
+  //   }
+
+  //   changeConfig = true;
+
+  //   if (lastConfig == masterController.text && masterController.text != ''){
+  //     showDialogWindow2('Изменить', 'Хотите изменить конфигурацию генерации пароля?', context, 'Да', toChangeConfig, 'Нет', unChangeConfig);
+  //     return;
+  //   }
+
+  //   for (int i=0; i<randomMaster.length; i++){
+  //     randomMaster[i] = await generator.generateMaster();
+  //   }
+
+  //   final check = masterController.text.split('.');
+
+  //   if (check.length == 2){
+  //       try {
+  //         await generator.getConfig(
+  //         config: masterController.text, 
+  //         key: keyController.text, 
+  //       );
+  //       }
+  //       on Exception{
+  //         showDialogWindow1('Ошибка!', 'Неправильный конфиг или пароль от конфига', context);
+  //         return;
+  //       }
+  //       final config = await generator.getConfig(
+  //       config: masterController.text, 
+  //       key: keyController.text
+  //       );
+  //       final params = config.split('.');
+  //       final paramlen = params.length;
+
+  //       serviceController.text = check[0];
+  //       for (int i=0; i<paramlen-8; i++){
+  //         // print(i);
+  //         randomMaster[i] = int.parse(params[i], radix: 36);
+  //         // print(randomMaster[i]);
+  //       }
+  //       lengthController.text = params[paramlen-7];
+  //       useUpper = params[paramlen-6]=='t'?true:false;
+  //       useLower = params[paramlen-5]=='t'?true:false;
+  //       useDigits = params[paramlen-4]=='t'?true:false;
+  //       useSpec1 = params[paramlen-3]=='t'?true:false;
+  //       useSpec2 = params[paramlen-2]=='t'?true:false;
+  //       useSpec3 = params[paramlen-1]=='t'?true:false;
+
+  //       lastConfig = masterController.text;
+  //   }
+
+  //   final success = await generator.generatePsswdSecret(
+  //     master: randomMaster, 
+  //     key: keyController.text,
+  //     service: serviceController.text, 
+  //     length: lengthController.text, 
+  //     useUpper: useUpper, 
+  //     useLower: useLower, 
+  //     useDigits: useDigits, 
+  //     useSpec1: useSpec1, 
+  //     useSpec2: useSpec2, 
+  //     useSpec3: useSpec3,
+  //   );
+
+  //   await saveConfig('psswdGen', [
+  //     keyController.text,  
+  //     lengthController.text,
+  //     useUpper.toString(),
+  //     useLower.toString(),
+  //     useDigits.toString(),
+  //     useSpec1.toString(),
+  //     useSpec2.toString(),
+  //     useSpec3.toString()
+  //     ]);
+
+    //   setState(() {
+    //     generatedPassword = success[0];
+    //     secret = success[1];
+    //     return;
+    //   });
+   
+    @override
+    Widget build(BuildContext context) {
     return 
     Scaffold(
       // navigationBar: CupertinoNavigationBar(
