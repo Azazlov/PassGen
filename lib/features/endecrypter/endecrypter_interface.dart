@@ -9,7 +9,7 @@ class EndecrypterInterface {
     Encrypted encrypted = Encrypted();
     await encrypted.getEncr(
       message: utf8.encode(message),
-      passwd: utf8.encode(password),
+      password: utf8.encode(password),
     );
     return encrypted.getMiniEncr();
   }
