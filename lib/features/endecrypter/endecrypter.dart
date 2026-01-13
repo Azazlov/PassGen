@@ -19,6 +19,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
   late EndecrypterInterface generator;
 
   String mssg = '';
+  String mssgCode = '';
 
   @override 
   void initState(){
@@ -62,6 +63,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
     );
 
     setState(() {
+      mssgCode = 'Скопировать шифр';
       mssg = result;
     });
   }
@@ -78,10 +80,18 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
 
     dynamic result;
 
-    result = await generator.decryptMessage(
-      encrJSON: textController.text, 
-      key: keyController.text
-    );
+    try{
+      result = await generator.decryptMessage(
+        encrJSON: textController.text, 
+        key: keyController.text
+      );
+    }
+    catch (e){
+      setState(() {
+        mssg = 'Ошибка дешифрования. Проверьте правильность введенных данных.';
+      });
+      return;
+    }
       
     await saveConfig(
       'endecrypter', 
@@ -92,6 +102,7 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
     );
 
     setState(() {
+      mssgCode = 'Скопировать сообщение';
       mssg = result;
     });
   }
@@ -113,13 +124,13 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
           padding: setPadding(),
           children: [
             buildInput('Сообщение/код', 'Текст/шифр', textController, false, TextInputType.text, pass),
-            buildInput('Ключ шифрования', 'mum{gse24}', keyController, true, TextInputType.text, pass),
+            buildInput('Ключ шифрования', 'Любой надежный ключ', keyController, true, TextInputType.text, pass),
             // buildInput('Мастер-ключ шифрования', 'jasdkb{bc[]}', masterKeyController, true, TextInputType.text, context),
             
             const SizedBox(height: 40),
             buildButton('Шифрование', encrypt),
             buildButton('Дешифрование', decrypt),
-            buildCopyOnTap('Сообщение/шифр', mssg, copySecret),
+            buildCopyOnTap(mssgCode, mssg, copySecret),
           ],
         ),
       )

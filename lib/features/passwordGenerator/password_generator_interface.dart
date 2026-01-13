@@ -17,6 +17,10 @@ class PasswordGenerationInterface {
   String includeLowercase = 'abcdefghijklmnopqrstuvwxyz';
   String includeUppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   String includeSpecSymbols = '!@#\$%^&*()_+-=[]{}|;:,.<>?';
+
+  late String generatedPassword;
+  late String strengthGeneratedPassword;
+  late String encodedPasswordGenerationConfig;
   
   PasswordGenerationInterface(
     String password,
@@ -35,12 +39,12 @@ class PasswordGenerationInterface {
       range: passwordLength,
       flags: flags);
     Map<String, String> passwordData = generator.generatePassword();
-    String password = passwordData['password']!;
-    String passwordStrength = passwordData['strength']!;
-    String generationConfig = passwordData['config']!;
+    generatedPassword = passwordData['password']!;
+    strengthGeneratedPassword = passwordData['strength']!;
+    encodedPasswordGenerationConfig = passwordData['config']!;
     List<int> encr = await Encrypted().getEncr(
-      message: utf8.encode(generationConfig),
-      password: utf8.encode(this.password)
+      message: utf8.encode(encodedPasswordGenerationConfig),
+      password: utf8.encode(password)
     );
 
     return PasswordGenerationConfig(
