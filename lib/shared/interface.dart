@@ -13,26 +13,29 @@ Widget buildSwitch(String label, bool value, void Function(bool) onChanged) {
 }
 
 // Поле ввода
-Widget buildInput(String label, String placeholder, TextEditingController controller,
-    bool hidden, TextInputType symbols, Function submFunction) {
+Widget buildInput(
+  String label, 
+  String placeholder, 
+  TextEditingController textController,
+  bool hidden, 
+  TextInputType symbols, 
+  Function submFunction
+  ) {
   return Column(
     children: [
       const SizedBox(height: 18),
       Text(label),
-      TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          filled: true,
-          // fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          contentPadding: const EdgeInsets.all(12),
-          hintText: placeholder,
-        ),
-        obscureText: hidden,
+      TextFormField(
         keyboardType: symbols,
-        onSubmitted: (_) => submFunction(),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'.*')),
+        ],
+        controller: textController,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: placeholder,
+          border: OutlineInputBorder(),
+        ),
       ),
     ],
   );

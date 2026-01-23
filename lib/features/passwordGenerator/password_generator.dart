@@ -1,6 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'dart:typed_data';
 import 'package:pass_gen/features/passwordGenerator/password_generator_business.dart';
 import 'package:flutter/material.dart';
 import 'package:pass_gen/features/passwordGenerator/password_generator_interface.dart';
@@ -20,7 +19,8 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   final TextEditingController keyController = TextEditingController();
   final TextEditingController masterKeyController = TextEditingController();
   final TextEditingController serviceController = TextEditingController();
-  final TextEditingController lengthController = TextEditingController(text: '16');
+  final TextEditingController minLengthController = TextEditingController(text: '12');
+  final TextEditingController maxLengthController = TextEditingController(text: '16');
   late PasswordGenerationInterface generator;
 
   bool useUpper = true;
@@ -45,15 +45,6 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
 
   Future<void> setupConfigs() async{
     List<String> configs = await getConfigs('psswdGen');
-
-    keyController.text = configs[0];
-    lengthController.text = configs[1];
-    useUpper = configs[2]=='true'?true:false;
-    useLower = configs[3]=='true'?true:false;
-    useDigits = configs[4]=='true'?true:false;
-    useSpec1 = configs[5]=='true'?true:false;
-    useSpec2 = configs[6]=='true'?true:false;
-    useSpec3 = configs[7]=='true'?true:false;
   }
 
   void toChangeConfig(){
@@ -85,7 +76,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   }
 
   Future<void> generatePassword() async {
-    parameters = checkInputs();
+    parameters = checkInputs(minLengthController.text, maxLengthController.text, [useLower, useUpper, useDigits, useSpec1, useSpec2, useSpec3]);
 
     if (lastConfig == configController.text && configController.text != ''){
       showDialogWindow2(
@@ -100,7 +91,6 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       return;
     }
 
-    final check = configController.text.split('.');
     if (parameters['isRender'] == 'true'){
       showDialogWindow1(
         parameters['title']!, 
@@ -110,8 +100,8 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     }
 
     setState(() {
-      generatedPassword = success[0];
-      secret = success[1];
+      // generatedPassword = success[0];
+      // secret = success[1];
       return;
     });
   }
@@ -129,7 +119,8 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             buildInput('Шифр конфига', 'сервис.****', configController, false, TextInputType.text, generatePassword),
             buildInput('Ключ шифрования', 'СОХРАНИТЕ ЕГО!', keyController, true, TextInputType.text, generatePassword),
             buildInput('Сервис', 'Без точек', serviceController, false, TextInputType.text, generatePassword),
-            buildInput('Длина пароля', 'от 1 до 1<<16', lengthController, false, TextInputType.number, generatePassword),
+            buildInput('Длина пароля', 'от 1 до 1<<16', minLengthController, false, TextInputType.number, generatePassword),
+            buildInput('Длина пароля', 'от 1 до 1<<16', maxLengthController, false, TextInputType.number, generatePassword),
 
             SizedBox(height: 40),
             buildSwitch('Заглавные буквы', useUpper, (v) => setState(() => useUpper = v)),

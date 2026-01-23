@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:pass_gen/features/about/about.dart';
 // import 'package:pass_gen/features/storage/storage.dart';
 import 'package:pass_gen/features/endecrypter/endecrypter.dart';
-// import 'package:pass_gen/features/passwordGenerator/password_generator.dart';
+import 'package:pass_gen/features/passwordGenerator/password_generator.dart';
 
 class TabScaffold extends StatefulWidget {
   const TabScaffold({super.key});
@@ -24,7 +24,7 @@ class _TabScaffoldState extends State<TabScaffold> {
     body: IndexedStack(
       index: _currentIndex,
       children: <Widget>[
-        // PasswordGeneratorScreen(),
+        PasswordGeneratorScreen(),
         EndecrypterScreen(),
         // StorageScreen(),
         AboutScreen(),
