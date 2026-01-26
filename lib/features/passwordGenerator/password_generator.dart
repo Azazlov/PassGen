@@ -76,7 +76,14 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   }
 
   Future<void> generatePassword() async {
-    parameters = checkInputs(minLengthController.text, maxLengthController.text, [useLower, useUpper, useDigits, useSpec1, useSpec2, useSpec3]);
+    parameters = checkInputs(
+      minLengthController.text, 
+      maxLengthController.text, 
+      [useLower, useUpper, useDigits, 
+      useSpec1, 
+      useSpec2, 
+      useSpec3]
+    );
 
     if (lastConfig == configController.text && configController.text != ''){
       showDialogWindow2(
@@ -116,24 +123,89 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
         child: ListView(
           padding: setPadding(),
           children: [
-            buildInput('Шифр конфига', 'сервис.****', configController, false, TextInputType.text, generatePassword),
-            buildInput('Ключ шифрования', 'СОХРАНИТЕ ЕГО!', keyController, true, TextInputType.text, generatePassword),
-            buildInput('Сервис', 'Без точек', serviceController, false, TextInputType.text, generatePassword),
-            buildInput('Длина пароля', 'от 1 до 1<<16', minLengthController, false, TextInputType.number, generatePassword),
-            buildInput('Длина пароля', 'от 1 до 1<<16', maxLengthController, false, TextInputType.number, generatePassword),
-
+            buildInput(
+              label: 'Шифр конфига', 
+              placeholder: 'сервис.****', 
+              textController: configController, 
+              hidden: false, 
+              symbols: TextInputType.text, 
+              submFunction: generatePassword
+            ),
+            buildInput(
+              label: 'Ключ шифрования', 
+              placeholder: 'СОХРАНИТЕ ЕГО!', 
+              textController: keyController, 
+              hidden: true, 
+              symbols: TextInputType.text, 
+              submFunction: generatePassword
+            ),
+            buildInput(
+              label: 'Сервис', 
+              placeholder: 'Без точек', 
+              textController: serviceController, 
+              hidden: false, 
+              symbols: TextInputType.text, 
+              submFunction: generatePassword
+            ),
+            buildInput(
+              label: 'Длина пароля', 
+              placeholder: 'от 1 до 1<<16', 
+              textController: minLengthController, 
+              hidden: false, 
+              symbols: TextInputType.number, 
+              submFunction: generatePassword
+            ),
+            buildInput(
+              label: 'Длина пароля', 
+              placeholder: 'от 1 до 1<<16', 
+              textController: maxLengthController, 
+              hidden: false, 
+              symbols: TextInputType.number, 
+              submFunction: generatePassword
+            ),
             SizedBox(height: 40),
-            buildSwitch('Заглавные буквы', useUpper, (v) => setState(() => useUpper = v)),
-            buildSwitch('Строчные буквы', useLower, (v) => setState(() => useLower = v)),
-            buildSwitch('Цифры', useDigits, (v) => setState(() => useDigits = v)),
-            buildSwitch('!@#\$%^&*()_+-=', useSpec1, (v) => setState(() => useSpec1 = v)),
-            buildSwitch("\"'`,./;:[]}{<>\\|", useSpec2, (v) => setState(() => useSpec2 = v)),
-            buildSwitch('~?', useSpec3, (v) => setState(() => useSpec3 = v)),
+            buildSwitch(
+              label: 'Заглавные буквы', 
+              value: useUpper, 
+              onChanged: (v) => setState(() => useUpper = v)
+            ),
+            buildSwitch(
+              label: 'Строчные буквы', 
+              value: useLower, 
+              onChanged: (v) => setState(() => useLower = v)
+            ),
+            buildSwitch(
+              label: 'Цифры', 
+              value: useDigits, 
+              onChanged: (v) => setState(() => useDigits = v)
+            ),
+            buildSwitch(
+              label: '!@#\$%^&*()_+-=', 
+              value: useSpec1, 
+              onChanged: (v) => setState(() => useSpec1 = v)
+            ),
+            buildSwitch(
+              label: "\"'`,./;:[]}{<>\\|", 
+              value: useSpec2, 
+              onChanged: (v) => setState(() => useSpec2 = v)
+            ),
+            buildSwitch(
+              label: '~?', 
+              value: useSpec3, 
+              onChanged: (v) => setState(() => useSpec3 = v)
+            ),
 
             SizedBox(height: 48),
-            buildButton('Сгенерировать', generatePassword),
+            buildButton(
+              label: 'Сгенерировать', 
+              function: generatePassword
+            ),
 
-            buildCopyOnTap('Пароль', generatedPassword, copyPsswd)
+            buildCopyOnTap(
+              label: 'Пароль', 
+              text1: generatedPassword, 
+              function: copyPsswd
+            )
           ],
         ),
       ));

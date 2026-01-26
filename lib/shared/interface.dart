@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Переключатель
-Widget buildSwitch(String label, bool value, void Function(bool) onChanged) {
+Widget buildSwitch({  
+  required String label, 
+  required bool value, 
+  required void Function(bool) onChanged
+  }) {
   return ListTile(
     title: Text(label),
     trailing: Switch(
@@ -13,14 +17,14 @@ Widget buildSwitch(String label, bool value, void Function(bool) onChanged) {
 }
 
 // Поле ввода
-Widget buildInput(
-  String label, 
-  String placeholder, 
-  TextEditingController textController,
-  bool hidden, 
-  TextInputType symbols, 
-  Function submFunction
-  ) {
+Widget buildInput({
+  required String label, 
+  required String placeholder, 
+  required TextEditingController textController,
+  required bool hidden, 
+  required TextInputType symbols, 
+  required Function submFunction
+  }) {
   return Column(
     children: [
       const SizedBox(height: 18),
@@ -42,7 +46,10 @@ Widget buildInput(
 }
 
 // Кнопка
-Widget buildButton(String label, VoidCallback function) {
+Widget buildButton({  
+  required String label, 
+  required VoidCallback function
+  }) {
   return ElevatedButton(
     onPressed: function,
     style: ElevatedButton.styleFrom(
@@ -74,7 +81,11 @@ Widget buildBigText(String text) {
 }
 
 // Текст с копированием
-Widget buildCopyOnTap(String label, String text1, Function function) {
+Widget buildCopyOnTap({
+  required String label, 
+  required String text1, 
+  required Function function
+  }) {
   return Column(
     children: [
       SizedBox(height: 48),
