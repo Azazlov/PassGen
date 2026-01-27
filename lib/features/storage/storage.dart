@@ -274,14 +274,14 @@ class _StorageScreenState extends State<StorageScreen>{
         child: ListView(
           padding: setPadding(),
           children: [
-            buildCopyOnTap('Конфиг генерации пароля', encryptedConfig, copyEncryptedConfig),
+            // buildCopyOnTap('Конфиг генерации пароля', encryptedConfig, copyEncryptedConfig),
             SizedBox(height: 48),
             
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Center(
-                  child: buildButton('<', prevConfig)
+                  // child: buildButton('<', prevConfig)
                 ),
 
                 const SizedBox(width: 64),
@@ -290,7 +290,7 @@ class _StorageScreenState extends State<StorageScreen>{
 
                 const SizedBox(width: 64),
                 Center(
-                  child: buildButton('>', nextConfig)
+                  // child: buildButton('>', nextConfig)
                 ),
               ]
             ),
@@ -302,13 +302,13 @@ class _StorageScreenState extends State<StorageScreen>{
 
             SizedBox(height: 32),
 
-            buildButton('Удалить', deleteConfig),
+            // buildButton('Удалить', deleteConfig),
 
             SizedBox(height: 48),
-            buildButton('Сохранить', saveConfigs),
+            // buildButton('Сохранить', saveConfigs),
 
             SizedBox(height: 48),
-            buildButton('Восстановить', recoveryConfigs),
+            // buildButton('Восстановить', recoveryConfigs),
 
           ]
         ),
