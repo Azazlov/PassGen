@@ -8,8 +8,11 @@ Widget buildSwitch({
   required void Function(bool) onChanged
   }) {
   return ListTile(
+    leading: Icon(Icons.toll_sharp),
     title: Text(label),
-    trailing: Switch(
+    subtitle: Text('Включить или отключить $label'),
+    trailing: 
+    Switch(
       value: value,
       onChanged: onChanged,
     ),
@@ -28,7 +31,7 @@ Widget buildInput({
   return Column(
     children: [
       const SizedBox(height: 18),
-      Text(label),
+      // Text(label),
       TextFormField(
         keyboardType: symbols,
         inputFormatters: [
@@ -108,4 +111,67 @@ Widget buildCopyOnTap({
 
 EdgeInsets setPadding() {
   return EdgeInsets.only(top: 88, right: 30, left: 30, bottom: 88);
+}
+
+
+// Model for password option used by the option switches
+class PasswordOption {
+  final String label;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  PasswordOption({
+    required this.label,
+    required this.value,
+    this.onChanged,
+  });
+}
+
+class _PasswordCategoryTile extends StatelessWidget {
+  final String title;
+  final List<PasswordOption> options;
+
+  const _PasswordCategoryTile({required this.title, required this.options});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: options.map((option) => _OptionSwitch(option: option)).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OptionSwitch extends StatelessWidget {
+  final PasswordOption option;
+
+  const _OptionSwitch({required this.option});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Switch.adaptive(
+          value: option.value,
+          onChanged: (v) => option.onChanged?.call(v),
+        ),
+        Text(option.label, style: Theme.of(context).textTheme.bodyMedium),
+      ],
+    );
+  }
 }

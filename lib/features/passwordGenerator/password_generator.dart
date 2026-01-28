@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:pass_gen/features/passwordGenerator/password_generator_business.dart';
+import 'package:pass_gen/modules/generate_password.dart';
 import 'package:flutter/material.dart';
 import 'package:pass_gen/features/passwordGenerator/password_generator_interface.dart';
 import 'package:pass_gen/features/storage/storage_service.dart';
@@ -85,7 +86,16 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       useSpec3]
     );
 
-    if (lastConfig == configController.text && configController.text != ''){
+    PasswordGenerator generator = PasswordGenerator(
+      symbolAlphabet: const SymbolAlphabet(), 
+      range: [
+        int.parse(minLengthController.text), 
+        int.parse(maxLengthController.text)
+      ], 
+      flags: 512
+    );
+
+    if (lastConfig == configController.text && configController.text.trim() != ''){
       showDialogWindow2(
         'Изменить', 
         'Хотите изменить конфигурацию генерации пароля?', 
@@ -98,6 +108,8 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       return;
     }
 
+    lastConfig = configController.text;
+
     if (parameters['isRender'] == 'true'){
       showDialogWindow1(
         parameters['title']!, 
@@ -107,7 +119,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     }
 
     setState(() {
-      // generatedPassword = success[0];
+      generatedPassword = 'Тут будет пароль';
       // secret = success[1];
       return;
     });
@@ -121,24 +133,24 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
       // ),
       body: Center(
         child: ListView(
-          padding: setPadding(),
+          padding: EdgeInsets.all(16),
           children: [
-            buildInput(
-              label: 'Шифр конфига', 
-              placeholder: 'сервис.****', 
-              textController: configController, 
-              hidden: false, 
-              symbols: TextInputType.text, 
-              submFunction: generatePassword
-            ),
-            buildInput(
-              label: 'Ключ шифрования', 
-              placeholder: 'СОХРАНИТЕ ЕГО!', 
-              textController: keyController, 
-              hidden: true, 
-              symbols: TextInputType.text, 
-              submFunction: generatePassword
-            ),
+            // buildInput(
+            //   label: 'Шифр конфига', 
+            //   placeholder: 'сервис.****', 
+            //   textController: configController, 
+            //   hidden: false, 
+            //   symbols: TextInputType.text, 
+            //   submFunction: generatePassword
+            // ),
+            // buildInput(
+            //   label: 'Ключ шифрования', 
+            //   placeholder: 'СОХРАНИТЕ ЕГО!', 
+            //   textController: keyController, 
+            //   hidden: true, 
+            //   symbols: TextInputType.text, 
+            //   submFunction: generatePassword
+            // ),
             buildInput(
               label: 'Сервис', 
               placeholder: 'Без точек', 
@@ -180,17 +192,17 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
               onChanged: (v) => setState(() => useDigits = v)
             ),
             buildSwitch(
-              label: '!@#\$%^&*()_+-=', 
+              label: 'Спец. символы', 
               value: useSpec1, 
               onChanged: (v) => setState(() => useSpec1 = v)
             ),
             buildSwitch(
-              label: "\"'`,./;:[]}{<>\\|", 
+              label: "Доп. спец. символы", 
               value: useSpec2, 
               onChanged: (v) => setState(() => useSpec2 = v)
             ),
             buildSwitch(
-              label: '~?', 
+              label: 'Редкие спец. символы', 
               value: useSpec3, 
               onChanged: (v) => setState(() => useSpec3 = v)
             ),
