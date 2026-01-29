@@ -25,11 +25,17 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   late PasswordGenerationInterface generator;
 
   bool useUpper = true;
+  bool uniqUpper = true;
   bool useLower = true;
+  bool uniqLower = true;
   bool useDigits = true;
+  bool uniqDigits = true;
   bool useSpec1 = false;
+  bool uniqSpec1 = true;
   bool useSpec2 = false;
+  bool uniqSpec2 = true;
   bool useSpec3 = false;
+  bool uniqSpec3 = true;
   bool changeConfig = true; 
 
   String generatedPassword = '';
@@ -151,6 +157,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             //   symbols: TextInputType.text, 
             //   submFunction: generatePassword
             // ),
+            SizedBox(height: 36),
             buildInput(
               label: 'Сервис', 
               placeholder: 'Без точек', 
@@ -159,54 +166,71 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
               symbols: TextInputType.text, 
               submFunction: generatePassword
             ),
+            SizedBox(height: 18),
+            Text(
+              'Настройки длины пароля',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold
+              ),
+            ),
             buildInput(
-              label: 'Длина пароля', 
-              placeholder: 'от 1 до 1<<16', 
+              label: 'Мин. длина', 
+              placeholder: 'от 1 до 1024', 
               textController: minLengthController, 
               hidden: false, 
               symbols: TextInputType.number, 
               submFunction: generatePassword
             ),
             buildInput(
-              label: 'Длина пароля', 
-              placeholder: 'от 1 до 1<<16', 
+              label: 'Макс. длина', 
+              placeholder: 'от 1 до 1024', 
               textController: maxLengthController, 
               hidden: false, 
               symbols: TextInputType.number, 
               submFunction: generatePassword
             ),
-            SizedBox(height: 40),
-            buildSwitch(
-              label: 'Заглавные буквы', 
-              value: useUpper, 
-              onChanged: (v) => setState(() => useUpper = v)
-            ),
-            buildSwitch(
-              label: 'Строчные буквы', 
-              value: useLower, 
-              onChanged: (v) => setState(() => useLower = v)
-            ),
-            buildSwitch(
-              label: 'Цифры', 
-              value: useDigits, 
-              onChanged: (v) => setState(() => useDigits = v)
-            ),
-            buildSwitch(
-              label: 'Спец. символы', 
-              value: useSpec1, 
-              onChanged: (v) => setState(() => useSpec1 = v)
-            ),
-            buildSwitch(
-              label: "Доп. спец. символы", 
-              value: useSpec2, 
-              onChanged: (v) => setState(() => useSpec2 = v)
-            ),
-            buildSwitch(
-              label: 'Редкие спец. символы', 
-              value: useSpec3, 
-              onChanged: (v) => setState(() => useSpec3 = v)
-            ),
-
+            Divider(height: 32,),
+            ExpansionTile(
+              title:  Text('Настройки символов'), children: [
+              buildSwitch(
+                label: 'Заглавные буквы', 
+                value: useUpper, 
+                isUsed: (v) => setState(() => useUpper = v),
+                icon: Icons.text_fields
+              ),
+              buildSwitch(
+                label: 'Строчные буквы', 
+                value: useLower, 
+                isUsed: (v) => setState(() => useLower = v),
+                icon: Icons.text_fields
+              ),
+              buildSwitch(
+                label: 'Цифры', 
+                value: useDigits, 
+                isUsed: (v) => setState(() => useDigits = v),
+                icon: Icons.dialpad
+              ),
+              buildSwitch(
+                label: 'Спец. символы', 
+                value: useSpec1, 
+                isUsed: (v) => setState(() => useSpec1 = v),
+                icon: Icons.tag
+              ),
+              buildSwitch(
+                label: "Доп. спец. символы", 
+                value: useSpec2, 
+                isUsed: (v) => setState(() => useSpec2 = v),
+                icon: Icons.tag
+              ),
+              buildSwitch(
+                label: 'Редкие спец. символы', 
+                value: useSpec3, 
+                isUsed: (v) => setState(() => useSpec3 = v),
+                icon: Icons.tag
+              ),
+            ]), 
             SizedBox(height: 48),
             buildButton(
               label: 'Сгенерировать', 

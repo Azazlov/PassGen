@@ -5,19 +5,51 @@ import 'package:flutter/services.dart';
 Widget buildSwitch({  
   required String label, 
   required bool value, 
-  required void Function(bool) onChanged
+  required void Function(bool) isUsed,
+  required IconData icon
   }) {
   return ListTile(
-    leading: Icon(Icons.toll_sharp),
+    leading: Icon(icon),
+    title: Text(label),
+    subtitle: Text('В пароле будут $label'),
+    trailing: 
+      Switch(
+        value: value,
+        onChanged: isUsed,
+      ),
+    dense: true,
+    onTap: () => isUsed(!value),
+    selected: value,
+  );
+}
+
+Widget buildSwitchWithUnique({  
+  required String label, 
+  required bool value, 
+  required void Function(bool) isUsed,
+  required bool? Function(bool?) isUnique,
+  required IconData icon
+  }) {
+  return ListTile(
+    leading: Icon(icon),
     title: Text(label),
     subtitle: Text('Включить или отключить $label'),
     trailing: 
-    Switch(
-      value: value,
-      onChanged: onChanged,
-    ),
-  );
-}
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Уникальные'),
+          Checkbox(
+            value: value,
+            onChanged: isUnique,
+          ),
+          Switch(
+            value: value,
+            onChanged: isUsed,
+          ),
+        ],
+      ));
+  }
 
 // Поле ввода
 Widget buildInput({
@@ -113,65 +145,3 @@ EdgeInsets setPadding() {
   return EdgeInsets.only(top: 88, right: 30, left: 30, bottom: 88);
 }
 
-
-// Model for password option used by the option switches
-class PasswordOption {
-  final String label;
-  final bool value;
-  final ValueChanged<bool>? onChanged;
-
-  PasswordOption({
-    required this.label,
-    required this.value,
-    this.onChanged,
-  });
-}
-
-class _PasswordCategoryTile extends StatelessWidget {
-  final String title;
-  final List<PasswordOption> options;
-
-  const _PasswordCategoryTile({required this.title, required this.options});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              children: options.map((option) => _OptionSwitch(option: option)).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OptionSwitch extends StatelessWidget {
-  final PasswordOption option;
-
-  const _OptionSwitch({required this.option});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Switch.adaptive(
-          value: option.value,
-          onChanged: (v) => option.onChanged?.call(v),
-        ),
-        Text(option.label, style: Theme.of(context).textTheme.bodyMedium),
-      ],
-    );
-  }
-}
