@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pass_gen/modules/passwd_strength.dart';
+import 'package:pass_gen/modules/password_strength.dart';
 
 void main() {
   group('getPasswdStrength', () {

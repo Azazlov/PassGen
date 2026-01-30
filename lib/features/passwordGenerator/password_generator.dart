@@ -24,22 +24,28 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   final TextEditingController maxLengthController = TextEditingController(text: '16');
   late PasswordGenerationInterface generator;
 
-  bool useUpper = true;
   bool uniqUpper = true;
-  bool useLower = true;
   bool uniqLower = true;
-  bool useDigits = true;
   bool uniqDigits = true;
-  bool useSpec1 = false;
   bool uniqSpec1 = true;
-  bool useSpec2 = false;
   bool uniqSpec2 = true;
-  bool useSpec3 = false;
-  bool uniqSpec3 = true;
-  bool changeConfig = true; 
+  bool changeConfig = true;
 
-  String generatedPassword = '';
-  String secret = '';
+  int passwordStrength = 1; 
+
+  Map<int, List<dynamic>> strengthLabels = {
+    1: ['Очень слабый', Colors.red, digits],
+    16: ['Слабый', Colors.orange, digits | lowercase],
+    32: ['Средний', const Color.fromARGB(255, 215, 223, 52), digits | lowercase | uppercase],
+    48: ['Сильный', Colors.green, digits | lowercase | uppercase | symbols],
+    64: ['Очень сильный', Colors.blue, digits | lowercase | uppercase | symbols | 1<<7],
+  };
+
+  Map<String, String> success = {};
+  String password = '';
+  String config = '';
+  String strength = '';
+
   String lastConfig = '';
 
   late Map<String, String> parameters;
@@ -51,7 +57,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   }
 
   Future<void> setupConfigs() async{
-    List<String> configs = await getConfigs('psswdGen');
+    // List<String> configs = await getConfigs('psswdGen');
   }
 
   void toChangeConfig(){
@@ -67,7 +73,7 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     final encryptedconfigs = await getConfigs('encryptedConfigs');
     await saveConfig(
       'encryptedConfigs',
-      encryptedconfigs==null?[secret]:encryptedconfigs+[secret]
+      encryptedconfigs==null?[config]:encryptedconfigs+[config]
     );
   }
 
@@ -86,10 +92,10 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     parameters = checkInputs(
       minLengthController.text, 
       maxLengthController.text, 
-      [useLower, useUpper, useDigits, 
-      useSpec1, 
-      useSpec2, 
-      useSpec3]
+      [uniqUpper, uniqLower, uniqDigits, 
+      uniqSpec1, 
+      uniqSpec2, 
+      ],
     );
 
     PasswordGenerator generator = PasswordGenerator(
@@ -98,8 +104,12 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
         int.parse(minLengthController.text), 
         int.parse(maxLengthController.text)
       ], 
-      flags: 512
+      flags: strengthLabels[passwordStrength]?[2] as int
     );
+    success = generator.generatePassword();
+    password = success['password']!;
+    strength = success['strength']!;
+    config = success['config']!;
 
     if (lastConfig == configController.text && configController.text.trim() != ''){
       showDialogWindow2(
@@ -125,8 +135,9 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     }
 
     setState(() {
-      generatedPassword = 'Тут будет пароль';
-      // secret = success[1];
+      password = success['password']!;
+      strength = success['strength']!;
+      config = success['config']!;
       return;
     });
   }
@@ -141,23 +152,17 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
         child: ListView(
           padding: EdgeInsets.all(16),
           children: [
-            // buildInput(
-            //   label: 'Шифр конфига', 
-            //   placeholder: 'сервис.****', 
-            //   textController: configController, 
-            //   hidden: false, 
-            //   symbols: TextInputType.text, 
-            //   submFunction: generatePassword
-            // ),
-            // buildInput(
-            //   label: 'Ключ шифрования', 
-            //   placeholder: 'СОХРАНИТЕ ЕГО!', 
-            //   textController: keyController, 
-            //   hidden: true, 
-            //   symbols: TextInputType.text, 
-            //   submFunction: generatePassword
-            // ),
             SizedBox(height: 36),
+            ListTile(
+              title: Text(
+                'Генератор паролей',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+            ),
             buildInput(
               label: 'Сервис', 
               placeholder: 'Без точек', 
@@ -165,6 +170,34 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
               hidden: false, 
               symbols: TextInputType.text, 
               submFunction: generatePassword
+            ),
+            // RangeSlider(
+            //   values: RangeValues(minLengthController.text.isEmpty ? 8.0 : double.parse(minLengthController.text), maxLengthController.text.isEmpty ? 16.0 : double.parse(maxLengthController.text)),
+            //   min: 12,
+            //   max: 32,
+            //   divisions: 60,
+            //   labels: RangeLabels('${minLengthController.text}', '${maxLengthController.text}'),
+            //   onChanged: (values) {
+            //     setState(() {
+            //       minLengthController.text = values.start.toInt().toString();
+            //       maxLengthController.text = values.end.toInt().toString();
+            //     });
+            //   },
+            // ),
+            Slider(
+              value: passwordStrength.toDouble(),
+              min: 1,
+              max: 64,
+              divisions: 4, 
+              label: '${strengthLabels[passwordStrength]?.first ?? "Неизвестная сложность $passwordStrength"}',
+              activeColor: strengthLabels[passwordStrength]?[1] != null
+                  ? strengthLabels[passwordStrength]![1] as Color
+                  : null,
+              onChanged: (value) {
+                setState(() {
+                  passwordStrength = value.toInt();
+                });
+              },
             ),
             SizedBox(height: 18),
             Text(
@@ -191,46 +224,6 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
               symbols: TextInputType.number, 
               submFunction: generatePassword
             ),
-            Divider(height: 32,),
-            ExpansionTile(
-              title:  Text('Настройки символов'), children: [
-              buildSwitch(
-                label: 'Заглавные буквы', 
-                value: useUpper, 
-                isUsed: (v) => setState(() => useUpper = v),
-                icon: Icons.text_fields
-              ),
-              buildSwitch(
-                label: 'Строчные буквы', 
-                value: useLower, 
-                isUsed: (v) => setState(() => useLower = v),
-                icon: Icons.text_fields
-              ),
-              buildSwitch(
-                label: 'Цифры', 
-                value: useDigits, 
-                isUsed: (v) => setState(() => useDigits = v),
-                icon: Icons.dialpad
-              ),
-              buildSwitch(
-                label: 'Спец. символы', 
-                value: useSpec1, 
-                isUsed: (v) => setState(() => useSpec1 = v),
-                icon: Icons.tag
-              ),
-              buildSwitch(
-                label: "Доп. спец. символы", 
-                value: useSpec2, 
-                isUsed: (v) => setState(() => useSpec2 = v),
-                icon: Icons.tag
-              ),
-              buildSwitch(
-                label: 'Редкие спец. символы', 
-                value: useSpec3, 
-                isUsed: (v) => setState(() => useSpec3 = v),
-                icon: Icons.tag
-              ),
-            ]), 
             SizedBox(height: 48),
             buildButton(
               label: 'Сгенерировать', 
@@ -239,9 +232,43 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
 
             buildCopyOnTap(
               label: 'Пароль', 
-              text1: generatedPassword, 
+              text1: password, 
               function: copyPsswd
-            )
+            ),
+            Divider(height: 32,),
+            ExpansionTile(
+              title:  Text('Настройки символов'), children: [
+              buildSwitch(
+                label: 'Заглавные буквы', 
+                value: uniqUpper, 
+                isUsed: (v) => setState(() => uniqUpper = v),
+                icon: Icons.text_fields
+              ),
+              buildSwitch(
+                label: 'Строчные буквы', 
+                value: uniqLower, 
+                isUsed: (v) => setState(() => uniqLower = v),
+                icon: Icons.text_fields
+              ),
+              buildSwitch(
+                label: 'Цифры', 
+                value: uniqDigits, 
+                isUsed: (v) => setState(() => uniqDigits = v),
+                icon: Icons.dialpad
+              ),
+              buildSwitch(
+                label: 'Спец. символы', 
+                value: uniqSpec1, 
+                isUsed: (v) => setState(() => uniqSpec1 = v),
+                icon: Icons.tag
+              ),
+              buildSwitch(
+                label: "Доп. спец. символы", 
+                value: uniqSpec2, 
+                isUsed: (v) => setState(() => uniqSpec2 = v),
+                icon: Icons.tag
+              ),
+            ]), 
           ],
         ),
       ));

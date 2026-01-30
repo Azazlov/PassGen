@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:pass_gen/modules/encrypted.dart';
-import 'package:pass_gen/modules/passwd_strength.dart';
+import 'package:pass_gen/modules/password_strength.dart';
 import 'package:pass_gen/modules/shared.dart';
 export 'package:pass_gen/modules/encrypted.dart' show randomInt, random;
-export 'package:pass_gen/modules/passwd_strength.dart' show getPasswdStrength;
+export 'package:pass_gen/modules/password_strength.dart' show getPasswdStrength;
 
 // Побитовые флаги для категорий символов
 const int digits = 1 << 0;
@@ -22,12 +22,14 @@ class SymbolAlphabet {
   final String lowercase;
   final String uppercase;
   final String symbolsChars;
+  final String appendChars;
 
   const SymbolAlphabet({
     this.digits = '0123456789',
     this.lowercase = 'abcdefghijklmnopqrstuvwxyz',
     this.uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-    this.symbolsChars = '!@#\$%^&*()_+-=[]{}|;:,.<>?',
+    this.symbolsChars = '!@#%^&*_+-=[]{};:,.?',
+    this.appendChars = '\'"()/\\|`~<>\$€£¥¢•…·÷×±§©®™¶†‡°¤¿¡«»""\'\'—–\''
   });
 
   String getAlphabet(int flag) {
@@ -36,6 +38,7 @@ class SymbolAlphabet {
       case 4: return lowercase; // lowercase
       case 16: return uppercase; // uppercase
       case 64: return symbolsChars; // symbols
+      case 128: return appendChars; // appendChars
       default: return '';
     }
   }
@@ -133,7 +136,6 @@ class PasswordGenerator{
         }
       }
     }
-
     double psswdStrength = getPasswdStrength(password);
     isRestored = false;
     return {'password': password, 'strength': psswdStrength.toString(), 'config': generateConfig()};
@@ -175,6 +177,7 @@ void main(){
   // Все обязательны (IsReq флаги)
   // Все символы уникальны (allIsUniq)
   int flags = digits | digitsIsReq | lowercase | lowercaseIsReq | uppercase | uppercaseIsReq | symbols | symbolsIsReq | allIsUniq;
+  print(flags);
   
   PasswordGenerator generator = PasswordGenerator(
     symbolAlphabet: symbolAlphabet,
