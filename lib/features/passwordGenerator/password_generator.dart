@@ -31,14 +31,14 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
   bool uniqSpec2 = true;
   bool changeConfig = true;
 
-  int passwordStrength = 1; 
+  int passwordStrength = 32; 
 
-  Map<int, List<dynamic>> strengthLabels = {
-    1: ['Очень слабый', Colors.red, digits],
-    16: ['Слабый', Colors.orange, digits | lowercase],
-    32: ['Средний', const Color.fromARGB(255, 215, 223, 52), digits | lowercase | uppercase],
-    48: ['Сильный', Colors.green, digits | lowercase | uppercase | symbols],
-    64: ['Очень сильный', Colors.blue, digits | lowercase | uppercase | symbols | 1<<7],
+  Map<int, Map<String, dynamic>> strengthLabels = {
+    1: {'label': 'Очень слабый', 'color': Colors.red, 'flags': digits, 'length_range': [4, 6]},
+    16: {'label': 'Слабый', 'color': Colors.orange, 'flags': digits | lowercase, 'length_range': [6, 8]},
+    32: {'label': 'Средний', 'color': const Color.fromARGB(255, 215, 223, 52), 'flags': digits | lowercase | uppercase, 'length_range': [8, 14]},
+    48: {'label': 'Сильный', 'color': Colors.green, 'flags': digits | lowercase | uppercase | symbols, 'length_range': [14, 20]},
+    64: {'label': 'Очень сильный', 'color': Colors.blue, 'flags': digits | lowercase | uppercase | symbols | 512, 'length_range': [20, 32]},
   };
 
   Map<String, String> success = {};
@@ -99,12 +99,14 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
     );
 
     PasswordGenerator generator = PasswordGenerator(
-      symbolAlphabet: const SymbolAlphabet(), 
+      symbolAlphabet: SymbolAlphabet(
+        appended: strengthLabels[passwordStrength]?['flags'] as int == 597
+      ), 
       range: [
         int.parse(minLengthController.text), 
         int.parse(maxLengthController.text)
       ], 
-      flags: strengthLabels[passwordStrength]?[2] as int
+      flags: strengthLabels[passwordStrength]?['flags'] as int
     );
     success = generator.generatePassword();
     password = success['password']!;
@@ -167,35 +169,23 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
               label: 'Сервис', 
               placeholder: 'Без точек', 
               textController: serviceController, 
-              hidden: false, 
               symbols: TextInputType.text, 
               submFunction: generatePassword
             ),
-            // RangeSlider(
-            //   values: RangeValues(minLengthController.text.isEmpty ? 8.0 : double.parse(minLengthController.text), maxLengthController.text.isEmpty ? 16.0 : double.parse(maxLengthController.text)),
-            //   min: 12,
-            //   max: 32,
-            //   divisions: 60,
-            //   labels: RangeLabels('${minLengthController.text}', '${maxLengthController.text}'),
-            //   onChanged: (values) {
-            //     setState(() {
-            //       minLengthController.text = values.start.toInt().toString();
-            //       maxLengthController.text = values.end.toInt().toString();
-            //     });
-            //   },
-            // ),
             Slider(
               value: passwordStrength.toDouble(),
               min: 1,
               max: 64,
               divisions: 4, 
-              label: '${strengthLabels[passwordStrength]?.first ?? "Неизвестная сложность $passwordStrength"}',
-              activeColor: strengthLabels[passwordStrength]?[1] != null
-                  ? strengthLabels[passwordStrength]![1] as Color
+              label: '${strengthLabels[passwordStrength]?['label'] ?? "Неизвестная сложность $passwordStrength"}',
+              activeColor: strengthLabels[passwordStrength]?['color'] != null
+                  ? strengthLabels[passwordStrength]!['color'] as Color
                   : null,
               onChanged: (value) {
                 setState(() {
                   passwordStrength = value.toInt();
+                  minLengthController.text = strengthLabels[passwordStrength]?['length_range'][0].toString() ?? '12';
+                  maxLengthController.text = strengthLabels[passwordStrength]?['length_range'][1].toString() ?? '16';
                 });
               },
             ),
@@ -210,34 +200,21 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             ),
             buildInput(
               label: 'Мин. длина', 
-              placeholder: 'от 1 до 1024', 
+              placeholder: 'от 1 до 32', 
               textController: minLengthController, 
-              hidden: false, 
               symbols: TextInputType.number, 
               submFunction: generatePassword
             ),
             buildInput(
               label: 'Макс. длина', 
-              placeholder: 'от 1 до 1024', 
-              textController: maxLengthController, 
-              hidden: false, 
+              placeholder: 'от 1 до 64', 
+              textController: maxLengthController,  
               symbols: TextInputType.number, 
               submFunction: generatePassword
             ),
-            SizedBox(height: 48),
-            buildButton(
-              label: 'Сгенерировать', 
-              function: generatePassword
-            ),
-
-            buildCopyOnTap(
-              label: 'Пароль', 
-              text1: password, 
-              function: copyPsswd
-            ),
             Divider(height: 32,),
             ExpansionTile(
-              title:  Text('Настройки символов'), children: [
+              title:  Text('Настройки обязательности'), children: [
               buildSwitch(
                 label: 'Заглавные буквы', 
                 value: uniqUpper, 
@@ -268,7 +245,17 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
                 isUsed: (v) => setState(() => uniqSpec2 = v),
                 icon: Icons.tag
               ),
-            ]), 
+            ]),
+            SizedBox(height: 48),
+            buildButton(
+              label: 'Сгенерировать', 
+              function: generatePassword
+            ), 
+            buildCopyOnTap(
+              label: 'Пароль', 
+              text1: password, 
+              function: copyPsswd
+            ),
           ],
         ),
       ));

@@ -56,7 +56,7 @@ Widget buildInput({
   required String label, 
   required String placeholder, 
   required TextEditingController textController,
-  required bool hidden, 
+  bool hidden = false, 
   required TextInputType symbols, 
   required Function submFunction
   }) {
@@ -116,6 +116,7 @@ Widget buildBigText(String text) {
 }
 
 // Текст с копированием
+// Текст с копированием
 Widget buildCopyOnTap({
   required String label, 
   required String text1, 
@@ -123,18 +124,67 @@ Widget buildCopyOnTap({
   }) {
   return Column(
     children: [
-      SizedBox(height: 48),
+      const SizedBox(height: 48),
       Text(
         label,
-        style: TextStyle(fontSize: 20),
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
       ),
+      const SizedBox(height: 16),
       text1 != '' && text1 != "Нет конфигов"
           ? GestureDetector(
               onTap: () {
                 Clipboard.setData(ClipboardData(text: text1));
                 function();
               },
-              child: buildBigText(text1),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color.fromARGB(255, 90, 90, 90),
+                      width: 2,
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color.fromARGB(255, 245, 245, 245),
+                        const Color.fromARGB(255, 235, 235, 235),
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Text(
+                          text1,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontFamily: 'segoe UI',
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             )
           : buildBigText(text1),
     ],

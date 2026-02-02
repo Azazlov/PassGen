@@ -21,16 +21,22 @@ class SymbolAlphabet {
   final String digits;
   final String lowercase;
   final String uppercase;
-  final String symbolsChars;
+  late String symbolsChars;
   final String appendChars;
+  final bool appended;
 
-  const SymbolAlphabet({
+  SymbolAlphabet({
     this.digits = '0123456789',
     this.lowercase = 'abcdefghijklmnopqrstuvwxyz',
     this.uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
     this.symbolsChars = '!@#%^&*_+-=[]{};:,.?',
-    this.appendChars = '\'"()/\\|`~<>\$€£¥¢•…·÷×±§©®™¶†‡°¤¿¡«»""\'\'—–\''
-  });
+    this.appendChars = '\'"()/\\|`~<>\$€£¥¢•…·÷×±§©®™¶†‡°¤¿¡«»""\'\'—–\'',
+    this.appended = false
+  }){
+    if (appended) {
+      symbolsChars += appendChars;
+    }
+  }
 
   String getAlphabet(int flag) {
     switch (flag) {
@@ -38,7 +44,6 @@ class SymbolAlphabet {
       case 4: return lowercase; // lowercase
       case 16: return uppercase; // uppercase
       case 64: return symbolsChars; // symbols
-      case 128: return appendChars; // appendChars
       default: return '';
     }
   }
@@ -181,7 +186,7 @@ void main(){
   
   PasswordGenerator generator = PasswordGenerator(
     symbolAlphabet: symbolAlphabet,
-    range: [12, 16],
+    range: [512, 1024],
     flags: flags,
   );
   
