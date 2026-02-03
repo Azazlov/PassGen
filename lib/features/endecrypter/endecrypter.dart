@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pass_gen/features/storage/storage_service.dart';
 import 'package:pass_gen/shared/interface.dart';
-import 'package:pass_gen/shared/dialog.dart';
+import 'package:pass_gen/shared/dialogs.dart';
 import 'package:pass_gen/features/endecrypter/endecrypter_interface.dart';
 
 class EndecrypterScreen extends StatefulWidget {
