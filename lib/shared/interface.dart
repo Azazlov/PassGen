@@ -155,7 +155,7 @@ Widget buildCopyOnTap({
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        const Color.fromARGB(255, 245, 245, 245),
+                        const Color.fromRGBO(245, 245, 245, 1),
                         const Color.fromARGB(255, 235, 235, 235),
                       ],
                     ),
