@@ -25,3 +25,15 @@ class EndecrypterInterface {
     return message;
   }
 }
+
+void main(List<String> args) async {
+  EndecrypterInterface encrypter = EndecrypterInterface();
+  String mssg = 'Hello';
+  print('Message: ${mssg}');
+  String password = 'secret123';
+  print('Password: ${password}');
+  String encrypted = await encrypter.encryptMessage(message: mssg, password: password);
+  print('Encrypted message: ${encrypted}');
+  String decrypted = await encrypter.decryptMessage(encrJSON: encrypted, key: password);
+  print('Decrypted message: ${decrypted}');
+}
