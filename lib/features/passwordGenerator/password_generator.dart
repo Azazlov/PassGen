@@ -4,9 +4,9 @@ import 'package:pass_gen/features/passwordGenerator/password_generator_business.
 import 'package:pass_gen/modules/generate_password.dart';
 import 'package:flutter/material.dart';
 import 'package:pass_gen/features/passwordGenerator/password_generator_interface.dart';
-import 'package:pass_gen/features/storage/storage_service.dart';
 import 'package:pass_gen/shared/dialogs.dart';
 import 'package:pass_gen/shared/interface.dart';
+import 'package:pass_gen/features/storage/storage_interface.dart';
 
 class PasswordGeneratorScreen extends StatefulWidget {
   const PasswordGeneratorScreen({super.key});

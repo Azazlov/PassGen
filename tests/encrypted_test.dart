@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'dart:convert';
-import 'encrypted.dart';
+import '../lib/modules/encrypted.dart';
 
 void main() {
   group('Encrypted Class Tests', () {
