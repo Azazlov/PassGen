@@ -9,7 +9,8 @@ Future<void> saveConfig(String key, List<String> value) async {
   await prefs.setStringList(key, value);
 }
 
-Future<String> getPsswd(int id){
+Future<String> getPsswd(int id) async{
+  await Future.delayed(Duration(seconds: 0));
   return '';
 }
 

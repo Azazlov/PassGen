@@ -4,9 +4,9 @@ class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   // App metadata
-  static const String _appName = 'Secure Pass';
+  static const String _appName = 'PassGen';
   static const String _version = 'v1.2.0';
-  static const String _developer = 'Александр Николаевич Липатов';
+  static const String _developer = '@Azazlov';
   static const String _githubUrl = 'https://github.com/azazlov/secure-pass';
   static const String _privacyUrl = 'https://example.com/privacy';
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pass_gen/features/about/about.dart';
-import 'package:pass_gen/features/storage/storage.dart';
-import 'package:pass_gen/features/endecrypter/endecrypter.dart';
-import 'package:pass_gen/features/passwordGenerator/password_generator.dart';
+import 'package:pass_gen/features/about/presentation.dart';
+import 'package:pass_gen/features/storage/presentation.dart';
+import 'package:pass_gen/features/endecrypter/presentation.dart';
+import 'package:pass_gen/features/passwordGenerator/presentation.dart';
 
 /// Перечисление для типобезопасного управления вкладками
 enum AppTab {

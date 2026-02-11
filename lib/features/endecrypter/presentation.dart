@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pass_gen/features/storage/storage_service.dart';
 import 'package:pass_gen/shared/interface.dart';
 import 'package:pass_gen/shared/dialogs.dart';
-import 'package:pass_gen/features/endecrypter/endecrypter_interface.dart';
+import 'logic.dart';
 
 class EndecrypterScreen extends StatefulWidget {
   const EndecrypterScreen({super.key});
@@ -30,9 +29,9 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
 
   Future<void> setupConfigs() async{
     try{
-      dynamic configs = await getConfigs('endecrypter');
-      keyController.text = configs[0];
-      masterKeyController.text = configs[1];
+      // dynamic configs = await getConfigs('endecrypter');
+      // keyController.text = configs[0];
+      // masterKeyController.text = configs[1];
     }
     catch (e){e;}
   }
@@ -54,13 +53,13 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
       password: keyController.text
     );
       
-    await saveConfig(
-      'endecrypter', 
-      [
-        keyController.text, 
-        masterKeyController.text
-      ]
-    );
+    // await saveConfig(
+    //   'endecrypter', 
+    //   [
+    //     keyController.text, 
+    //     masterKeyController.text
+    //   ]
+    // );
 
     setState(() {
       mssgCode = 'Скопировать шифр';
@@ -93,13 +92,13 @@ class _EndecrypterScreen extends State<EndecrypterScreen> {
       return;
     }
       
-    await saveConfig(
-      'endecrypter', 
-      [
-        keyController.text, 
-        masterKeyController.text
-      ]
-    );
+    // await saveConfig(
+    //   'endecrypter', 
+    //   [
+    //     keyController.text, 
+    //     masterKeyController.text
+    //   ]
+    // );
 
     setState(() {
       mssgCode = 'Скопировать сообщение';
