@@ -93,12 +93,12 @@ class AppData{
   String lastConfig = '';
   late Map<String, String> parameters;
 
-  TextEditingController keyController = TextEditingController();
-  TextEditingController minLengthController = TextEditingController(text: '8');
-  TextEditingController maxLengthController = TextEditingController(text: '14');
-  TextEditingController serviceController = TextEditingController();
+  bool atWork = false;
 
-  int passwordStrength = 3;
+  TextEditingController keyController = TextEditingController();
+  TextEditingController minLengthController = TextEditingController();
+  TextEditingController maxLengthController = TextEditingController();
+  TextEditingController serviceController = TextEditingController();
 
   Map<int, Map<String, dynamic>> strengthLabels = {
     0: {'label': 'Очень слабый', 'color': Colors.red, 'flags': digits, 'length_range': [4, 6]},
@@ -108,11 +108,16 @@ class AppData{
     4: {'label': 'Очень сильный', 'color': Colors.blue, 'flags': digits | lowercase | uppercase | symbols | 512, 'length_range': [20, 32]},
   };
 
-  PasswordGenerator passwordGenerator = PasswordGenerator(
-    symbolAlphabet: SymbolAlphabet(), 
-    range: [12, 14], 
-    flags: 511
-  );
+
+
+  int passwordStrength = 2;
+  late List<int> range;
+  late int flags;
+  late PasswordGenerator passwordGenerator;
+
+  late String label;
+
+  late Color color;
 
   String password = '';
   String config = '';
@@ -124,7 +129,21 @@ class AppData{
   bool reqSpec1 = false;
   bool reqSpec2 = false;
 
-  AppData();
+  AppData(){
+    updateStrength(passwordStrength);
+  }
+
+  void updateStrength(int passwordStrength){
+    this.passwordStrength = passwordStrength;
+    range = strengthLabels[passwordStrength]!['length_range'];
+    flags = strengthLabels[passwordStrength]!['flags'];
+
+    label = '${strengthLabels[passwordStrength]?['label'] ?? "Неизвестная сложность $passwordStrength"}';
+    color = strengthLabels[passwordStrength]!['color'];
+
+    minLengthController.text = range.first.toString();
+    maxLengthController.text = range.last.toString();
+  }
 
   Future<void> setupConfigs() async{
     // List<String> configs = await getConfigs('psswdGen');
@@ -175,6 +194,24 @@ class AppData{
         reqSpec1, 
         reqSpec2, 
       ],
+    );
+
+    range = [
+      int.tryParse(minLengthController.text) ?? 12, 
+      int.tryParse(maxLengthController.text) ?? 16
+    ];
+
+    minLengthController.text = range.first.toString();
+    maxLengthController.text = range.last.toString();
+
+    if (range.first > range.last || range.first > 255 || range.last > 255){
+      throw Exception('Недопустимое значение');
+    }
+
+    passwordGenerator = PasswordGenerator(
+      symbolAlphabet: SymbolAlphabet(), 
+      range: range, 
+      flags: flags
     );
 
     password = passwordGenerator.generatePassword()['password']!;

@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:pass_gen/shared/dialogs.dart';
 import 'package:pass_gen/shared/interface.dart';
 import 'logic.dart';
 
@@ -52,18 +53,11 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
               min: 0,
               max: 4,
               divisions: 4,
-              label: '${data.strengthLabels[data.passwordStrength]?['label'] ?? "Неизвестная сложность $data.passwordStrength"}',
-              activeColor: 
-                  data.strengthLabels[data.passwordStrength]?['color'] != null
-                  ? data.strengthLabels[data.passwordStrength]!['color'] as Color
-                  : null,
+              label: data.label,
+              activeColor: data.color,
               onChanged: (value) {
                 setState(() {
-                  data.passwordStrength = value.toInt();
-                  data.minLengthController.text = 
-                    data.strengthLabels[data.passwordStrength]?['length_range'][0].toString() ?? '12';
-                  data.maxLengthController.text = 
-                    data.strengthLabels[data.passwordStrength]?['length_range'][1].toString() ?? '16';
+                  data.updateStrength(value.toInt());
                 });
               },
             ),
@@ -129,7 +123,12 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
             label: 'Сгенерировать', 
             function: () {
               setState(() {
-                data.generatePassword();
+                try{
+                  data.generatePassword();
+                }
+                catch (e){
+                  showDialogWindow1("Ошибка", '$e', context);
+                }
               });
               }
           ), 

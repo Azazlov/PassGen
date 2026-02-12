@@ -115,7 +115,9 @@ class PasswordGenerator{
         }
       }
     }
+
     int uniqueChars = password.length;
+
     for (int i = 0; i < _length - uniqueChars; i++){
       if (enabledCategories.isEmpty){
         break;
@@ -143,7 +145,11 @@ class PasswordGenerator{
     }
     double psswdStrength = getPasswdStrength(password);
     isRestored = false;
-    return {'password': password, 'strength': psswdStrength.toString(), 'config': generateConfig()};
+    return {
+      'password': password, 
+      'strength': psswdStrength.toString(), 
+      'config': generateConfig()
+    };
   }
   
   List<String> shuffleList(List<String> list){
@@ -171,31 +177,4 @@ class PasswordGenerator{
       isRestored = true;
     }
   }
-
-}
-
-void main(){
-  // Создаем алфавит
-  final symbolAlphabet = SymbolAlphabet();
-  
-  // Флаги: включены все категории (digits, lowercase, uppercase, symbols)
-  // Все обязательны (IsReq флаги)
-  // Все символы уникальны (allIsUniq)
-  int flags = digits | digitsIsReq | lowercase | lowercaseIsReq | uppercase | uppercaseIsReq | symbols | symbolsIsReq | allIsUniq;
-  print(flags);
-  
-  PasswordGenerator generator = PasswordGenerator(
-    symbolAlphabet: symbolAlphabet,
-    range: [512, 1024],
-    flags: flags,
-  );
-  
-  Map<String, String> passwordInfo = generator.generatePassword(); 
-  String password = passwordInfo['password']!;
-  double passwordStrength = double.parse(passwordInfo['strength']!);
-  print('Пароль: $password');
-  print('Надежность пароля: $passwordStrength');
-  print('Конфиг: ${generator.generateConfig()}');
-  generator.restoreConfig(generator.generateConfig());
-  print('Восстановленный конфиг: ${generator._flags}, ${generator._length}, ${generator._rands}');
 }
