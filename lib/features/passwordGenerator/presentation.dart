@@ -120,11 +120,13 @@ class _PasswordGeneratorScreenState extends State<PasswordGeneratorScreen> {
           ]),
           SizedBox(height: 48),
           buildButton(
-            label: 'Сгенерировать', 
+            label: 'Сгенерировать\n${data.strength}\n${data.config}', 
             function: () {
               setState(() {
                 try{
-                  data.generatePassword();
+                  if (!data.generating){
+                    data.generatePassword();
+                  }
                 }
                 catch (e){
                   showDialogWindow1("Ошибка", '$e', context);

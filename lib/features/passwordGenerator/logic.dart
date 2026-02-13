@@ -40,8 +40,8 @@ class PasswordGenerationInterface {
   Future<PasswordGenerationConfig> getConfig() async{
     SymbolAlphabet alphabet = SymbolAlphabet();
     generator = PasswordGenerator(
-      symbolAlphabet:  alphabet,
-      range: passwordLength,
+      alphabet:  alphabet,
+      lengthRange: passwordLength,
       flags: flags
     );
     Map<String, String> passwordData = generator.generatePassword();
@@ -92,8 +92,9 @@ class AppData{
   bool changeConfig = false;
   String lastConfig = '';
   late Map<String, String> parameters;
+  late Map<String, String> passwordParameters;
 
-  bool atWork = false;
+  bool generating = false;
 
   TextEditingController keyController = TextEditingController();
   TextEditingController minLengthController = TextEditingController();
@@ -171,7 +172,7 @@ class AppData{
     saveConfig();
   }
 
-  void copyPsswd(context) {
+  void copyPsswd(BuildContext context) {
     showDialogWindow2(
       'Скопировано',
       "Сохранить шифр в хранилище?",
@@ -184,6 +185,8 @@ class AppData{
   }
 
   void generatePassword() {
+    if (generating){return;}
+    generating = true;
     parameters = checkInputs(
       minLength: minLengthController.text, 
       maxLength: maxLengthController.text, 
@@ -209,11 +212,18 @@ class AppData{
     }
 
     passwordGenerator = PasswordGenerator(
-      symbolAlphabet: SymbolAlphabet(), 
-      range: range, 
+      alphabet: SymbolAlphabet(), 
+      lengthRange: range, 
       flags: flags
     );
 
-    password = passwordGenerator.generatePassword()['password']!;
+    passwordParameters = passwordGenerator.generatePassword();
+    password = passwordParameters['password']!;
+    strength = passwordParameters['strength']!;
+    config = passwordParameters['config']!;
+    print(
+      '${passwordGenerator.restoreFromConfig(config)}'
+    );
+    generating = false;
   }
 }

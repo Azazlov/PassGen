@@ -49,132 +49,111 @@ class SymbolAlphabet {
   }
 }
 
-class PasswordGenerator{
-  late SymbolAlphabet alphabet;
-  late List<int> lengthRange; // [min, max]
-  late List<int> _rands; // Случайные числа для воспроизведения генерации
-  late int _length; // Длина генерируемого пароля
-  late int _flags; // Побитовые флаги: какие категории используются, какие обязательны, уникальность
-  bool isRestored = false;
+class PasswordGenerator {
+  final SymbolAlphabet alphabet;
+  final List<int> lengthRange;
+  int _flags;
+
+  // Внутренние переменные для хранения данных ПОСЛЕДНЕГО сгенерированного пароля
+  List<int> _lastRands = [];
+  int _lastLength = 0;
 
   PasswordGenerator({
-    required SymbolAlphabet symbolAlphabet,
-    required List<int> range,
+    required this.alphabet,
+    required this.lengthRange,
     required int flags,
-    this.isRestored = false,
-  }) {
-    alphabet = symbolAlphabet;
-    lengthRange = range;
-    _flags = flags;
-    _rands = [];
-    _length = 0;
-  }
+  }) : _flags = flags;
 
-  // Проверить, включена ли категория
-  bool isCategoryEnabled(int categoryFlag) {
-    return (_flags & categoryFlag) != 0;
-  }
+  // --- ГЕНЕРАЦИЯ ---
 
-  // Проверить, обязательна ли категория
-  bool isCategoryRequired(int categoryFlag) {
-    return (_flags & (categoryFlag << 1)) != 0;
-  }
-
-  // Проверить, должны ли все символы быть уникальны
-  bool shouldBeUnique() {
-    return (_flags & allIsUniq) != 0;
-  }
-
-  Map<String, String> generatePassword(){
-    _length = isRestored ? _length : randomInt(min: lengthRange[0], max: lengthRange[1]+1);
-    _rands = isRestored ? _rands : random(len: _length*2);
-    String password = '';
+  /// Создает новый случайный пароль
+  Map<String, String> generatePassword() {
+    final length = randomInt(min: lengthRange[0], max: lengthRange[1] + 1);
+    final rands = random(len: length * 2);
     
-    List<int> enabledCategories = [];
-    List<int> categoryFlags = [digits, lowercase, uppercase, symbols];
-    Map<int, List<String>> availableSymbols = {};
-    String tempAlpha;
-    // Определяем, какие категории включены
-    for (int flag in categoryFlags) {
-      if (isCategoryEnabled(flag)) {
-        enabledCategories.add(flag);
-        if (isCategoryRequired(flag)){
-          tempAlpha = alphabet.getAlphabet(flag);
-          if (tempAlpha.isNotEmpty){
-            // Добавляем обязательный символ в пароль
-            int randIndex = _rands[password.length] % tempAlpha.length;
-            password += tempAlpha[randIndex];
-            if (shouldBeUnique()){
-              // Удаляем использованный символ из доступных
-              availableSymbols[flag] = tempAlpha.split('')..removeAt(randIndex);
-              if (availableSymbols[flag]!.isEmpty){
-                enabledCategories.remove(flag);
-              }
-            }
+    return _coreEngine(length, _flags, rands);
+  }
+
+  /// Восстанавливает пароль из строки конфига без создания нового объекта
+  Map<String, String> restoreFromConfig(String config) {
+    try {
+      List<String> parts = config.split('.');
+      if (parts.length < 3) throw Exception("Invalid config");
+
+      final length = int.parse(decodeBase64(parts[0]));
+      final flags = int.parse(decodeBase64(parts[1]));
+      final rands = List<int>.from(base64Decode(parts[2]));
+
+      // Генерируем пароль на основе восстановленных данных
+      return _coreEngine(length, flags, rands);
+    } catch (e) {
+      return {'password': '', 'strength': '0', 'config': '', 'error': 'Restore failed'};
+    }
+  }
+
+  /// Ядро генерации (Pure logic)
+  Map<String, String> _coreEngine(int length, int flags, List<int> rands) {
+    if (rands.isEmpty) return {'password': '', 'strength': '0', 'config': ''};
+
+    // Сохраняем состояние для метода generateConfig
+    _lastLength = length;
+    _lastRands = rands;
+    // Мы не меняем this._flags, так как конфиг может иметь другие флаги
+
+    int getSafeRand(int index) => rands[index % rands.length];
+
+    List<String> passwordChars = [];
+    String allAllowedChars = '';
+    int randCursor = 0;
+
+    // Категории: Digits(1), Lower(4), Upper(16), Symbols(64)
+    for (int f in [1, 4, 16, 64]) {
+      if ((flags & f) != 0) {
+        String chars = alphabet.getAlphabet(f);
+        if (chars.isNotEmpty) {
+          allAllowedChars += chars;
+          // Required проверка (флаг << 1)
+          if ((flags & (f << 1)) != 0 && passwordChars.length < length) {
+            passwordChars.add(chars[getSafeRand(randCursor) % chars.length]);
+            randCursor++;
           }
         }
       }
     }
 
-    int uniqueChars = password.length;
+    if (allAllowedChars.isEmpty) return {'password': '', 'strength': '0'};
 
-    for (int i = 0; i < _length - uniqueChars; i++){
-      if (enabledCategories.isEmpty){
-        break;
-      }
-      int catIndex = _rands[password.length + i] % enabledCategories.length;
-      int categoryFlag = enabledCategories[catIndex];
-      String chars;
-      if (shouldBeUnique() && availableSymbols.containsKey(categoryFlag)){
-        chars = availableSymbols[categoryFlag]!.join('');
-      } else {
-        chars = alphabet.getAlphabet(categoryFlag);
-      }
-      if (chars.isEmpty){
-        continue;
-      }
-      int charIndex = _rands[password.length + i] % chars.length;
-      password += chars[charIndex];
-      if (shouldBeUnique()){
-        // Удаляем использованный символ из доступных
-        availableSymbols[categoryFlag]!.removeAt(charIndex);
-        if (availableSymbols[categoryFlag]!.isEmpty){
-          enabledCategories.removeAt(catIndex);
-        }
-      }
+    // Заполнение
+    while (passwordChars.length < length) {
+      passwordChars.add(allAllowedChars[getSafeRand(randCursor) % allAllowedChars.length]);
+      randCursor++;
     }
-    double psswdStrength = getPasswdStrength(password);
-    isRestored = false;
+
+    // Перемешивание
+    for (int i = passwordChars.length - 1; i > 0; i--) {
+      int j = getSafeRand(length + i) % (i + 1);
+      String temp = passwordChars[i];
+      passwordChars[i] = passwordChars[j];
+      passwordChars[j] = temp;
+    }
+
+    String password = passwordChars.join('');
+    
     return {
-      'password': password, 
-      'strength': psswdStrength.toString(), 
-      'config': generateConfig()
+      'password': password,
+      'strength': getPasswdStrength(password).toString(),
+      'config': _internalGenerateConfig(length, flags, rands)
     };
   }
+
+  // --- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ---
+
+  String _internalGenerateConfig(int len, int flags, List<int> rnds) {
+    return '${encodeBase64(len.toString())}.${encodeBase64(flags.toString())}.${base64Encode(rnds)}';
+  }
+
+  // Если нужно получить конфиг последнего сгенерированного пароля отдельно
+  String lastConfig() => _internalGenerateConfig(_lastLength, _flags, _lastRands);
   
-  List<String> shuffleList(List<String> list){
-    List<String> shuffled = [];
-    List<String> tempList = List.from(list);
-    while (tempList.isNotEmpty){
-      int randIndex = randomInt(min: 0, max: tempList.length);
-      shuffled.add(tempList[randIndex]);
-      tempList.removeAt(randIndex);
-    }
-    return shuffled;
-  }
-
-  String generateConfig(){
-    String config = '${encodeBase64(_length.toString())}.${encodeBase64(_flags.toString())}.${base64Encode(_rands)}';
-    return config;
-  }
-
-  void restoreConfig(String config) {
-    List<String> parts = config.split('.');
-    if (parts.length >= 3) {
-      _length = (int.parse(decodeBase64(parts[0])));
-      _flags = int.parse(decodeBase64(parts[1]));
-      _rands = List<int>.from(base64Decode(parts[2]));
-      isRestored = true;
-    }
-  }
+  void updateFlags(int newFlags) => _flags = newFlags;
 }
