@@ -116,7 +116,6 @@ Widget buildBigText(String text) {
 }
 
 // Текст с копированием
-// Текст с копированием
 Widget buildCopyOnTap({
   required String label, 
   required String text1, 
@@ -150,14 +149,6 @@ Widget buildCopyOnTap({
                     border: Border.all(
                       color: const Color.fromARGB(255, 90, 90, 90),
                       width: 2,
-                    ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        const Color.fromRGBO(245, 245, 245, 1),
-                        const Color.fromARGB(255, 235, 235, 235),
-                      ],
                     ),
                     boxShadow: [
                       BoxShadow(

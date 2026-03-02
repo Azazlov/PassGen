@@ -4,7 +4,7 @@ import 'package:pass_gen/modules/generate_password.dart';
 import 'package:pass_gen/modules/encrypted.dart';
 import 'package:pass_gen/shared/dialogs.dart';
 import 'dart:convert';
-
+import 'package:uuid/uuid.dart';
 
 class PasswordGenerationInterface {
   int version = 1;
@@ -15,27 +15,29 @@ class PasswordGenerationInterface {
   late String category;
   late int expireDays;
   late int flags;
-  late List<int> passwordLength = [12, 16];
+  late List<int> passwordLength;
   late PasswordGenerator generator;
   String includeDigits = '0123456789';
   String includeLowercase = 'abcdefghijklmnopqrstuvwxyz';
   String includeUppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   String includeSpecSymbols = '!@#\$%^&*()_+-=[]{}|;:,.<>?';
 
+  Encrypted encrypter = Encrypted();
+
   late String generatedPassword;
   late String strengthGeneratedPassword;
-  late String encodedPasswordGenerationConfig;
+  late String encodedPasswordGenerationConfig = '';
   
-  PasswordGenerationInterface(
-    String password,
-    String service,
-    dynamic lastUsageDate,
-    String uuid,
-    String category,
-    int expireDays,
-    int flags,
-    List<int> passwordLength
-  );
+  PasswordGenerationInterface({
+    required this.password,
+    required this.service,
+    required this.lastUsageDate,
+    required this.uuid,
+    required this.category,
+    required this.expireDays,
+    required this.flags,
+    required this.passwordLength
+  });
 
   Future<PasswordGenerationConfig> getConfig() async{
     SymbolAlphabet alphabet = SymbolAlphabet();
@@ -92,7 +94,17 @@ class AppData{
   bool changeConfig = false;
   String lastConfig = '';
   late Map<String, String> parameters;
-  late Map<String, String> passwordParameters;
+
+  String appPassword = '12';
+  String serviceName = 'asdfas';
+  String lastUsageDate = '';
+  String uuid = Uuid().v8();
+  String categoryName = 'Default';
+  int expireDays = 30;
+
+  late BuildContext context;
+  late PasswordGenerationInterface passwordGenerator;
+  late PasswordGenerationConfig passwordConfig = PasswordGenerationConfig(encr: '');
 
   bool generating = false;
 
@@ -112,9 +124,8 @@ class AppData{
 
 
   int passwordStrength = 2;
-  late List<int> range;
+  late List<int> passwordLengthRange;
   late int flags;
-  late PasswordGenerator passwordGenerator;
 
   late String label;
 
@@ -127,23 +138,48 @@ class AppData{
   bool reqUpper = false;
   bool reqLower = false;
   bool reqDigits = false;
-  bool reqSpec1 = false;
-  bool reqSpec2 = false;
+  bool reqSymbols = false;
 
   AppData(){
     updateStrength(passwordStrength);
+    updatePasswordGenerator();
   }
 
   void updateStrength(int passwordStrength){
     this.passwordStrength = passwordStrength;
-    range = strengthLabels[passwordStrength]!['length_range'];
+    passwordLengthRange = strengthLabels[passwordStrength]!['length_range'];
     flags = strengthLabels[passwordStrength]!['flags'];
 
     label = '${strengthLabels[passwordStrength]?['label'] ?? "Неизвестная сложность $passwordStrength"}';
     color = strengthLabels[passwordStrength]!['color'];
 
-    minLengthController.text = range.first.toString();
-    maxLengthController.text = range.last.toString();
+    minLengthController.text = passwordLengthRange.first.toString();
+    maxLengthController.text = passwordLengthRange.last.toString();
+  }
+
+  void toggleFlag(int flag) {
+    if (flag > 0) {
+      // Установить флаг (включить обязательность)
+      flags |= flag;
+    } else {
+      // Снять флаг (выключить обязательность)
+      flags &= ~(-flag);
+    }
+    print('${flag}\n${flags}');
+  }
+
+  void updatePasswordGenerator(){
+    passwordGenerator = 
+    PasswordGenerationInterface(
+      password: appPassword, 
+      service: serviceName, 
+      lastUsageDate: lastUsageDate, 
+      uuid: uuid, 
+      category: categoryName, 
+      expireDays: expireDays, 
+      flags: flags, 
+      passwordLength: passwordLengthRange
+    );
   }
 
   Future<void> setupConfigs() async{
@@ -172,7 +208,7 @@ class AppData{
     saveConfig();
   }
 
-  void copyPsswd(BuildContext context) {
+  void copyPsswd() {
     showDialogWindow2(
       'Скопировано',
       "Сохранить шифр в хранилище?",
@@ -184,7 +220,7 @@ class AppData{
     );
   }
 
-  void generatePassword() {
+  void generatePassword() async{
     if (generating){return;}
     generating = true;
     parameters = checkInputs(
@@ -194,36 +230,28 @@ class AppData{
         reqUpper, 
         reqLower, 
         reqDigits, 
-        reqSpec1, 
-        reqSpec2, 
+        reqSymbols
       ],
     );
 
-    range = [
+    passwordLengthRange = [
       int.tryParse(minLengthController.text) ?? 12, 
       int.tryParse(maxLengthController.text) ?? 16
     ];
 
-    minLengthController.text = range.first.toString();
-    maxLengthController.text = range.last.toString();
+    minLengthController.text = passwordLengthRange.first.toString();
+    maxLengthController.text = passwordLengthRange.last.toString();
 
-    if (range.first > range.last || range.first > 255 || range.last > 255){
+    if (passwordLengthRange.first > passwordLengthRange.last || passwordLengthRange.first > 255 || passwordLengthRange.last > 255){
       throw Exception('Недопустимое значение');
     }
 
-    passwordGenerator = PasswordGenerator(
-      alphabet: SymbolAlphabet(), 
-      lengthRange: range, 
-      flags: flags
-    );
+    updatePasswordGenerator();
+    passwordConfig = await passwordGenerator.getConfig();
+    password = passwordGenerator.generatedPassword;
+    strength = passwordGenerator.strengthGeneratedPassword;
+    config = passwordGenerator.encodedPasswordGenerationConfig;
 
-    passwordParameters = passwordGenerator.generatePassword();
-    password = passwordParameters['password']!;
-    strength = passwordParameters['strength']!;
-    config = passwordParameters['config']!;
-    print(
-      '${passwordGenerator.restoreFromConfig(config)}'
-    );
     generating = false;
   }
 }

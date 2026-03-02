@@ -18,7 +18,7 @@ class PasswordGenerationConfig{
     {
       this.version = 0,
       this.service = 'None',
-      this.lastUsageDate = false,
+      this.lastUsageDate = '',
       this.uuid = '',
       this.category = 'None',
       this.expireDays = 30,
@@ -30,7 +30,7 @@ class PasswordGenerationConfig{
 
   // Минификация конфига
   String configToBase64Mini(){
-    dynamic lud = lastUsageDate == false? 'Not used': _minificateDate(lastUsageDate);
+    dynamic lud = lastUsageDate.isEmpty? 'Not used': _minificateDate(lastUsageDate);
     String splitedParams = '$version.${encodeBase64(service)}.$lud.$uuid.$category.$expireDays';
     String miniConfig = '${encodeBase64(splitedParams)}.$encr';
     return miniConfig;
