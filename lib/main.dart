@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pass_gen/app/app.dart';
+import 'app/app.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

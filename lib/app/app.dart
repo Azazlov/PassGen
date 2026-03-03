@@ -1,18 +1,189 @@
 import 'package:flutter/material.dart';
-import 'routes.dart';
+import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+// Data sources
+import '../../data/datasources/encryptor_local_datasource.dart';
+import '../../data/datasources/password_generator_local_datasource.dart';
+import '../../data/datasources/storage_local_datasource.dart';
+
+// Repositories
+import '../../data/repositories/password_generator_repository_impl.dart';
+import '../../data/repositories/encryptor_repository_impl.dart';
+import '../../data/repositories/storage_repository_impl.dart';
+
+// Use cases
+import '../../domain/usecases/password/generate_password_usecase.dart';
+import '../../domain/usecases/password/save_password_usecase.dart';
+import '../../domain/usecases/encryptor/encrypt_message_usecase.dart';
+import '../../domain/usecases/encryptor/decrypt_message_usecase.dart';
+import '../../domain/usecases/storage/get_configs_usecase.dart';
+import '../../domain/usecases/storage/save_configs_usecase.dart';
+import '../../domain/usecases/storage/get_passwords_usecase.dart';
+import '../../domain/usecases/storage/delete_password_usecase.dart';
+import '../../domain/usecases/storage/export_passwords_usecase.dart';
+import '../../domain/usecases/storage/import_passwords_usecase.dart';
+
+// Controllers
+import '../../presentation/features/generator/generator_controller.dart';
+import '../../presentation/features/encryptor/encryptor_controller.dart';
+import '../../presentation/features/storage/storage_controller.dart';
+
+// Screens
+import '../../presentation/features/generator/generator_screen.dart';
+import '../../presentation/features/encryptor/encryptor_screen.dart';
+import '../../presentation/features/storage/storage_screen.dart';
+import '../../presentation/features/about/about_screen.dart';
+
+/// Перечисление для типобезопасного управления вкладками
+enum AppTab {
+  generator(Icons.create, 'Генератор'),
+  encryptor(Icons.lock, 'Шифратор'),
+  storage(Icons.archive, 'Хранилище'),
+  about(Icons.info, 'О программе');
+
+  const AppTab(this.icon, this.label);
+  final IconData icon;
+  final String label;
+
+  static AppTab fromIndex(int index) => values[index.clamp(0, values.length - 1)];
+}
 
 class PasswordGeneratorApp extends StatelessWidget {
   const PasswordGeneratorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'PassGen',
-      home: const TabScaffold(),
-      theme: getTheme(false),
-      darkTheme: getTheme(true),
-      themeMode: ThemeMode.system,
+    return MultiProvider(
+      providers: [
+        // Data Sources (singletons)
+        Provider(create: (_) => EncryptorLocalDataSource()),
+        Provider(create: (_) => StorageLocalDataSource()),
+        Provider(
+          create: (context) => PasswordGeneratorLocalDataSource(
+            context.read<EncryptorLocalDataSource>(),
+            context.read<StorageLocalDataSource>(),
+          ),
+        ),
+
+        // Repositories
+        Provider(
+          create: (context) => PasswordGeneratorRepositoryImpl(
+            context.read<PasswordGeneratorLocalDataSource>(),
+          ),
+        ),
+        Provider(
+          create: (context) => EncryptorRepositoryImpl(
+            context.read<EncryptorLocalDataSource>(),
+          ),
+        ),
+        Provider(
+          create: (context) => StorageRepositoryImpl(
+            context.read<StorageLocalDataSource>(),
+          ),
+        ),
+
+        // Use Cases
+        Provider(
+          create: (context) => GeneratePasswordUseCase(
+            context.read<PasswordGeneratorRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => SavePasswordUseCase(
+            context.read<PasswordGeneratorRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => EncryptMessageUseCase(
+            context.read<EncryptorRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => DecryptMessageUseCase(
+            context.read<EncryptorRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => GetConfigsUseCase(
+            context.read<StorageRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => SaveConfigsUseCase(
+            context.read<StorageRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => GetPasswordsUseCase(
+            context.read<StorageRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => DeletePasswordUseCase(
+            context.read<StorageRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => ExportPasswordsUseCase(
+            context.read<StorageRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => ImportPasswordsUseCase(
+            context.read<StorageRepositoryImpl>(),
+          ),
+        ),
+
+        // Controllers
+        ChangeNotifierProxyProvider2<GeneratePasswordUseCase, SavePasswordUseCase, GeneratorController>(
+          create: (context) => GeneratorController(
+            generatePasswordUseCase: context.read<GeneratePasswordUseCase>(),
+            savePasswordUseCase: context.read<SavePasswordUseCase>(),
+          ),
+          update: (_, genUc, saveUc, controller) => GeneratorController(
+            generatePasswordUseCase: genUc,
+            savePasswordUseCase: saveUc,
+          ),
+        ),
+        ChangeNotifierProxyProvider2<EncryptMessageUseCase, DecryptMessageUseCase, EncryptorController>(
+          create: (context) => EncryptorController(
+            encryptUseCase: context.read<EncryptMessageUseCase>(),
+            decryptUseCase: context.read<DecryptMessageUseCase>(),
+          ),
+          update: (_, encryptUc, decryptUc, controller) => EncryptorController(
+            encryptUseCase: encryptUc,
+            decryptUseCase: decryptUc,
+          ),
+        ),
+        ChangeNotifierProxyProvider4<
+          GetPasswordsUseCase,
+          DeletePasswordUseCase,
+          ExportPasswordsUseCase,
+          ImportPasswordsUseCase,
+          StorageController>(
+          create: (context) => StorageController(
+            getPasswordsUseCase: context.read<GetPasswordsUseCase>(),
+            deletePasswordUseCase: context.read<DeletePasswordUseCase>(),
+            exportPasswordsUseCase: context.read<ExportPasswordsUseCase>(),
+            importPasswordsUseCase: context.read<ImportPasswordsUseCase>(),
+          ),
+          update: (_, getUc, deleteUc, exportUc, importUc, controller) => StorageController(
+            getPasswordsUseCase: getUc,
+            deletePasswordUseCase: deleteUc,
+            exportPasswordsUseCase: exportUc,
+            importPasswordsUseCase: importUc,
+          ),
+        ),
+      ],
+      child: MaterialApp(
+        title: 'PassGen',
+        home: const TabScaffold(),
+        theme: getTheme(false),
+        darkTheme: getTheme(true),
+        themeMode: ThemeMode.system,
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }
@@ -33,12 +204,62 @@ ThemeData getTheme(bool isDarkMode) {
     colorScheme: isDarkMode ? darkColorScheme : lightColorScheme,
     typography: Typography.material2018(),
     textTheme: GoogleFonts.latoTextTheme(
-      isDarkMode?ThemeData.dark().textTheme:ThemeData.light().textTheme,
+      isDarkMode ? ThemeData.dark().textTheme : ThemeData.light().textTheme,
     ),
     appBarTheme: const AppBarTheme(
       centerTitle: true,
     ),
-    // Дополнительные настройки темы
-    // ...
   );
+}
+
+class TabScaffold extends StatefulWidget {
+  const TabScaffold({super.key});
+
+  @override
+  State<TabScaffold> createState() => _TabScaffoldState();
+}
+
+class _TabScaffoldState extends State<TabScaffold> {
+  AppTab _currentTab = AppTab.generator;
+
+  void _onTabTapped(int index) {
+    final newTab = AppTab.fromIndex(index);
+    if (_currentTab != newTab) {
+      setState(() => _currentTab = newTab);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentTab.index,
+        children: const [
+          GeneratorScreen(),
+          EncryptorScreen(),
+          StorageScreen(),
+          AboutScreen(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentTab.index,
+        onTap: _onTabTapped,
+        backgroundColor: theme.colorScheme.surface,
+        selectedItemColor: theme.colorScheme.primary,
+        unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
+        enableFeedback: true,
+        items: AppTab.values.map((tab) {
+          return BottomNavigationBarItem(
+            icon: Icon(tab.icon),
+            label: tab.label,
+            tooltip: tab.label,
+          );
+        }).toList(),
+      ),
+    );
+  }
 }
