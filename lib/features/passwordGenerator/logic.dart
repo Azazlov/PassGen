@@ -3,6 +3,7 @@ import 'package:pass_gen/modules/password_generation_config.dart';
 import 'package:pass_gen/modules/generate_password.dart';
 import 'package:pass_gen/modules/encrypted.dart';
 import 'package:pass_gen/shared/dialogs.dart';
+import 'package:pass_gen/features/storage/database_service.dart';
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
 
@@ -81,7 +82,7 @@ Map<String, String> checkInputs({
     }
   }
   catch (e){
-    print(e);
+    // Игнорирование ошибки
   }
   return {
     'title': title,
@@ -105,6 +106,8 @@ class AppData{
   late BuildContext context;
   late PasswordGenerationInterface passwordGenerator;
   late PasswordGenerationConfig passwordConfig = PasswordGenerationConfig(encr: '');
+
+  final DatabaseService _dbService = DatabaseService.instance;
 
   bool generating = false;
 
@@ -165,7 +168,6 @@ class AppData{
       // Снять флаг (выключить обязательность)
       flags &= ~(-flag);
     }
-    print('${flag}\n${flags}');
   }
 
   void updatePasswordGenerator(){
@@ -196,16 +198,62 @@ class AppData{
   }
 
   void saveConfig(){
+    // Пустая реализация
+  }
 
+  Future<void> saveConfigToDatabase() async {
+    final configMap = {
+      'version': passwordConfig.version,
+      'service': passwordConfig.service,
+      'lastUsageDate': passwordConfig.lastUsageDate.toString(),
+      'uuid': passwordConfig.uuid,
+      'category': passwordConfig.category,
+      'expireDays': passwordConfig.expireDays,
+      'encr': passwordConfig.encr,
+      'password': password,
+      'strength': strength,
+      'config': config,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+    
+    await _dbService.savePasswordConfig(configMap);
+  }
+
+  Future<void> updateConfigInDatabase() async {
+    final configMap = {
+      'version': passwordConfig.version,
+      'service': passwordConfig.service,
+      'lastUsageDate': passwordConfig.lastUsageDate.toString(),
+      'uuid': passwordConfig.uuid,
+      'category': passwordConfig.category,
+      'expireDays': passwordConfig.expireDays,
+      'encr': passwordConfig.encr,
+      'password': password,
+      'strength': strength,
+      'config': config,
+    };
+    
+    await _dbService.updateConfig(configMap);
+  }
+
+  Future<List<Map<String, dynamic>>> getAllConfigsFromDatabase() async {
+    return await _dbService.getAllConfigs();
+  }
+
+  Future<Map<String, dynamic>?> getConfigByUuidFromDatabase(String uuid) async {
+    return await _dbService.getConfigByUuid(uuid);
+  }
+
+  Future<void> deleteConfigFromDatabase(String uuid) async {
+    await _dbService.deleteConfig(uuid);
   }
 
   void unChangeConfig(){
     changeConfig = false;
   }
 
-  void saveEncrypt() async{
-    // final encryptedconfigs = await getConfigs();
-    saveConfig();
+  Future<void> saveEncrypt() async {
+    await saveConfigToDatabase();
   }
 
   void copyPsswd() {
@@ -220,22 +268,22 @@ class AppData{
     );
   }
 
-  void generatePassword() async{
+  Future<void> generatePassword() async{
     if (generating){return;}
     generating = true;
     parameters = checkInputs(
-      minLength: minLengthController.text, 
-      maxLength: maxLengthController.text, 
+      minLength: minLengthController.text,
+      maxLength: maxLengthController.text,
       reqSymbols: [
-        reqUpper, 
-        reqLower, 
-        reqDigits, 
+        reqUpper,
+        reqLower,
+        reqDigits,
         reqSymbols
       ],
     );
 
     passwordLengthRange = [
-      int.tryParse(minLengthController.text) ?? 12, 
+      int.tryParse(minLengthController.text) ?? 12,
       int.tryParse(maxLengthController.text) ?? 16
     ];
 
@@ -251,6 +299,8 @@ class AppData{
     password = passwordGenerator.generatedPassword;
     strength = passwordGenerator.strengthGeneratedPassword;
     config = passwordGenerator.encodedPasswordGenerationConfig;
+
+    await saveConfigToDatabase();
 
     generating = false;
   }

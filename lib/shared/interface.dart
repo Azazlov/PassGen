@@ -93,7 +93,7 @@ Widget buildButton({
         borderRadius: BorderRadius.circular(8),
       ),
     ),
-    child: Text(label),
+    child: Text(label, textAlign: TextAlign.center),
   );
 }
 
