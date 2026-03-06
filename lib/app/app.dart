@@ -6,11 +6,16 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../data/datasources/encryptor_local_datasource.dart';
 import '../../data/datasources/password_generator_local_datasource.dart';
 import '../../data/datasources/storage_local_datasource.dart';
+import '../../data/datasources/auth_local_datasource.dart';
 
 // Repositories
 import '../../data/repositories/password_generator_repository_impl.dart';
 import '../../data/repositories/encryptor_repository_impl.dart';
 import '../../data/repositories/storage_repository_impl.dart';
+import '../../data/repositories/auth_repository_impl.dart';
+import '../../data/repositories/security_log_repository_impl.dart';
+import '../../data/repositories/category_repository_impl.dart';
+import '../../data/repositories/app_settings_repository_impl.dart';
 
 // Use cases
 import '../../domain/usecases/password/generate_password_usecase.dart';
@@ -23,23 +28,41 @@ import '../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../domain/usecases/storage/delete_password_usecase.dart';
 import '../../domain/usecases/storage/export_passwords_usecase.dart';
 import '../../domain/usecases/storage/import_passwords_usecase.dart';
+import '../../domain/usecases/auth/setup_pin_usecase.dart';
+import '../../domain/usecases/auth/verify_pin_usecase.dart';
+import '../../domain/usecases/auth/change_pin_usecase.dart';
+import '../../domain/usecases/auth/remove_pin_usecase.dart';
+import '../../domain/usecases/auth/get_auth_state_usecase.dart';
+import '../../domain/usecases/log/log_event_usecase.dart';
+import '../../domain/usecases/log/get_logs_usecase.dart';
+import '../../domain/usecases/category/get_categories_usecase.dart';
+import '../../domain/usecases/category/create_category_usecase.dart';
+import '../../domain/usecases/category/delete_category_usecase.dart';
+import '../../domain/usecases/category/update_category_usecase.dart';
+import '../../domain/usecases/settings/get_setting_usecase.dart';
+import '../../domain/usecases/settings/set_setting_usecase.dart';
+import '../../domain/usecases/settings/remove_setting_usecase.dart';
 
 // Controllers
 import '../../presentation/features/generator/generator_controller.dart';
 import '../../presentation/features/encryptor/encryptor_controller.dart';
 import '../../presentation/features/storage/storage_controller.dart';
+import '../../presentation/features/auth/auth_controller.dart';
 
 // Screens
 import '../../presentation/features/generator/generator_screen.dart';
 import '../../presentation/features/encryptor/encryptor_screen.dart';
 import '../../presentation/features/storage/storage_screen.dart';
 import '../../presentation/features/about/about_screen.dart';
+import '../../presentation/features/auth/auth_screen.dart';
+import '../../presentation/features/settings/settings_screen.dart';
 
 /// Перечисление для типобезопасного управления вкладками
 enum AppTab {
   generator(Icons.create, 'Генератор'),
   encryptor(Icons.lock, 'Шифратор'),
   storage(Icons.archive, 'Хранилище'),
+  settings(Icons.settings, 'Настройки'),
   about(Icons.info, 'О программе');
 
   const AppTab(this.icon, this.label);
@@ -59,6 +82,7 @@ class PasswordGeneratorApp extends StatelessWidget {
         // Data Sources (singletons)
         Provider(create: (_) => EncryptorLocalDataSource()),
         Provider(create: (_) => StorageLocalDataSource()),
+        Provider(create: (_) => AuthLocalDataSource()),
         Provider(
           create: (context) => PasswordGeneratorLocalDataSource(
             context.read<EncryptorLocalDataSource>(),
@@ -81,6 +105,20 @@ class PasswordGeneratorApp extends StatelessWidget {
           create: (context) => StorageRepositoryImpl(
             context.read<StorageLocalDataSource>(),
           ),
+        ),
+        Provider(
+          create: (context) => AuthRepositoryImpl(
+            context.read<AuthLocalDataSource>(),
+          ),
+        ),
+        Provider(
+          create: (context) => SecurityLogRepositoryImpl(),
+        ),
+        Provider(
+          create: (context) => CategoryRepositoryImpl(),
+        ),
+        Provider(
+          create: (context) => AppSettingsRepositoryImpl(),
         ),
 
         // Use Cases
@@ -134,6 +172,76 @@ class PasswordGeneratorApp extends StatelessWidget {
             context.read<StorageRepositoryImpl>(),
           ),
         ),
+        Provider(
+          create: (context) => SetupPinUseCase(
+            context.read<AuthRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => VerifyPinUseCase(
+            context.read<AuthRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => ChangePinUseCase(
+            context.read<AuthRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => RemovePinUseCase(
+            context.read<AuthRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => GetAuthStateUseCase(
+            context.read<AuthRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => LogEventUseCase(
+            context.read<SecurityLogRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => GetLogsUseCase(
+            context.read<SecurityLogRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => GetCategoriesUseCase(
+            context.read<CategoryRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => CreateCategoryUseCase(
+            context.read<CategoryRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => DeleteCategoryUseCase(
+            context.read<CategoryRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => UpdateCategoryUseCase(
+            context.read<CategoryRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => GetSettingUseCase(
+            context.read<AppSettingsRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => SetSettingUseCase(
+            context.read<AppSettingsRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => RemoveSettingUseCase(
+            context.read<AppSettingsRepositoryImpl>(),
+          ),
+        ),
 
         // Controllers
         ChangeNotifierProxyProvider2<GeneratePasswordUseCase, SavePasswordUseCase, GeneratorController>(
@@ -175,10 +283,35 @@ class PasswordGeneratorApp extends StatelessWidget {
             importPasswordsUseCase: importUc,
           ),
         ),
+        ChangeNotifierProxyProvider6<
+          SetupPinUseCase,
+          VerifyPinUseCase,
+          ChangePinUseCase,
+          RemovePinUseCase,
+          GetAuthStateUseCase,
+          LogEventUseCase,
+          AuthController>(
+          create: (context) => AuthController(
+            setupPinUseCase: context.read<SetupPinUseCase>(),
+            verifyPinUseCase: context.read<VerifyPinUseCase>(),
+            changePinUseCase: context.read<ChangePinUseCase>(),
+            removePinUseCase: context.read<RemovePinUseCase>(),
+            getAuthStateUseCase: context.read<GetAuthStateUseCase>(),
+            logEventUseCase: context.read<LogEventUseCase>(),
+          ),
+          update: (_, setupUc, verifyUc, changeUc, removeUc, getStateUc, logUc, controller) => AuthController(
+            setupPinUseCase: setupUc,
+            verifyPinUseCase: verifyUc,
+            changePinUseCase: changeUc,
+            removePinUseCase: removeUc,
+            getAuthStateUseCase: getStateUc,
+            logEventUseCase: logUc,
+          ),
+        ),
       ],
       child: MaterialApp(
         title: 'PassGen',
-        home: const TabScaffold(),
+        home: const AuthWrapper(),
         theme: getTheme(false),
         darkTheme: getTheme(true),
         themeMode: ThemeMode.system,
@@ -240,6 +373,7 @@ class _TabScaffoldState extends State<TabScaffold> {
           GeneratorScreen(),
           EncryptorScreen(),
           StorageScreen(),
+          SettingsScreen(),
           AboutScreen(),
         ],
       ),
@@ -261,5 +395,23 @@ class _TabScaffoldState extends State<TabScaffold> {
         }).toList(),
       ),
     );
+  }
+}
+
+/// Обёртка для проверки состояния аутентификации
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = context.watch<AuthController>().authState;
+
+    // Если не аутентифицирован - показываем экран аутентификации
+    if (!authState.isAuthenticated) {
+      return const AuthScreen();
+    }
+
+    // Если аутентифицирован - показываем основное приложение
+    return const TabScaffold();
   }
 }

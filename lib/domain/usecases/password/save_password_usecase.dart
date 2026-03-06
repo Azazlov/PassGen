@@ -12,11 +12,15 @@ class SavePasswordUseCase {
     required String service,
     required String password,
     required String config,
+    int? categoryId,
+    String? login,
   }) async {
     return await repository.savePassword(
       service: service,
       password: password,
       config: config,
+      categoryId: categoryId,
+      login: login,
     );
   }
 }

@@ -35,5 +35,7 @@ abstract class PasswordGeneratorRepository {
     required String service,
     required String password,
     required String config,
+    int? categoryId,
+    String? login,
   });
 }

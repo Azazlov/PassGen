@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
-import '../../entities/password_entry.dart';
 import '../../repositories/storage_repository.dart';
 
 /// Использование: Удаление пароля

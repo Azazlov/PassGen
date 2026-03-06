@@ -126,6 +126,8 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
     required String service,
     required String password,
     required String config,
+    int? categoryId,
+    String? login,
   }) async {
     try {
       // Сохраняем пароль через dataSource
@@ -133,6 +135,8 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
         service: service,
         password: password,
         config: config,
+        categoryId: categoryId,
+        login: login,
       );
 
       if (result['error'] != null) {

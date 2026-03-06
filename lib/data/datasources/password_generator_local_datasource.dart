@@ -190,6 +190,8 @@ class PasswordGeneratorLocalDataSource {
     required String service,
     required String password,
     required String config,
+    int? categoryId,
+    String? login,
   }) async {
     try {
       // Получаем текущие пароли
@@ -206,6 +208,8 @@ class PasswordGeneratorLocalDataSource {
         final updatedEntry = existingEntry.copyWith(
           password: password,
           config: config,
+          login: login ?? existingEntry.login,
+          categoryId: categoryId ?? existingEntry.categoryId,
           updatedAt: DateTime.now(),
         );
         passwords[existingIndex] = updatedEntry;
@@ -215,6 +219,8 @@ class PasswordGeneratorLocalDataSource {
           service: service,
           password: password,
           config: config,
+          login: login,
+          categoryId: categoryId,
           createdAt: DateTime.now(),
         );
         passwords.add(newEntry);

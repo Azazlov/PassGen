@@ -2,16 +2,22 @@ import 'dart:convert';
 
 /// Запись о сохранённом пароле
 class PasswordEntry {
+  final int? id;
+  final int? categoryId;
   final String service;
   final String password;
   final String config;
+  final String? login;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
   const PasswordEntry({
+    this.id,
+    this.categoryId,
     required this.service,
     required this.password,
     required this.config,
+    this.login,
     required this.createdAt,
     this.updatedAt,
   });
@@ -19,9 +25,12 @@ class PasswordEntry {
   /// Создаёт PasswordEntry из JSON
   factory PasswordEntry.fromJson(Map<String, dynamic> json) {
     return PasswordEntry(
+      id: json['id'] as int?,
+      categoryId: json['category_id'] as int?,
       service: json['service'] ?? '',
       password: json['password'] ?? '',
       config: json['config'] ?? '',
+      login: json['login'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
@@ -34,9 +43,12 @@ class PasswordEntry {
   /// Преобразует PasswordEntry в JSON
   Map<String, dynamic> toJson() {
     return {
+      if (id != null) 'id': id,
+      if (categoryId != null) 'category_id': categoryId,
       'service': service,
       'password': password,
       'config': config,
+      if (login != null) 'login': login,
       'createdAt': createdAt.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };
@@ -44,15 +56,21 @@ class PasswordEntry {
 
   /// Создаёт копию записи с обновлёнными данными
   PasswordEntry copyWith({
+    int? id,
+    int? categoryId,
     String? service,
     String? password,
     String? config,
+    String? login,
     DateTime? updatedAt,
   }) {
     return PasswordEntry(
+      id: id ?? this.id,
+      categoryId: categoryId ?? this.categoryId,
       service: service ?? this.service,
       password: password ?? this.password,
       config: config ?? this.config,
+      login: login ?? this.login,
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
     );
