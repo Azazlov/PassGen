@@ -20,6 +20,10 @@ class CharacterSetDisplay extends StatelessWidget {
       (sum, c) => sum + c.count,
     );
 
+    if (total == 0) {
+      return const SizedBox.shrink();
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -76,13 +80,15 @@ class CharacterSetDisplay extends StatelessWidget {
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
       }
-      categories.add(_CharacterCategory(
-        label: 'Строчные',
-        subtitle: 'a-z',
-        characters: chars,
-        count: chars.length,
-        isEnabled: true,
-      ));
+      if (chars.isNotEmpty) {
+        categories.add(_CharacterCategory(
+          label: 'Строчные',
+          subtitle: 'a-z',
+          characters: chars,
+          count: chars.length,
+          isEnabled: true,
+        ));
+      }
     }
 
     // Заглавные
@@ -91,13 +97,15 @@ class CharacterSetDisplay extends StatelessWidget {
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
       }
-      categories.add(_CharacterCategory(
-        label: 'Заглавные',
-        subtitle: 'A-Z',
-        characters: chars,
-        count: chars.length,
-        isEnabled: true,
-      ));
+      if (chars.isNotEmpty) {
+        categories.add(_CharacterCategory(
+          label: 'Заглавные',
+          subtitle: 'A-Z',
+          characters: chars,
+          count: chars.length,
+          isEnabled: true,
+        ));
+      }
     }
 
     // Цифры
@@ -106,13 +114,15 @@ class CharacterSetDisplay extends StatelessWidget {
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
       }
-      categories.add(_CharacterCategory(
-        label: 'Цифры',
-        subtitle: '0-9',
-        characters: chars,
-        count: chars.length,
-        isEnabled: true,
-      ));
+      if (chars.isNotEmpty) {
+        categories.add(_CharacterCategory(
+          label: 'Цифры',
+          subtitle: '0-9',
+          characters: chars,
+          count: chars.length,
+          isEnabled: true,
+        ));
+      }
     }
 
     // Спецсимволы
@@ -121,16 +131,18 @@ class CharacterSetDisplay extends StatelessWidget {
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
       }
-      categories.add(_CharacterCategory(
-        label: 'Спецсимволы',
-        subtitle: '!@#...',
-        characters: chars,
-        count: chars.length,
-        isEnabled: true,
-      ));
+      if (chars.isNotEmpty) {
+        categories.add(_CharacterCategory(
+          label: 'Спецсимволы',
+          subtitle: '!@#...',
+          characters: chars,
+          count: chars.length,
+          isEnabled: true,
+        ));
+      }
     }
 
-    // Исключённые
+    // Исключённые (показываем только если опция включена)
     if (settings.excludeSimilar) {
       categories.add(_CharacterCategory(
         label: 'Исключены',

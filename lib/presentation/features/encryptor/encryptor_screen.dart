@@ -8,6 +8,8 @@ import '../../../presentation/widgets/app_text_field.dart';
 import '../../../presentation/widgets/copyable_password.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import 'encryptor_controller.dart';
+import '../../../domain/usecases/encryptor/encrypt_message_usecase.dart';
+import '../../../domain/usecases/encryptor/decrypt_message_usecase.dart';
 
 /// Экран шифратора/дешифратора
 class EncryptorScreen extends StatelessWidget {
@@ -16,7 +18,10 @@ class EncryptorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => context.read<EncryptorController>(),
+      create: (_) => EncryptorController(
+        encryptUseCase: context.read<EncryptMessageUseCase>(),
+        decryptUseCase: context.read<DecryptMessageUseCase>(),
+      ),
       child: const _EncryptorScreenContent(),
     );
   }

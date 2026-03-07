@@ -55,10 +55,10 @@ void main() {
       );
 
       // Находим виджет и нажимаем
-      await tester.tap(find.byType(CopyablePassword));
+      await tester.tap(find.byType(CopyablePassword).first);
       await tester.pump();
 
-      // Проверяем буфер обмена
+      // Проверяем буфер обмена (сразу, не ждём 60 сек)
       final clipboardData = await Clipboard.getData('text/plain');
       expect(clipboardData?.text, equals('TestPassword123!'));
     });

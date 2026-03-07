@@ -10,6 +10,9 @@ import 'generator_controller.dart';
 import '../storage/storage_controller.dart';
 import '../categories/categories_controller.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/usecases/password/generate_password_usecase.dart';
+import '../../../domain/usecases/password/save_password_usecase.dart';
+import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/entities/category.dart';
 
 /// Экран генератора паролей
@@ -19,7 +22,11 @@ class GeneratorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => context.read<GeneratorController>(),
+      create: (_) => GeneratorController(
+        generatePasswordUseCase: context.read<GeneratePasswordUseCase>(),
+        savePasswordUseCase: context.read<SavePasswordUseCase>(),
+        logEventUseCase: context.read<LogEventUseCase>(),
+      ),
       child: const _GeneratorScreenContent(),
     );
   }
