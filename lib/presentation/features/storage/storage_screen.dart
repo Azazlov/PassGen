@@ -59,9 +59,12 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
           PopupMenuButton<String>(
             onSelected: (value) => _handleMenuAction(value, controller),
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'import', child: Text('Импорт')),
-              const PopupMenuItem(value: 'export', child: Text('Экспорт')),
-              const PopupMenuItem(value: 'delete', child: Text('Удалить', style: TextStyle(color: Colors.red))),
+              const PopupMenuItem(value: 'import_json', child: Text('Импорт JSON')),
+              const PopupMenuItem(value: 'export_json', child: Text('Экспорт JSON')),
+              const PopupMenuItem(value: 'import_passgen', child: Text('Импорт .passgen')),
+              const PopupMenuItem(value: 'export_passgen', child: Text('Экспорт .passgen')),
+              const PopupMenuDivider(),
+              const PopupMenuItem(value: 'delete', child: Text('Удалить всё', style: TextStyle(color: Colors.red))),
             ],
           ),
         ],
@@ -307,11 +310,17 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
 
   void _handleMenuAction(String value, StorageController controller) async {
     switch (value) {
-      case 'import':
+      case 'import_json':
         await _importPasswords(controller);
         break;
-      case 'export':
+      case 'export_json':
         await _exportPasswords(controller);
+        break;
+      case 'import_passgen':
+        await _importPassgen(controller);
+        break;
+      case 'export_passgen':
+        await _exportPassgen(controller);
         break;
       case 'delete':
         _deletePassword(controller);
@@ -414,6 +423,197 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
         context: context,
         title: 'Ошибка',
         content: 'При экспорте произошла ошибка: $e',
+      );
+    }
+  }
+
+  // ==================== .passgen ЭКСПОРТ/ИМПОРТ ====================
+
+  Future<void> _exportPassgen(StorageController controller) async {
+    if (controller.isEmpty) {
+      showAppDialog(
+        context: context,
+        title: 'Ошибка',
+        content: 'Хранилище пустое',
+      );
+      return;
+    }
+
+    // Запрашиваем мастер-пароль
+    final masterPasswordController = TextEditingController();
+    
+    if (!context.mounted) return;
+    
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Экспорт в .passgen'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Введите мастер-пароль для шифрования:'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: masterPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Мастер-пароль',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Экспорт'),
+          ),
+        ],
+      ),
+    );
+
+    masterPasswordController.dispose();
+
+    if (confirmed != true) return;
+
+    try {
+      final result = await controller.exportPassgen(masterPasswordController.text);
+
+      if (!context.mounted) return;
+
+      result.fold(
+        (failure) {
+          showAppDialog(
+            context: context,
+            title: 'Ошибка',
+            content: failure.message,
+          );
+        },
+        (base64Data) async {
+          try {
+            final directory = await getTemporaryDirectory();
+            final file = File('${directory.path}/passwords_export.passgen');
+            await file.writeAsString(base64Data);
+
+            await Share.shareXFiles([XFile(file.path)]);
+            
+            if (context.mounted) {
+              showAppDialog(
+                context: context,
+                title: 'Экспорт выполнен',
+                content: 'Пароли экспортированы в формате .passgen',
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              showAppDialog(
+                context: context,
+                title: 'Ошибка',
+                content: 'При экспорте произошла ошибка: $e',
+              );
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      showAppDialog(
+        context: context,
+        title: 'Ошибка',
+        content: 'При экспорте произошла ошибка: $e',
+      );
+    }
+  }
+
+  Future<void> _importPassgen(StorageController controller) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['passgen'],
+        dialogTitle: 'Выберите файл .passgen',
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        showAppDialog(
+          context: context,
+          title: 'Отменено',
+          content: 'Файл не выбран',
+        );
+        return;
+      }
+
+      final file = result.files.first;
+      final base64Data = utf8.decode(file.bytes as List<int>);
+
+      // Запрашиваем мастер-пароль
+      final masterPasswordController = TextEditingController();
+      
+      if (!context.mounted) return;
+      
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Импорт из .passgen'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Введите мастер-пароль для дешифрования:'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: masterPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Мастер-пароль',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Отмена'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Импорт'),
+            ),
+          ],
+        ),
+      );
+
+      masterPasswordController.dispose();
+
+      if (confirmed != true) return;
+
+      final success = await controller.importPassgen(base64Data, masterPasswordController.text);
+
+      if (!context.mounted) return;
+
+      if (success) {
+        showAppDialog(
+          context: context,
+          title: 'Импортировано',
+          content: 'Пароли успешно импортированы из .passgen',
+        );
+      } else {
+        showAppDialog(
+          context: context,
+          title: 'Ошибка',
+          content: controller.error ?? 'Ошибка импорта',
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      showAppDialog(
+        context: context,
+        title: 'Ошибка',
+        content: 'При импорте произошла ошибка: $e',
       );
     }
   }

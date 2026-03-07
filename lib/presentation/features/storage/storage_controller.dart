@@ -7,6 +7,8 @@ import '../../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../../domain/usecases/storage/delete_password_usecase.dart';
 import '../../../domain/usecases/storage/export_passwords_usecase.dart';
 import '../../../domain/usecases/storage/import_passwords_usecase.dart';
+import '../../../domain/usecases/storage/export_passgen_usecase.dart';
+import '../../../domain/usecases/storage/import_passgen_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
 
 /// Контроллер для экрана хранилища
@@ -15,6 +17,8 @@ class StorageController extends ChangeNotifier {
   final DeletePasswordUseCase deletePasswordUseCase;
   final ExportPasswordsUseCase exportPasswordsUseCase;
   final ImportPasswordsUseCase importPasswordsUseCase;
+  final ExportPassgenUseCase exportPassgenUseCase;
+  final ImportPassgenUseCase importPassgenUseCase;
   final LogEventUseCase logEventUseCase;
 
   StorageController({
@@ -22,6 +26,8 @@ class StorageController extends ChangeNotifier {
     required this.deletePasswordUseCase,
     required this.exportPasswordsUseCase,
     required this.importPasswordsUseCase,
+    required this.exportPassgenUseCase,
+    required this.importPassgenUseCase,
     required this.logEventUseCase,
   });
 
@@ -191,7 +197,7 @@ class StorageController extends ChangeNotifier {
   /// Экспорт паролей в JSON
   Future<Either<StorageFailure, String>> exportPasswords() async {
     final result = await exportPasswordsUseCase.execute();
-    
+
     // Логируем экспорт
     result.fold(
       (failure) => null,
@@ -202,7 +208,7 @@ class StorageController extends ChangeNotifier {
         );
       },
     );
-    
+
     return result;
   }
 
@@ -224,7 +230,7 @@ class StorageController extends ChangeNotifier {
           // Логируем импорт
           logEventUseCase.execute(
             EventTypes.dataImport,
-            details: {'success': true},
+            details: {'success': true, 'format': 'json'},
           );
           
           await loadPasswords();
@@ -233,6 +239,61 @@ class StorageController extends ChangeNotifier {
       );
     } catch (e) {
       _error = 'Ошибка импорта: $e';
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoading = false;
+    }
+  }
+
+  /// Экспорт паролей в формат .passgen
+  Future<Either<StorageFailure, String>> exportPassgen(String masterPassword) async {
+    final result = await exportPassgenUseCase.execute(masterPassword);
+    
+    // Логируем экспорт
+    result.fold(
+      (failure) => null,
+      (data) {
+        logEventUseCase.execute(
+          EventTypes.dataExport,
+          details: {'count': _passwords.length, 'format': 'passgen'},
+        );
+      },
+    );
+    
+    return result;
+  }
+
+  /// Импорт паролей из формата .passgen
+  Future<bool> importPassgen(String data, String masterPassword) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final result = await importPassgenUseCase.execute(
+        data: data,
+        masterPassword: masterPassword,
+      );
+
+      return result.fold(
+        (failure) {
+          _error = failure.message;
+          notifyListeners();
+          return false;
+        },
+        (_) async {
+          // Логируем импорт
+          logEventUseCase.execute(
+            EventTypes.dataImport,
+            details: {'success': true, 'format': 'passgen'},
+          );
+          
+          await loadPasswords();
+          return true;
+        },
+      );
+    } catch (e) {
+      _error = 'Ошибка импорта .passgen: $e';
       notifyListeners();
       return false;
     } finally {

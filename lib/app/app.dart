@@ -185,11 +185,6 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
-          create: (context) => SetupPinUseCase(
-            context.read<AuthRepositoryImpl>(),
-          ),
-        ),
-        Provider(
           create: (context) => VerifyPinUseCase(
             context.read<AuthRepositoryImpl>(),
           ),
@@ -282,26 +277,21 @@ class PasswordGeneratorApp extends StatelessWidget {
             decryptUseCase: decryptUc,
           ),
         ),
-        ChangeNotifierProxyProvider5<
-          GetPasswordsUseCase,
-          DeletePasswordUseCase,
-          ExportPasswordsUseCase,
-          ImportPasswordsUseCase,
-          LogEventUseCase,
-          StorageController>(
+        // StorageController с 7 зависимостями
+        ChangeNotifierProvider<StorageController>(
           create: (context) => StorageController(
             getPasswordsUseCase: context.read<GetPasswordsUseCase>(),
             deletePasswordUseCase: context.read<DeletePasswordUseCase>(),
             exportPasswordsUseCase: context.read<ExportPasswordsUseCase>(),
             importPasswordsUseCase: context.read<ImportPasswordsUseCase>(),
+            exportPassgenUseCase: context.read<ExportPassgenUseCase>(),
+            importPassgenUseCase: context.read<ImportPassgenUseCase>(),
             logEventUseCase: context.read<LogEventUseCase>(),
           ),
-          update: (_, getUc, deleteUc, exportUc, importUc, logUc, controller) => StorageController(
-            getPasswordsUseCase: getUc,
-            deletePasswordUseCase: deleteUc,
-            exportPasswordsUseCase: exportUc,
-            importPasswordsUseCase: importUc,
-            logEventUseCase: logUc,
+        ),
+        Provider(
+          create: (context) => SetupPinUseCase(
+            context.read<AuthRepositoryImpl>(),
           ),
         ),
         ChangeNotifierProxyProvider6<
