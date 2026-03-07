@@ -7,6 +7,9 @@ import '../../../presentation/widgets/copyable_password.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import 'generator_controller.dart';
 import '../storage/storage_controller.dart';
+import '../categories/categories_controller.dart';
+import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/entities/category.dart';
 
 /// Экран генератора паролей
 class GeneratorScreen extends StatelessWidget {
@@ -125,6 +128,11 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                 controller: controller.serviceController,
                 keyboardType: TextInputType.text,
               ),
+
+              const SizedBox(height: 16),
+
+              // Выбор категории
+              _buildCategorySelector(controller, theme),
 
               const SizedBox(height: 24),
 
@@ -245,6 +253,88 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCategorySelector(GeneratorController controller, ThemeData theme) {
+    return FutureBuilder(
+      future: context.read<GetCategoriesUseCase>().execute(),
+      builder: (context, snapshot) {
+        final categories = snapshot.data ?? [];
+        final selectedCategory = controller.selectedCategoryId != null
+            ? categories.cast<Category?>().firstWhere(
+                  (c) => c?.id == controller.selectedCategoryId,
+                  orElse: () => null,
+                )
+            : null;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Категория',
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: () async {
+                final result = await showDialog<Category?>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Выберите категорию'),
+                    content: SizedBox(
+                      width: double.maxFinite,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: categories.length,
+                        itemBuilder: (ctx, index) {
+                          final category = categories[index] as Category;
+                          return ListTile(
+                            leading: Text(category.icon ?? '📁', style: const TextStyle(fontSize: 20)),
+                            title: Text(category.name),
+                            subtitle: category.isSystem ? const Text('Системная') : null,
+                            onTap: () => Navigator.of(ctx).pop(category),
+                          );
+                        },
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(null),
+                        child: const Text('Без категории'),
+                      ),
+                    ],
+                  ),
+                );
+                controller.updateSelectedCategoryId(result?.id);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: theme.colorScheme.outline),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      selectedCategory?.icon ?? '📁',
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        selectedCategory?.name ?? 'Без категории',
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

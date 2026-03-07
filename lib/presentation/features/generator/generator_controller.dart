@@ -29,6 +29,15 @@ class GeneratorController extends ChangeNotifier {
   final TextEditingController minLengthController = TextEditingController();
   final TextEditingController maxLengthController = TextEditingController();
 
+  // Выбор категории
+  int? _selectedCategoryId;
+  int? get selectedCategoryId => _selectedCategoryId;
+
+  void updateSelectedCategoryId(int? id) {
+    _selectedCategoryId = id;
+    notifyListeners();
+  }
+
   // Геттеры
   int get strength => _strength;
   PasswordGenerationSettings get settings => _settings;
@@ -205,6 +214,7 @@ class GeneratorController extends ChangeNotifier {
         service: serviceController.text,
         password: _lastResult!.password,
         config: _lastResult!.config,
+        categoryId: _selectedCategoryId,
       );
 
       return result.fold(

@@ -22,19 +22,66 @@ class StorageController extends ChangeNotifier {
   });
 
   // Состояние
+  List<PasswordEntry> _allPasswords = [];
   List<PasswordEntry> _passwords = [];
   int _currentIndex = 0;
   bool _isLoading = false;
   String? _error;
 
+  // Фильтры
+  int? _selectedCategoryId;
+  String _searchQuery = '';
+
+  int? get selectedCategoryId => _selectedCategoryId;
+  String get searchQuery => _searchQuery;
+
   // Геттеры
   List<PasswordEntry> get passwords => _passwords;
+  List<PasswordEntry> get allPasswords => _allPasswords;
   int get currentIndex => _currentIndex;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isEmpty => _passwords.isEmpty;
   int get passwordsCount => _passwords.length;
   PasswordEntry? get currentPassword => _currentIndex < _passwords.length ? _passwords[_currentIndex] : null;
+
+  /// Установка категории фильтра
+  void setCategoryFilter(int? categoryId) {
+    _selectedCategoryId = categoryId;
+    _applyFilters();
+  }
+
+  /// Установка поискового запроса
+  void setSearchQuery(String query) {
+    _searchQuery = query.toLowerCase();
+    _applyFilters();
+  }
+
+  /// Применение фильтров
+  void _applyFilters() {
+    _passwords = _allPasswords.where((entry) {
+      // Фильтр по категории
+      if (_selectedCategoryId != null && entry.categoryId != _selectedCategoryId) {
+        return false;
+      }
+      // Поиск по сервису
+      if (_searchQuery.isNotEmpty && !entry.service.toLowerCase().contains(_searchQuery)) {
+        return false;
+      }
+      return true;
+    }).toList();
+    _currentIndex = 0;
+    notifyListeners();
+  }
+
+  /// Сброс фильтров
+  void clearFilters() {
+    _selectedCategoryId = null;
+    _searchQuery = '';
+    _passwords = List.from(_allPasswords);
+    _currentIndex = 0;
+    notifyListeners();
+  }
 
   /// Инициализация - загрузка паролей
   Future<void> loadPasswords() async {
@@ -50,16 +97,18 @@ class StorageController extends ChangeNotifier {
       result.fold(
         (failure) {
           _error = failure.message;
+          _allPasswords = [];
           _passwords = [];
           _currentIndex = 0;
         },
         (passwordsList) {
-          _passwords = passwordsList;
-          _currentIndex = 0;
+          _allPasswords = passwordsList;
+          _applyFilters(); // Применяем фильтры
         },
       );
     } catch (e) {
       _error = 'Ошибка загрузки: $e';
+      _allPasswords = [];
       _passwords = [];
     } finally {
       _isLoading = false;
@@ -99,6 +148,14 @@ class StorageController extends ChangeNotifier {
         },
         (_) {
           _passwords.removeAt(_currentIndex);
+          // Также удаляем из всех паролей
+          final entry = _passwords.length > _currentIndex 
+              ? _passwords[_currentIndex] 
+              : null;
+          if (entry != null) {
+            _allPasswords.removeWhere((e) => 
+              e.service == entry.service && e.password == entry.password);
+          }
           if (_currentIndex >= _passwords.length) {
             _currentIndex = _passwords.isEmpty ? 0 : _passwords.length - 1;
           }

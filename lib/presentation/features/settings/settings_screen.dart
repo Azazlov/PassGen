@@ -9,7 +9,8 @@ import '../../../domain/usecases/auth/remove_pin_usecase.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
 import '../../widgets/app_dialogs.dart';
 import '../../widgets/app_text_field.dart';
-import '../../widgets/app_button.dart';
+import '../categories/categories_screen.dart';
+import '../logs/logs_screen.dart';
 
 /// Экран настроек приложения
 class SettingsScreen extends StatelessWidget {
@@ -89,10 +90,8 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
             title: 'Категории',
             subtitle: 'Управление категориями паролей',
             onTap: () {
-              _showInfoDialog(
-                context,
-                'Категории',
-                'Управление категориями будет реализовано в следующей версии',
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const CategoriesScreen()),
               );
             },
           ),
@@ -296,7 +295,9 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
   }
 
   void _showLogsDialog(BuildContext context, SettingsController controller) async {
-    _showInfoDialog(context, 'Логи', 'Просмотр логов будет реализован в следующей версии\n\nЗаписей: $_logsCount');
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const LogsScreen()),
+    );
   }
 
   void _confirmClearLogs(BuildContext context, SettingsController controller) async {

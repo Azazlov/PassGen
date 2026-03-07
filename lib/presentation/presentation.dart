@@ -14,3 +14,9 @@ export 'features/auth/auth_screen.dart';
 
 export 'features/settings/settings_controller.dart';
 export 'features/settings/settings_screen.dart';
+
+export 'features/categories/categories_controller.dart';
+export 'features/categories/categories_screen.dart';
+
+export 'features/logs/logs_controller.dart';
+export 'features/logs/logs_screen.dart';
