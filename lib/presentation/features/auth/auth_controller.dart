@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../domain/entities/auth_state.dart';
 import '../../../domain/entities/auth_result.dart';
@@ -17,6 +18,10 @@ class AuthController extends ChangeNotifier {
   final RemovePinUseCase removePinUseCase;
   final GetAuthStateUseCase getAuthStateUseCase;
   final LogEventUseCase logEventUseCase;
+
+  // Таймер неактивности
+  Timer? _inactivityTimer;
+  static const Duration inactivityTimeout = Duration(minutes: 5);
 
   AuthController({
     required this.setupPinUseCase,
@@ -267,11 +272,51 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ==================== ТАЙМЕР НЕАКТИВНОСТИ ====================
+
+  /// Запускает таймер неактивности
+  void startInactivityTimer() {
+    _inactivityTimer?.cancel();
+    _inactivityTimer = Timer(inactivityTimeout, () {
+      _lockApp();
+    });
+  }
+
+  /// Сбрасывает таймер неактивности
+  void resetInactivityTimer() {
+    if (_authState.isAuthenticated) {
+      startInactivityTimer();
+    }
+  }
+
+  /// Блокирует приложение
+  void _lockApp() {
+    _authState = const AuthState(
+      isAuthenticated: false,
+      isPinSetup: true,
+      isLocked: false,
+      remainingAttempts: null,
+      lockoutUntil: null,
+    );
+    _inactivityTimer?.cancel();
+    notifyListeners();
+    
+    // Логируем блокировку
+    logEventUseCase.execute(
+      EventTypes.authFailure,
+      details: {'reason': 'inactivity_timeout'},
+    );
+  }
+
+  /// Проверяет состояние блокировки
+  bool get isLocked => !_authState.isAuthenticated;
+
   @override
   void dispose() {
     _pinController.dispose();
     _confirmPinController.dispose();
     _enteredPin = '';
+    _inactivityTimer?.cancel();
     super.dispose();
   }
 }

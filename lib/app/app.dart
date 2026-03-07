@@ -381,39 +381,56 @@ class _TabScaffoldState extends State<TabScaffold> {
     if (_currentTab != newTab) {
       setState(() => _currentTab = newTab);
     }
+    // Сбрасываем таймер неактивности при переключении вкладок
+    context.read<AuthController>().resetInactivityTimer();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Запускаем таймер неактивности после сборки
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthController>().resetInactivityTimer();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentTab.index,
-        children: const [
-          GeneratorScreen(),
-          EncryptorScreen(),
-          StorageScreen(),
-          SettingsScreen(),
-          AboutScreen(),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentTab.index,
-        onTap: _onTabTapped,
-        backgroundColor: theme.colorScheme.surface,
-        selectedItemColor: theme.colorScheme.primary,
-        unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        enableFeedback: true,
-        items: AppTab.values.map((tab) {
-          return BottomNavigationBarItem(
-            icon: Icon(tab.icon),
-            label: tab.label,
-            tooltip: tab.label,
-          );
-        }).toList(),
+    return Listener(
+      onPointerDown: (_) {
+        // Сбрасываем таймер неактивности при любом касании
+        context.read<AuthController>().resetInactivityTimer();
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentTab.index,
+          children: const [
+            GeneratorScreen(),
+            EncryptorScreen(),
+            StorageScreen(),
+            SettingsScreen(),
+            AboutScreen(),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentTab.index,
+          onTap: _onTabTapped,
+          backgroundColor: theme.colorScheme.surface,
+          selectedItemColor: theme.colorScheme.primary,
+          unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
+          showUnselectedLabels: true,
+          type: BottomNavigationBarType.fixed,
+          enableFeedback: true,
+          items: AppTab.values.map((tab) {
+            return BottomNavigationBarItem(
+              icon: Icon(tab.icon),
+              label: tab.label,
+              tooltip: tab.label,
+            );
+          }).toList(),
+        ),
       ),
     );
   }
