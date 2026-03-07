@@ -27,6 +27,8 @@ export 'usecases/storage/get_passwords_usecase.dart';
 export 'usecases/storage/delete_password_usecase.dart';
 export 'usecases/storage/export_passwords_usecase.dart';
 export 'usecases/storage/import_passwords_usecase.dart';
+export 'usecases/storage/export_passgen_usecase.dart';
+export 'usecases/storage/import_passgen_usecase.dart';
 export 'usecases/auth/setup_pin_usecase.dart';
 export 'usecases/auth/verify_pin_usecase.dart';
 export 'usecases/auth/change_pin_usecase.dart';

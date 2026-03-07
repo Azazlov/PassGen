@@ -28,6 +28,8 @@ import '../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../domain/usecases/storage/delete_password_usecase.dart';
 import '../../domain/usecases/storage/export_passwords_usecase.dart';
 import '../../domain/usecases/storage/import_passwords_usecase.dart';
+import '../../domain/usecases/storage/export_passgen_usecase.dart';
+import '../../domain/usecases/storage/import_passgen_usecase.dart';
 import '../../domain/usecases/auth/setup_pin_usecase.dart';
 import '../../domain/usecases/auth/verify_pin_usecase.dart';
 import '../../domain/usecases/auth/change_pin_usecase.dart';
@@ -173,6 +175,16 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
+          create: (context) => ExportPassgenUseCase(
+            context.read<StorageRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => ImportPassgenUseCase(
+            context.read<StorageRepositoryImpl>(),
+          ),
+        ),
+        Provider(
           create: (context) => SetupPinUseCase(
             context.read<AuthRepositoryImpl>(),
           ),
@@ -244,14 +256,20 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
 
         // Controllers
-        ChangeNotifierProxyProvider2<GeneratePasswordUseCase, SavePasswordUseCase, GeneratorController>(
+        ChangeNotifierProxyProvider3<
+          GeneratePasswordUseCase,
+          SavePasswordUseCase,
+          LogEventUseCase,
+          GeneratorController>(
           create: (context) => GeneratorController(
             generatePasswordUseCase: context.read<GeneratePasswordUseCase>(),
             savePasswordUseCase: context.read<SavePasswordUseCase>(),
+            logEventUseCase: context.read<LogEventUseCase>(),
           ),
-          update: (_, genUc, saveUc, controller) => GeneratorController(
+          update: (_, genUc, saveUc, logUc, controller) => GeneratorController(
             generatePasswordUseCase: genUc,
             savePasswordUseCase: saveUc,
+            logEventUseCase: logUc,
           ),
         ),
         ChangeNotifierProxyProvider2<EncryptMessageUseCase, DecryptMessageUseCase, EncryptorController>(
@@ -264,23 +282,26 @@ class PasswordGeneratorApp extends StatelessWidget {
             decryptUseCase: decryptUc,
           ),
         ),
-        ChangeNotifierProxyProvider4<
+        ChangeNotifierProxyProvider5<
           GetPasswordsUseCase,
           DeletePasswordUseCase,
           ExportPasswordsUseCase,
           ImportPasswordsUseCase,
+          LogEventUseCase,
           StorageController>(
           create: (context) => StorageController(
             getPasswordsUseCase: context.read<GetPasswordsUseCase>(),
             deletePasswordUseCase: context.read<DeletePasswordUseCase>(),
             exportPasswordsUseCase: context.read<ExportPasswordsUseCase>(),
             importPasswordsUseCase: context.read<ImportPasswordsUseCase>(),
+            logEventUseCase: context.read<LogEventUseCase>(),
           ),
-          update: (_, getUc, deleteUc, exportUc, importUc, controller) => StorageController(
+          update: (_, getUc, deleteUc, exportUc, importUc, logUc, controller) => StorageController(
             getPasswordsUseCase: getUc,
             deletePasswordUseCase: deleteUc,
             exportPasswordsUseCase: exportUc,
             importPasswordsUseCase: importUc,
+            logEventUseCase: logUc,
           ),
         ),
         ChangeNotifierProxyProvider6<

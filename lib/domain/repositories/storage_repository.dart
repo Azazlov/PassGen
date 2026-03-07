@@ -36,4 +36,13 @@ abstract class StorageRepository {
 
   /// Импортирует пароли из JSON строки
   Future<Either<StorageFailure, bool>> importPasswords(String jsonString);
+
+  /// Экспортирует пароли в формат .passgen
+  Future<Either<StorageFailure, String>> exportPassgen(String masterPassword);
+
+  /// Импортирует пароли из формата .passgen
+  Future<Either<StorageFailure, bool>> importPassgen({
+    required String data,
+    required String masterPassword,
+  });
 }

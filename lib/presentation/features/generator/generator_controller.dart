@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import '../../../core/errors/failures.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/event_types.dart';
 import '../../../domain/entities/password_generation_settings.dart';
 import '../../../domain/entities/password_result.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
+import '../../../domain/usecases/log/log_event_usecase.dart';
 
 /// Контроллер для экрана генератора паролей
 class GeneratorController extends ChangeNotifier {
   final GeneratePasswordUseCase generatePasswordUseCase;
   final SavePasswordUseCase savePasswordUseCase;
+  final LogEventUseCase logEventUseCase;
 
   GeneratorController({
     required this.generatePasswordUseCase,
     required this.savePasswordUseCase,
+    required this.logEventUseCase,
   }) {
     _updateSettingsByStrength(_strength);
   }
@@ -224,6 +228,15 @@ class GeneratorController extends ChangeNotifier {
           return {'success': false, 'updated': false};
         },
         (data) {
+          // Логируем создание пароля
+          logEventUseCase.execute(
+            EventTypes.pwdCreated,
+            details: {
+              'service': serviceController.text,
+              'category_id': _selectedCategoryId,
+            },
+          );
+
           // data может быть Map из dataSource или bool из repository
           if (data is Map<String, dynamic>) {
             return data;

@@ -1,11 +1,13 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import '../../../core/errors/failures.dart';
+import '../../../core/constants/event_types.dart';
 import '../../../domain/entities/password_entry.dart';
 import '../../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../../domain/usecases/storage/delete_password_usecase.dart';
 import '../../../domain/usecases/storage/export_passwords_usecase.dart';
 import '../../../domain/usecases/storage/import_passwords_usecase.dart';
+import '../../../domain/usecases/log/log_event_usecase.dart';
 
 /// Контроллер для экрана хранилища
 class StorageController extends ChangeNotifier {
@@ -13,12 +15,14 @@ class StorageController extends ChangeNotifier {
   final DeletePasswordUseCase deletePasswordUseCase;
   final ExportPasswordsUseCase exportPasswordsUseCase;
   final ImportPasswordsUseCase importPasswordsUseCase;
+  final LogEventUseCase logEventUseCase;
 
   StorageController({
     required this.getPasswordsUseCase,
     required this.deletePasswordUseCase,
     required this.exportPasswordsUseCase,
     required this.importPasswordsUseCase,
+    required this.logEventUseCase,
   });
 
   // Состояние
@@ -147,13 +151,23 @@ class StorageController extends ChangeNotifier {
           _error = failure.message;
         },
         (_) {
+          // Логируем удаление пароля
+          final entry = _passwords.length > _currentIndex
+              ? _passwords[_currentIndex]
+              : null;
+          
+          logEventUseCase.execute(
+            EventTypes.pwdDeleted,
+            details: {
+              'service': entry?.service ?? 'unknown',
+              'category_id': entry?.categoryId,
+            },
+          );
+
           _passwords.removeAt(_currentIndex);
           // Также удаляем из всех паролей
-          final entry = _passwords.length > _currentIndex 
-              ? _passwords[_currentIndex] 
-              : null;
           if (entry != null) {
-            _allPasswords.removeWhere((e) => 
+            _allPasswords.removeWhere((e) =>
               e.service == entry.service && e.password == entry.password);
           }
           if (_currentIndex >= _passwords.length) {
@@ -176,7 +190,20 @@ class StorageController extends ChangeNotifier {
 
   /// Экспорт паролей в JSON
   Future<Either<StorageFailure, String>> exportPasswords() async {
-    return await exportPasswordsUseCase.execute();
+    final result = await exportPasswordsUseCase.execute();
+    
+    // Логируем экспорт
+    result.fold(
+      (failure) => null,
+      (data) {
+        logEventUseCase.execute(
+          EventTypes.dataExport,
+          details: {'count': _passwords.length},
+        );
+      },
+    );
+    
+    return result;
   }
 
   /// Импорт паролей из JSON
@@ -194,6 +221,12 @@ class StorageController extends ChangeNotifier {
           return false;
         },
         (_) async {
+          // Логируем импорт
+          logEventUseCase.execute(
+            EventTypes.dataImport,
+            details: {'success': true},
+          );
+          
           await loadPasswords();
           return true;
         },
