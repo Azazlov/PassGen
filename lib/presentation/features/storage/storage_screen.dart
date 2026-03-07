@@ -10,7 +10,11 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../presentation/widgets/app_button.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
+import '../../../presentation/widgets/shimmer_effect.dart';
 import 'storage_controller.dart';
+import '../categories/categories_controller.dart';
+import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/entities/category.dart';
 
 /// Экран хранилища паролей
 class StorageScreen extends StatelessWidget {
@@ -70,9 +74,11 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
         ],
       ),
       body: SafeArea(
-        child: controller.isLoading && controller.passwords.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : _buildContent(controller, theme),
+        child: controller.isLoading
+            ? ShimmerList(itemCount: 5, itemHeight: 120)
+            : controller.isEmpty
+                ? _buildEmptyState(theme)
+                : _buildContent(controller, theme),
       ),
     );
   }
@@ -90,6 +96,25 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // Поиск
+        TextField(
+          decoration: InputDecoration(
+            hintText: 'Поиск по сервису...',
+            prefixIcon: const Icon(Icons.search),
+            border: const OutlineInputBorder(),
+            filled: true,
+            fillColor: theme.colorScheme.surfaceContainerHighest,
+          ),
+          onChanged: (value) => controller.setSearchQuery(value),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Фильтр категорий
+        _buildCategoryFilter(controller, theme),
+
+        const SizedBox(height: 24),
+
         // Навигация между паролями
         _buildNavigation(controller, theme),
 
@@ -101,10 +126,22 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                Icon(
-                  Icons.folder,
-                  size: 48,
-                  color: theme.colorScheme.primary,
+                // Иконка категории (используем заглушку, т.к. category не загружен)
+                FutureBuilder<List<Category>>(
+                  future: context.read<GetCategoriesUseCase>().execute(),
+                  builder: (context, snapshot) {
+                    final categories = snapshot.data ?? [];
+                    final category = password.categoryId != null
+                        ? categories.cast<Category?>().firstWhere(
+                            (c) => c?.id == password.categoryId,
+                            orElse: () => null,
+                          )
+                        : null;
+                    return Text(
+                      category?.icon ?? '📁',
+                      style: const TextStyle(fontSize: 48),
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -616,5 +653,39 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
         content: 'При импорте произошла ошибка: $e',
       );
     }
+  }
+
+  /// Построение фильтра категорий
+  Widget _buildCategoryFilter(StorageController controller, ThemeData theme) {
+    return FutureBuilder<List<Category>>(
+      future: context.read<GetCategoriesUseCase>().execute(),
+      builder: (context, snapshot) {
+        final categories = snapshot.data ?? [];
+
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            // Фильтр "Все"
+            FilterChip(
+              label: const Text('Все'),
+              selected: controller.selectedCategoryId == null,
+              onSelected: (_) => controller.setCategoryFilter(null),
+              avatar: const Icon(Icons.all_inclusive),
+            ),
+            // Фильтры по категориям
+            ...categories.map((category) {
+              final isSelected = controller.selectedCategoryId == category.id;
+              return FilterChip(
+                label: Text(category.name),
+                selected: isSelected,
+                onSelected: (_) => controller.setCategoryFilter(isSelected ? null : category.id),
+                avatar: Text(category.icon ?? '📁', style: const TextStyle(fontSize: 16)),
+              );
+            }),
+          ],
+        );
+      },
+    );
   }
 }

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// Core
+import '../core/constants/breakpoints.dart';
+import '../core/constants/spacing.dart';
+import '../core/utils/page_transitions.dart';
+
 // Data sources
 import '../../data/datasources/encryptor_local_datasource.dart';
 import '../../data/datasources/password_generator_local_datasource.dart';
@@ -332,26 +337,104 @@ class PasswordGeneratorApp extends StatelessWidget {
   }
 }
 
+// Синяя цветовая схема согласно ТЗ
 final ColorScheme lightColorScheme = ColorScheme.fromSeed(
-  seedColor: const Color(0xFF6750A4),
+  seedColor: const Color(0xFF2196F3), // Blue
+  primary: const Color(0xFF2196F3),
+  secondary: const Color(0xFF1976D2),
+  tertiary: const Color(0xFF00897B),
+  error: const Color(0xFFD32F2F),
   brightness: Brightness.light,
 );
 
 final ColorScheme darkColorScheme = ColorScheme.fromSeed(
-  seedColor: const Color(0xFF6750A4),
+  seedColor: const Color(0xFF2196F3), // Blue
+  primary: const Color(0xFF64B5F6),
+  secondary: const Color(0xFF42A5F5),
+  tertiary: const Color(0xFF26A69A),
+  error: const Color(0xFFEF5350),
   brightness: Brightness.dark,
 );
 
 ThemeData getTheme(bool isDarkMode) {
+  final baseTheme = isDarkMode ? ThemeData.dark() : ThemeData.light();
+  
   return ThemeData(
     useMaterial3: true,
     colorScheme: isDarkMode ? darkColorScheme : lightColorScheme,
-    typography: Typography.material2018(),
-    textTheme: GoogleFonts.latoTextTheme(
-      isDarkMode ? ThemeData.dark().textTheme : ThemeData.light().textTheme,
+    // Кастомизированная типографика согласно ТЗ (Раздел 2.3)
+    textTheme: GoogleFonts.latoTextTheme(baseTheme.textTheme).copyWith(
+      displayLarge: const TextStyle(
+        fontSize: 57,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.25,
+      ),
+      headlineLarge: const TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.w600,
+      ),
+      headlineMedium: const TextStyle(
+        fontSize: 28,
+        fontWeight: FontWeight.w600,
+      ),
+      titleLarge: const TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+      ),
+      titleMedium: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+      ),
+      bodyLarge: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+      ),
+      bodyMedium: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+      ),
+      labelLarge: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+      ),
     ),
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       centerTitle: true,
+      backgroundColor: isDarkMode 
+          ? darkColorScheme.surface 
+          : lightColorScheme.surface,
+      foregroundColor: isDarkMode 
+          ? darkColorScheme.onSurface 
+          : lightColorScheme.onSurface,
+    ),
+    // Кнопки высотой 48dp согласно ТЗ
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.lg,
+          vertical: Spacing.md,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    ),
+    cardTheme: CardThemeData(
+      elevation: isDarkMode ? 0 : 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+    // Анимации переходов согласно ТЗ (Раздел 10.1)
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+      },
     ),
   );
 }
@@ -384,9 +467,68 @@ class _TabScaffoldState extends State<TabScaffold> {
     });
   }
 
+  /// BottomNavigationBar для мобильных
+  Widget _buildBottomNavigation() {
+    final theme = Theme.of(context);
+    return BottomNavigationBar(
+      currentIndex: _currentTab.index,
+      onTap: _onTabTapped,
+      backgroundColor: theme.colorScheme.surface,
+      selectedItemColor: theme.colorScheme.primary,
+      unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
+      showUnselectedLabels: true,
+      type: BottomNavigationBarType.fixed,
+      enableFeedback: true,
+      items: AppTab.values.map((tab) {
+        return BottomNavigationBarItem(
+          icon: Icon(tab.icon),
+          label: tab.label,
+          tooltip: tab.label,
+        );
+      }).toList(),
+    );
+  }
+
+  /// NavigationRail для планшетов и десктопов
+  Widget _buildNavigationRail() {
+    final theme = Theme.of(context);
+    final isDesktop = MediaQuery.of(context).size.width >= Breakpoints.desktopMin;
+
+    return NavigationRail(
+      selectedIndex: _currentTab.index,
+      onDestinationSelected: _onTabTapped,
+      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+      selectedIconTheme: IconThemeData(
+        color: theme.colorScheme.primary,
+        size: isDesktop ? 28 : 24,
+      ),
+      unselectedIconTheme: IconThemeData(
+        color: theme.colorScheme.onSurface.withOpacity(0.6),
+        size: isDesktop ? 28 : 24,
+      ),
+      selectedLabelTextStyle: theme.textTheme.labelLarge!,
+      unselectedLabelTextStyle: theme.textTheme.labelLarge!.copyWith(
+        color: theme.colorScheme.onSurface.withOpacity(0.6),
+      ),
+      labelType: isDesktop ? NavigationRailLabelType.all : NavigationRailLabelType.selected,
+      minWidth: isDesktop ? 80 : 72,
+      destinations: AppTab.values.map((tab) {
+        return NavigationRailDestination(
+          icon: Icon(tab.icon),
+          label: Text(tab.label),
+          padding: EdgeInsets.symmetric(
+            horizontal: Spacing.sm,
+            vertical: Spacing.md,
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < Breakpoints.mobileMax;
 
     return Listener(
       onPointerDown: (_) {
@@ -394,33 +536,27 @@ class _TabScaffoldState extends State<TabScaffold> {
         context.read<AuthController>().resetInactivityTimer();
       },
       child: Scaffold(
-        body: IndexedStack(
-          index: _currentTab.index,
-          children: const [
-            GeneratorScreen(),
-            EncryptorScreen(),
-            StorageScreen(),
-            SettingsScreen(),
-            AboutScreen(),
+        body: Row(
+          children: [
+            // NavigationRail для планшетов/десктопов
+            if (!isMobile) _buildNavigationRail(),
+            // Основной контент
+            Expanded(
+              child: IndexedStack(
+                index: _currentTab.index,
+                children: const [
+                  GeneratorScreen(),
+                  EncryptorScreen(),
+                  StorageScreen(),
+                  SettingsScreen(),
+                  AboutScreen(),
+                ],
+              ),
+            ),
           ],
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentTab.index,
-          onTap: _onTabTapped,
-          backgroundColor: theme.colorScheme.surface,
-          selectedItemColor: theme.colorScheme.primary,
-          unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
-          showUnselectedLabels: true,
-          type: BottomNavigationBarType.fixed,
-          enableFeedback: true,
-          items: AppTab.values.map((tab) {
-            return BottomNavigationBarItem(
-              icon: Icon(tab.icon),
-              label: tab.label,
-              tooltip: tab.label,
-            );
-          }).toList(),
-        ),
+        // BottomNavigationBar только для мобильных
+        bottomNavigationBar: isMobile ? _buildBottomNavigation() : null,
       ),
     );
   }

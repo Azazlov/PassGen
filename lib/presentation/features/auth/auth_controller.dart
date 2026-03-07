@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../domain/entities/auth_state.dart';
 import '../../../domain/entities/auth_result.dart';
 import '../../../domain/usecases/auth/setup_pin_usecase.dart';
@@ -77,6 +78,8 @@ class AuthController extends ChangeNotifier {
   void addDigit(String digit) {
     if (_enteredPin.length < 8) {
       _enteredPin += digit;
+      // Вибрация при вводе (тактильная обратная связь)
+      HapticFeedback.lightImpact();
       notifyListeners();
     }
   }

@@ -136,22 +136,53 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
 
               const SizedBox(height: 24),
 
-              // Слайдер сложности
+              // Пресеты сложности (FilterChip согласно ТЗ)
               Text(
                 'Сложность пароля',
                 style: theme.textTheme.titleMedium,
               ),
-              Slider(
-                value: controller.strength.toDouble(),
-                min: 0,
-                max: 4,
-                divisions: 4,
-                label: controller.strengthLabel,
-                activeColor: controller.strengthColor,
-                onChanged: (value) {
-                  controller.updateStrength(value.toInt());
-                },
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  FilterChip(
+                    label: const Text('Стандартный'),
+                    selected: controller.strength == 2,
+                    onSelected: (_) => controller.updateStrength(2),
+                  ),
+                  FilterChip(
+                    label: const Text('Надёжный'),
+                    selected: controller.strength == 3,
+                    onSelected: (_) => controller.updateStrength(3),
+                  ),
+                  FilterChip(
+                    label: const Text('Максимальный'),
+                    selected: controller.strength == 4,
+                    onSelected: (_) => controller.updateStrength(4),
+                  ),
+                  FilterChip(
+                    label: const Text('PIN'),
+                    selected: controller.strength == 0,
+                    onSelected: (_) => controller.updateStrength(0),
+                  ),
+                  FilterChip(
+                    label: const Text('Свой+'),
+                    selected: controller.strength == 1,
+                    onSelected: (_) => controller.updateStrength(1),
+                  ),
+                ],
               ),
+              const SizedBox(height: 8),
+              // Индикатор стойкости
+              LinearProgressIndicator(
+                value: controller.strength / 4,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  controller.strengthColor,
+                ),
+              ),
+              const SizedBox(height: 4),
               Text(
                 controller.strengthLabel,
                 style: theme.textTheme.bodyMedium?.copyWith(
