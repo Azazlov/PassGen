@@ -76,12 +76,47 @@ class GeneratorController extends ChangeNotifier {
   bool get requireLowercase => _settings.requireLowercase;
   bool get requireDigits => _settings.requireDigits;
   bool get requireSymbols => _settings.requireSymbols;
+  bool get excludeSimilar => _settings.excludeSimilar;
+  bool get useCustomLowercase => _settings.useCustomLowercase;
+  bool get useCustomUppercase => _settings.useCustomUppercase;
+  bool get useCustomDigits => _settings.useCustomDigits;
+  bool get useCustomSymbols => _settings.useCustomSymbols;
 
   /// Обновляет уровень сложности
   void updateStrength(int value) {
     _strength = value;
     _updateSettingsByStrength(value);
     _updateControllersFromSettings();
+    notifyListeners();
+  }
+
+  /// Переключает опцию "Исключить похожие символы"
+  void toggleExcludeSimilar(bool value) {
+    _settings = _settings.copyWith(excludeSimilar: value);
+    notifyListeners();
+  }
+
+  /// Переключает использование строчных букв
+  void toggleUseLowercase(bool value) {
+    _settings = _settings.copyWith(useCustomLowercase: value);
+    notifyListeners();
+  }
+
+  /// Переключает использование заглавных букв
+  void toggleUseUppercase(bool value) {
+    _settings = _settings.copyWith(useCustomUppercase: value);
+    notifyListeners();
+  }
+
+  /// Переключает использование цифр
+  void toggleUseDigits(bool value) {
+    _settings = _settings.copyWith(useCustomDigits: value);
+    notifyListeners();
+  }
+
+  /// Переключает использование спецсимволов
+  void toggleUseSymbols(bool value) {
+    _settings = _settings.copyWith(useCustomSymbols: value);
     notifyListeners();
   }
 

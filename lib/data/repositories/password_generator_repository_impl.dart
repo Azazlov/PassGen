@@ -20,6 +20,12 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
       final result = dataSource.generate(
         lengthRange: settings.lengthRange,
         flags: settings.flags,
+        excludeSimilar: settings.excludeSimilar,
+        useLowercase: settings.useCustomLowercase,
+        useUppercase: settings.useCustomUppercase,
+        useDigits: settings.useCustomDigits,
+        useSymbols: settings.useCustomSymbols,
+        customCharacters: settings.customCharacters,
       );
 
       if (result['error'] != null) {

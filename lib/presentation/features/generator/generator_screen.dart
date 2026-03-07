@@ -4,6 +4,7 @@ import '../../../presentation/widgets/app_button.dart';
 import '../../../presentation/widgets/app_switch.dart';
 import '../../../presentation/widgets/app_text_field.dart';
 import '../../../presentation/widgets/copyable_password.dart';
+import '../../../presentation/widgets/character_set_display.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import 'generator_controller.dart';
 import '../storage/storage_controller.dart';
@@ -90,36 +91,43 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controller = context.watch<GeneratorController>();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
 
     return Scaffold(
       body: SafeArea(
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
             children: [
-              const SizedBox(height: 16),
+              SizedBox(height: isSmallScreen ? 8 : 16),
 
               // Заголовок
               Text(
                 'Генератор паролей',
                 textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: isSmallScreen
+                    ? theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)
+                    : theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+
+              SizedBox(height: isSmallScreen ? 16 : 32),
+
+              // Отображение пароля - приоритетный элемент
+              Container(
+                constraints: BoxConstraints(
+                  minHeight: isSmallScreen ? 100 : 120,
+                ),
+                child: CopyablePassword(
+                  label: 'Пароль',
+                  text: controller.password,
+                  isEmpty: controller.password.isEmpty,
+                  onTap: _handlePasswordTap,
                 ),
               ),
 
-              const SizedBox(height: 32),
-
-              // Отображение пароля
-              CopyablePassword(
-                label: 'Пароль',
-                text: controller.password,
-                isEmpty: controller.password.isEmpty,
-                onTap: _handlePasswordTap,
-              ),
-
-              const SizedBox(height: 24),
+              SizedBox(height: isSmallScreen ? 16 : 24),
 
               // Поле сервиса
               AppTextField(
@@ -251,6 +259,22 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                 ],
               ),
 
+              const SizedBox(height: 16),
+
+              // Настройки для пресета "Свой+"
+              ExpansionTile(
+                title: const Text('Дополнительные настройки'),
+                children: [
+                  AppSwitch(
+                    label: 'Исключить похожие символы',
+                    subtitle: '1, l, I, 0, O, o',
+                    value: controller.excludeSimilar,
+                    icon: Icons.block,
+                    onChanged: controller.toggleExcludeSimilar,
+                  ),
+                ],
+              ),
+
               const SizedBox(height: 32),
 
               // Кнопка генерации
@@ -260,6 +284,11 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                 isLoading: controller.isLoading,
                 icon: Icons.refresh,
               ),
+
+              const SizedBox(height: 16),
+
+              // Отображение используемых символов
+              CharacterSetDisplay(settings: controller.settings),
 
               const SizedBox(height: 16),
 

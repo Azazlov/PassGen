@@ -18,6 +18,9 @@ class PasswordGeneratorLocalDataSource {
   static const String lowercase = 'abcdefghijklmnopqrstuvwxyz';
   static const String uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   static const String symbols = '!@#%^&*_+-=[]{};:,.?';
+  
+  /// Похожие символы для исключения
+  static const String similarCharacters = '1lI0Oo';
 
   /// Получает алфавит по флагу
   String getAlphabetByFlag(int flag) {
@@ -30,10 +33,16 @@ class PasswordGeneratorLocalDataSource {
     }
   }
 
-  /// Генерирует пароль
+  /// Генерирует пароль с расширенными настройками
   Map<String, String> generate({
     required List<int> lengthRange,
     required int flags,
+    bool excludeSimilar = false,
+    bool useLowercase = true,
+    bool useUppercase = true,
+    bool useDigits = true,
+    bool useSymbols = true,
+    String? customCharacters,
   }) {
     try {
       final length = _encryptor.generateRandomInt(
@@ -43,7 +52,17 @@ class PasswordGeneratorLocalDataSource {
 
       final rands = _encryptor.generateRandomBytes(length: length * 2);
 
-      return _coreEngine(length: length, flags: flags, rands: rands);
+      return _coreEngine(
+        length: length,
+        flags: flags,
+        rands: rands,
+        excludeSimilar: excludeSimilar,
+        useLowercase: useLowercase,
+        useUppercase: useUppercase,
+        useDigits: useDigits,
+        useSymbols: useSymbols,
+        customCharacters: customCharacters,
+      );
     } catch (e) {
       return {
         'password': '',
@@ -82,6 +101,12 @@ class PasswordGeneratorLocalDataSource {
     required int length,
     required int flags,
     required List<int> rands,
+    bool excludeSimilar = false,
+    bool useLowercase = true,
+    bool useUppercase = true,
+    bool useDigits = true,
+    bool useSymbols = true,
+    String? customCharacters,
   }) {
     if (rands.isEmpty) {
       return {'password': '', 'strength': '0', 'config': ''};
@@ -93,17 +118,43 @@ class PasswordGeneratorLocalDataSource {
     var allAllowedChars = '';
     var randCursor = 0;
 
-    // Категории: Digits(1), Lower(4), Upper(16), Symbols(64)
-    for (final f in [1, 4, 16, 64]) {
-      if ((flags & f) != 0) {
-        final chars = getAlphabetByFlag(f);
-        if (chars.isNotEmpty) {
-          allAllowedChars += chars;
+    // Если используется режим "Свой+" с пользовательскими наборами
+    if (customCharacters != null && customCharacters.isNotEmpty) {
+      // Используем только пользовательские символы
+      allAllowedChars = customCharacters;
+    } else {
+      // Стандартный режим с флагами
+      // Категории: Digits(1), Lower(4), Upper(16), Symbols(64)
+      for (final f in [1, 4, 16, 64]) {
+        if ((flags & f) != 0) {
+          String chars = getAlphabetByFlag(f);
+          
+          // Исключаем похожие символы если нужно
+          if (excludeSimilar) {
+            for (final char in similarCharacters.split('')) {
+              chars = chars.replaceAll(char, '');
+            }
+          }
+          
+          if (chars.isNotEmpty) {
+            // Проверяем соответствующие use* флаги
+            bool shouldInclude = false;
+            switch (f) {
+              case 1: shouldInclude = useDigits; break;
+              case 4: shouldInclude = useLowercase; break;
+              case 16: shouldInclude = useUppercase; break;
+              case 64: shouldInclude = useSymbols; break;
+            }
+            
+            if (shouldInclude) {
+              allAllowedChars += chars;
 
-          // Required проверка (флаг << 1)
-          if ((flags & (f << 1)) != 0 && passwordChars.length < length) {
-            passwordChars.add(chars[getSafeRand(randCursor) % chars.length]);
-            randCursor++;
+              // Required проверка (флаг << 1)
+              if ((flags & (f << 1)) != 0 && passwordChars.length < length) {
+                passwordChars.add(chars[getSafeRand(randCursor) % chars.length]);
+                randCursor++;
+              }
+            }
           }
         }
       }
@@ -111,6 +162,13 @@ class PasswordGeneratorLocalDataSource {
 
     if (allAllowedChars.isEmpty) {
       return {'password': '', 'strength': '0'};
+    }
+
+    // Исключаем похожие символы из всех разрешённых если нужно
+    if (excludeSimilar) {
+      for (final char in similarCharacters.split('')) {
+        allAllowedChars = allAllowedChars.replaceAll(char, '');
+      }
     }
 
     // Заполнение до нужной длины

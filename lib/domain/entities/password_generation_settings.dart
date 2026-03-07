@@ -8,6 +8,14 @@ class PasswordGenerationSettings {
   final bool requireDigits;
   final bool requireSymbols;
   final bool allUnique;
+  final bool excludeSimilar; // Исключать похожие символы (1, l, I, O, 0)
+  final String? customCharacters; // Пользовательские символы
+  
+  // Флаги для пользовательских наборов символов
+  final bool useCustomLowercase; // Использовать строчные
+  final bool useCustomUppercase; // Использовать заглавные
+  final bool useCustomDigits;    // Использовать цифры
+  final bool useCustomSymbols;   // Использовать спецсимволы
 
   const PasswordGenerationSettings({
     this.strength = 2,
@@ -18,6 +26,12 @@ class PasswordGenerationSettings {
     this.requireDigits = false,
     this.requireSymbols = false,
     this.allUnique = false,
+    this.excludeSimilar = false,
+    this.customCharacters,
+    this.useCustomLowercase = true,
+    this.useCustomUppercase = true,
+    this.useCustomDigits = true,
+    this.useCustomSymbols = true,
   });
 
   PasswordGenerationSettings copyWith({
@@ -29,6 +43,12 @@ class PasswordGenerationSettings {
     bool? requireDigits,
     bool? requireSymbols,
     bool? allUnique,
+    bool? excludeSimilar,
+    String? customCharacters,
+    bool? useCustomLowercase,
+    bool? useCustomUppercase,
+    bool? useCustomDigits,
+    bool? useCustomSymbols,
   }) {
     return PasswordGenerationSettings(
       strength: strength ?? this.strength,
@@ -39,9 +59,15 @@ class PasswordGenerationSettings {
       requireDigits: requireDigits ?? this.requireDigits,
       requireSymbols: requireSymbols ?? this.requireSymbols,
       allUnique: allUnique ?? this.allUnique,
+      excludeSimilar: excludeSimilar ?? this.excludeSimilar,
+      customCharacters: customCharacters ?? this.customCharacters,
+      useCustomLowercase: useCustomLowercase ?? this.useCustomLowercase,
+      useCustomUppercase: useCustomUppercase ?? this.useCustomUppercase,
+      useCustomDigits: useCustomDigits ?? this.useCustomDigits,
+      useCustomSymbols: useCustomSymbols ?? this.useCustomSymbols,
     );
   }
 
   @override
-  String toString() => 'PasswordGenerationSettings(strength: $strength, length: $lengthRange)';
+  String toString() => 'PasswordGenerationSettings(strength: $strength, length: $lengthRange, excludeSimilar: $excludeSimilar)';
 }

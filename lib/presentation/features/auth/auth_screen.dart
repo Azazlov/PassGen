@@ -25,15 +25,105 @@ class _AuthScreenContent extends StatefulWidget {
 }
 
 class _AuthScreenContentState extends State<_AuthScreenContent> {
+  final FocusNode _keyboardFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
     // Загружаем состояние при инициализации
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuthController>().refreshState();
+      // Запрашиваем фокус для захвата клавиатуры
+      _keyboardFocusNode.requestFocus();
     });
-    // Защита от скриншотов на Android
-    _setSecureFlag();
+  }
+
+  @override
+  void dispose() {
+    _keyboardFocusNode.dispose();
+    super.dispose();
+  }
+
+  /// Обработка нажатий клавиш физической клавиатуры
+  void _handleKeyEvent(KeyEvent event) {
+    // Обрабатываем только нажатия (не отпускания)
+    if (event is! KeyDownEvent) return;
+
+    final controller = context.read<AuthController>();
+
+    // Игнорируем если контроллер загружается
+    if (controller.isLoading) return;
+
+    // Цифры 0-9 (верхний ряд и NumPad)
+    String? digit;
+    switch (event.logicalKey) {
+      case LogicalKeyboardKey.digit0:
+      case LogicalKeyboardKey.numpad0:
+        digit = '0';
+        break;
+      case LogicalKeyboardKey.digit1:
+      case LogicalKeyboardKey.numpad1:
+        digit = '1';
+        break;
+      case LogicalKeyboardKey.digit2:
+      case LogicalKeyboardKey.numpad2:
+        digit = '2';
+        break;
+      case LogicalKeyboardKey.digit3:
+      case LogicalKeyboardKey.numpad3:
+        digit = '3';
+        break;
+      case LogicalKeyboardKey.digit4:
+      case LogicalKeyboardKey.numpad4:
+        digit = '4';
+        break;
+      case LogicalKeyboardKey.digit5:
+      case LogicalKeyboardKey.numpad5:
+        digit = '5';
+        break;
+      case LogicalKeyboardKey.digit6:
+      case LogicalKeyboardKey.numpad6:
+        digit = '6';
+        break;
+      case LogicalKeyboardKey.digit7:
+      case LogicalKeyboardKey.numpad7:
+        digit = '7';
+        break;
+      case LogicalKeyboardKey.digit8:
+      case LogicalKeyboardKey.numpad8:
+        digit = '8';
+        break;
+      case LogicalKeyboardKey.digit9:
+      case LogicalKeyboardKey.numpad9:
+        digit = '9';
+        break;
+      case LogicalKeyboardKey.backspace:
+      case LogicalKeyboardKey.delete:
+        controller.removeDigit();
+        return;
+      case LogicalKeyboardKey.enter:
+        if (controller.isPinComplete) {
+          _handleConfirm();
+        }
+        return;
+      default:
+        return;
+    }
+
+    if (digit != null) {
+      controller.addDigit(digit);
+    }
+  }
+
+  /// Подтверждение ввода PIN
+  void _handleConfirm() {
+    final controller = context.read<AuthController>();
+    if (controller.isPinComplete && !controller.isLoading) {
+      // Для режима установки PIN
+      if (!controller.authState.isPinSetup) {
+        controller.setupPin();
+      }
+    }
   }
 
   /// Устанавливает флаг защиты от скриншотов для Android
@@ -48,11 +138,15 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
     final theme = Theme.of(context);
     final controller = context.watch<AuthController>();
 
-    return Scaffold(
-      body: SafeArea(
-        child: controller.isLoading && controller.authState.isPinSetup
-            ? const Center(child: CircularProgressIndicator())
-            : _buildContent(controller, theme),
+    return KeyboardListener(
+      focusNode: _keyboardFocusNode,
+      onKeyEvent: _handleKeyEvent,
+      child: Scaffold(
+        body: SafeArea(
+          child: controller.isLoading && controller.authState.isPinSetup
+              ? const Center(child: CircularProgressIndicator())
+              : _buildContent(controller, theme),
+        ),
       ),
     );
   }
