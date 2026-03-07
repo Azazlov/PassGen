@@ -1,0 +1,424 @@
+@startuml PassGen Database Interaction Diagram
+' ============================================================================
+' PassGen - Диаграмма взаимодействия объектов базы данных
+' Версия: 1.0
+' Дата: 7 марта 2026 г.
+' ============================================================================
+
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantAlign center
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+' ============================================================================
+' ЧАСТЬ 1: ER-ДИАГРАММА (Схема базы данных)
+' ============================================================================
+
+package "PassGen Database Schema" {
+  
+  ' Таблица categories
+  entity "categories\n(Категории)" as categories {
+    *id : INTEGER PK <<generated>>
+    --
+    name : TEXT <<not null>>
+    icon : TEXT
+    is_system : INTEGER <<default 0>>
+    created_at : INTEGER <<not null>>
+  }
+  
+  ' Таблица password_entries
+  entity "password_entries\n(Записи паролей)" as password_entries {
+    *id : INTEGER PK <<generated>>
+    --
+    category_id : INTEGER <<FK>>
+    service : TEXT <<not null>>
+    login : TEXT
+    encrypted_password : BLOB <<not null>>
+    nonce : BLOB <<not null>>
+    created_at : INTEGER <<not null>>
+    updated_at : INTEGER <<not null>>
+  }
+  
+  ' Таблица password_configs
+  entity "password_configs\n(Конфигурации)" as password_configs {
+    *id : INTEGER PK <<generated>>
+    --
+    entry_id : INTEGER <<FK, unique>>
+    strength : INTEGER
+    min_length : INTEGER
+    max_length : INTEGER
+    flags : INTEGER
+    require_unique : INTEGER <<default 0>>
+    encrypted_config : BLOB
+  }
+  
+  ' Таблица security_logs
+  entity "security_logs\n(Логи безопасности)" as security_logs {
+    *id : INTEGER PK <<generated>>
+    --
+    action_type : TEXT <<not null>>
+    timestamp : INTEGER <<not null>>
+    details : TEXT
+  }
+  
+  ' Таблица app_settings
+  entity "app_settings\n(Настройки)" as app_settings {
+    *key : TEXT PK
+    --
+    value : TEXT <<not null>>
+    encrypted : INTEGER <<default 0>>
+  }
+  
+  ' Связи между таблицами
+  categories ||--o{ password_entries : "1:N (category_id)"
+  password_entries ||--o| password_configs : "1:1 (entry_id)"
+  
+}
+
+' ============================================================================
+' ЧАСТЬ 2: ИНДЕКСЫ И ОГРАНИЧЕНИЯ
+' ============================================================================
+
+note bottom of categories
+  <b>Индексы:</b>
+  - idx_categories_is_system (is_system)
+  
+  <b>Ограничения:</b>
+  - is_system IN (0, 1)
+end note
+
+note bottom of password_entries
+  <b>Индексы:</b>
+  - idx_password_entries_category (category_id)
+  - idx_password_entries_service (service)
+  
+  <b>Ограничения:</b>
+  - category_id REFERENCES categories(id)
+  - service NOT NULL
+end note
+
+note bottom of password_configs
+  <b>Индексы:</b>
+  - idx_password_configs_entry (entry_id) UNIQUE
+  
+  <b>Ограничения:</b>
+  - entry_id REFERENCES password_entries(id) UNIQUE
+end note
+
+note bottom of security_logs
+  <b>Индексы:</b>
+  - idx_security_logs_action (action_type)
+  - idx_security_logs_timestamp (timestamp)
+  
+  <b>Ограничения:</b>
+  - action_type NOT NULL
+  - timestamp NOT NULL
+end note
+
+note bottom of app_settings
+  <b>Индексы:</b>
+  - PRIMARY KEY (key)
+  
+  <b>Ограничения:</b>
+  - key PRIMARY KEY
+  - value NOT NULL
+end note
+
+' ============================================================================
+' ЧАСТЬ 3: СЦЕНАРИЙ 1 - ДОБАВЛЕНИЕ НОВОЙ ЗАПИСИ ПАРОЛЯ
+' ============================================================================
+
+rectangle "📝 Сценарий 1: Добавление новой записи пароля" as Scenario1 {
+  
+  participant "👤 Пользователь" as User1
+  participant "🔧 PasswordRepository" as Repo1
+  participant "📊 password_entries" as PE1
+  participant "⚙️ password_configs" as PC1
+  participant "📋 security_logs" as SL1
+  
+  User1 -> Repo1 : createPasswordEntry(\n  service: String,\n  login: String?,\n  password: String,\n  categoryId: Int?,\n  config: ConfigData)
+  activate Repo1
+  
+  Repo1 -> PE1 : BEGIN TRANSACTION
+  activate PE1
+  PE1 --> Repo1 : Transaction Started
+  
+  Repo1 -> PE1 : INSERT INTO password_entries(\n  category_id, service, login,\n  encrypted_password, nonce,\n  created_at, updated_at)\n  VALUES (?, ?, ?, ?, ?, ?, ?)
+  note right: Параметры:\n- category_id: Int?\n- service: String\n- login: String?\n- encrypted_password: Blob\n- nonce: Blob\n- created_at: Timestamp\n- updated_at: Timestamp
+  PE1 --> Repo1 : lastInsertRowId: Int
+  note right: Возврат: ID новой записи
+  
+  Repo1 -> PC1 : INSERT INTO password_configs(\n  entry_id, strength, min_length,\n  max_length, flags, require_unique,\n  encrypted_config)\n  VALUES (?, ?, ?, ?, ?, ?, ?)
+  note right: Параметры:\n- entry_id: Int (FK)\n- strength: Int\n- min_length: Int\n- max_length: Int\n- flags: Int\n- require_unique: Int\n- encrypted_config: Blob?
+  PC1 --> Repo1 : lastInsertRowId: Int
+  
+  Repo1 -> SL1 : INSERT INTO security_logs(\n  action_type, timestamp, details)\n  VALUES ('PWD_CREATED', ?, ?)
+  note right: Параметры:\n- action_type: 'PWD_CREATED'\n- timestamp: Timestamp\n- details: JSON{service, category_id}
+  SL1 --> Repo1 : lastInsertRowId: Int
+  
+  Repo1 -> PE1 : COMMIT TRANSACTION
+  PE1 --> Repo1 : Success
+  
+  Repo1 --> User1 : PasswordEntry{\n  id: Int,\n  service: String,\n  categoryId: Int?,\n  createdAt: DateTime\n}
+  deactivate Repo1
+  deactivate PE1
+  
+  note right of User1
+    <b>Результат:</b>
+    ✅ Запись создана
+    ✅ Конфигурация сохранена
+    ✅ Лог добавлен
+    ✅ Возвращён ID записи
+  end note
+}
+
+' ============================================================================
+' ЧАСТЬ 4: СЦЕНАРИЙ 2 - ОБНОВЛЕНИЕ СУЩЕСТВУЮЩЕЙ ЗАПИСИ ПАРОЛЯ
+' ============================================================================
+
+rectangle "✏️ Сценарий 2: Обновление существующей записи пароля" as Scenario2 {
+  
+  participant "👤 Пользователь" as User2
+  participant "🔧 PasswordRepository" as Repo2
+  participant "📊 password_entries" as PE2
+  participant "⚙️ password_configs" as PC2
+  participant "📋 security_logs" as SL2
+  
+  User2 -> Repo2 : updatePasswordEntry(\n  id: Int,\n  service: String?,\n  login: String?,\n  password: String?,\n  categoryId: Int?)
+  activate Repo2
+  
+  Repo2 -> PE2 : BEGIN TRANSACTION
+  activate PE2
+  PE2 --> Repo2 : Transaction Started
+  
+  Repo2 -> PE2 : SELECT * FROM password_entries\n  WHERE id = ?
+  note right: Параметры:\n- id: Int
+  PE2 --> Repo2 : PasswordEntry?
+  alt Запись не найдена
+    Repo2 --> User2 : Error: NotFound
+    deactivate Repo2
+    deactivate PE2
+  else Запись найдена
+    Repo2 -> PE2 : UPDATE password_entries SET\n  service = ?, login = ?,\n  category_id = ?,\n  encrypted_password = ?,\n  nonce = ?,\n  updated_at = ?\n  WHERE id = ?
+    note right: Параметры:\n- service: String\n- login: String?\n- category_id: Int?\n- encrypted_password: Blob\n- nonce: Blob\n- updated_at: Timestamp\n- id: Int (WHERE)
+    PE2 --> Repo2 : rowsAffected: Int
+    
+    Repo2 -> PC2 : UPDATE OR INSERT password_configs\n  SET entry_id = ?, strength = ?, ...\n  WHERE entry_id = ?
+    note right: Параметры:\n- entry_id: Int\n- strength: Int\n- ... (остальные поля)\n- entry_id: Int (WHERE)
+    PC2 --> Repo2 : rowsAffected: Int
+    
+    Repo2 -> SL2 : INSERT INTO security_logs(\n  action_type, timestamp, details)\n  VALUES ('PWD_UPDATED', ?, ?)
+    note right: Параметры:\n- action_type: 'PWD_UPDATED'\n- timestamp: Timestamp\n- details: JSON{id, service}
+    SL2 --> Repo2 : lastInsertRowId: Int
+    
+    Repo2 -> PE2 : COMMIT TRANSACTION
+    PE2 --> Repo2 : Success
+    
+    Repo2 --> User2 : PasswordEntry{\n  id: Int,\n  updatedAt: DateTime\n}
+    deactivate Repo2
+    deactivate PE2
+  end
+  
+  note right of User2
+    <b>Результат:</b>
+    ✅ Запись обновлена
+    ✅ Конфигурация обновлена
+    ✅ Лог добавлен
+    ⚠️ Ошибка если не найдено
+  end note
+}
+
+' ============================================================================
+' ЧАСТЬ 5: СЦЕНАРИЙ 3 - УДАЛЕНИЕ ЗАПИСИ ПАРОЛЯ
+' ============================================================================
+
+rectangle "🗑️ Сценарий 3: Удаление записи пароля" as Scenario3 {
+  
+  participant "👤 Пользователь" as User3
+  participant "🔧 PasswordRepository" as Repo3
+  participant "📊 password_entries" as PE3
+  participant "⚙️ password_configs" as PC3
+  participant "📋 security_logs" as SL3
+  
+  User3 -> Repo3 : deletePasswordEntry(id: Int)
+  activate Repo3
+  
+  Repo3 -> PE3 : BEGIN TRANSACTION
+  activate PE3
+  PE3 --> Repo3 : Transaction Started
+  
+  Repo3 -> PE3 : SELECT * FROM password_entries\n  WHERE id = ?
+  note right: Параметры:\n- id: Int
+  PE3 --> Repo3 : PasswordEntry?
+  alt Запись не найдена
+    Repo3 --> User3 : Error: NotFound
+    deactivate Repo3
+    deactivate PE3
+  else Запись найдена
+    Repo3 -> PC3 : DELETE FROM password_configs\n  WHERE entry_id = ?
+    note right: Параметры:\n- entry_id: Int (FK)
+    PC3 --> Repo3 : rowsAffected: Int
+    
+    Repo3 -> PE3 : DELETE FROM password_entries\n  WHERE id = ?
+    note right: Параметры:\n- id: Int
+    PE3 --> Repo3 : rowsAffected: Int
+    
+    Repo3 -> SL3 : INSERT INTO security_logs(\n  action_type, timestamp, details)\n  VALUES ('PWD_DELETED', ?, ?)
+    note right: Параметры:\n- action_type: 'PWD_DELETED'\n- timestamp: Timestamp\n- details: JSON{id, service}
+    SL3 --> Repo3 : lastInsertRowId: Int
+    
+    Repo3 -> PE3 : COMMIT TRANSACTION
+    PE3 --> Repo3 : Success
+    
+    Repo3 --> User3 : Success: Boolean
+    deactivate Repo3
+    deactivate PE3
+  end
+  
+  note right of User3
+    <b>Результат:</b>
+    ✅ Запись удалена (CASCADE)\n✅ Конфигурация удалена\n✅ Лог добавлен\n⚠️ Ошибка если не найдено
+  end note
+}
+
+' ============================================================================
+' ЧАСТЬ 6: СЦЕНАРИЙ 4 - ПОИСК ЗАПИСЕЙ ПО КАТЕГОРИИ
+' ============================================================================
+
+rectangle "🔍 Сценарий 4: Поиск записей по категории" as Scenario4 {
+  
+  participant "👤 Пользователь" as User4
+  participant "🔧 PasswordRepository" as Repo4
+  participant "📊 password_entries" as PE4
+  participant "📋 categories" as Cat4
+  
+  User4 -> Repo4 : getPasswordsByCategory(\n  categoryId: Int,\n  searchQuery: String?)
+  activate Repo4
+  
+  Repo4 -> Cat4 : SELECT * FROM categories\n  WHERE id = ?
+  note right: Параметры:\n- id: Int
+  Cat4 --> Repo4 : Category?
+  alt Категория не найдена
+    Repo4 --> User4 : Error: CategoryNotFound
+    deactivate Repo4
+  else Категория найдена
+    alt Есть поисковый запрос
+      Repo4 -> PE4 : SELECT * FROM password_entries\n  WHERE category_id = ?\n  AND service LIKE ?\n  ORDER BY service ASC
+      note right: Параметры:\n- category_id: Int\n- searchQuery: '%text%'\n- ORDER BY: service
+    else Нет поискового запроса
+      Repo4 -> PE4 : SELECT * FROM password_entries\n  WHERE category_id = ?\n  ORDER BY service ASC
+      note right: Параметры:\n- category_id: Int\n- ORDER BY: service
+    end
+    
+    PE4 --> Repo4 : List<PasswordEntry>
+    note right: Возврат:\n- id: Int\n- service: String\n- login: String?\n- category_id: Int\n- created_at: Timestamp\n- updated_at: Timestamp
+    
+    Repo4 --> User4 : List<PasswordEntry>{\n  id, service, login,\n  categoryId, createdAt\n}
+    deactivate Repo4
+  end
+  
+  note right of User4
+    <b>Результат:</b>
+    ✅ Список записей\n✅ Сортировка по service\n🔍 Опционально: поиск\n⚠️ Ошибка если категория не найдена
+  end note
+}
+
+' ============================================================================
+' ЧАСТЬ 7: СЦЕНАРИЙ 5 - ГЕНЕРАЦИЯ ОТЧЁТА О БЕЗОПАСНОСТИ
+' ============================================================================
+
+rectangle "📊 Сценарий 5: Генерация отчёта о безопасности" as Scenario5 {
+  
+  participant "👤 Пользователь" as User5
+  participant "🔧 SecurityLogRepository" as Repo5
+  participant "📋 security_logs" as SL5
+  participant "📊 password_entries" as PE5
+  participant "⚙️ app_settings" as AS5
+  
+  User5 -> Repo5 : generateSecurityReport(\n  startDate: DateTime,\n  endDate: DateTime,\n  limit: Int)
+  activate Repo5
+  
+  Repo5 -> AS5 : SELECT value FROM app_settings\n  WHERE key = 'security_report_settings'
+  note right: Получение настроек\nотчёта
+  AS5 --> Repo5 : SettingsJSON?
+  
+  Repo5 -> SL5 : SELECT action_type, COUNT(*) as count,\n  MIN(timestamp) as first,\n  MAX(timestamp) as last\n  FROM security_logs\n  WHERE timestamp BETWEEN ? AND ?\n  GROUP BY action_type\n  ORDER BY count DESC\n  LIMIT ?
+  note right: Параметры:\n- start_timestamp: Int\n- end_timestamp: Int\n- limit: Int
+  SL5 --> Repo5 : List<LogSummary>
+  note right: Возврат:\n- action_type: String\n- count: Int\n- first: Timestamp\n- last: Timestamp
+  
+  Repo5 -> SL5 : SELECT * FROM security_logs\n  WHERE action_type IN ('AUTH_FAILURE', 'AUTH_LOCKOUT')\n  AND timestamp BETWEEN ? AND ?\n  ORDER BY timestamp DESC\n  LIMIT 100
+  note right: Параметры:\n- start_timestamp: Int\n- end_timestamp: Int
+  SL5 --> Repo5 : List<SecurityLog>
+  note right: Возврат:\n- id, action_type\n- timestamp, details
+  
+  Repo5 -> PE5 : SELECT COUNT(*) as total,\n  COUNT(DISTINCT category_id) as categories,\n  MIN(created_at) as oldest,\n  MAX(updated_at) as newest\n  FROM password_entries
+  PE5 --> Repo5 : PasswordStats
+  note right: Возврат:\n- total: Int\n- categories: Int\n- oldest: Timestamp\n- newest: Timestamp
+  
+  Repo5 --> User5 : SecurityReport{\n  logSummary: List<LogSummary>,\n  securityEvents: List<SecurityLog>,\n  passwordStats: PasswordStats,\n  generatedAt: DateTime\n}
+  deactivate Repo5
+  
+  note right of User5
+    <b>Результат:</b>
+    ✅ Статистика логов\n✅ Список событий безопасности\n✅ Статистика паролей\n⚠️ Ограничение по записям
+  end note
+}
+
+' ============================================================================
+' ЧАСТЬ 8: ТИПЫ ДАННЫХ И КОНСТАНТЫ
+' ============================================================================
+
+rectangle "📋 Типы данных и константы" as Types {
+  
+  note right
+    <b>INTEGER</b>
+    - id: AUTOINCREMENT
+    - timestamps: milliseconds since epoch
+    - flags: bit mask (0-255)
+    
+    <b>TEXT</b>
+    - service: VARCHAR(255)
+    - login: VARCHAR(255)
+    - action_type: ENUM string
+    
+    <b>BLOB</b>
+    - encrypted_password: ChaCha20-Poly1305
+    - nonce: 32 bytes
+    - encrypted_config: JSON encrypted
+    
+    <b>Константы</b>
+    - PBKDF2 iterations: 10000
+    - Lockout duration: 30 seconds
+    - Max failed attempts: 5
+    - Inactivity timeout: 5 minutes
+  end note
+}
+
+' ============================================================================
+' ЧАСТЬ 9: ТРИГГЕРЫ И АВТОМАТИЗАЦИЯ
+' ============================================================================
+
+rectangle "⚙️ Триггеры и автоматизация" as Triggers {
+  
+  note right
+    <b>Триггер: cleanup_old_logs</b>
+    WHEN: INSERT INTO security_logs
+    ACTION: DELETE old logs if count > 2000
+    KEEP: Last 1000 records
+    
+    <b>Триггер: update_timestamp</b>
+    WHEN: UPDATE password_entries
+    ACTION: SET updated_at = CURRENT_TIMESTAMP
+    
+    <b>Триггер: cascade_delete_config</b>
+    WHEN: DELETE FROM password_entries
+    ACTION: DELETE FROM password_configs\n    WHERE entry_id = OLD.id
+  end note
+}
+
+@enduml
+' ============================================================================
+' Конец диаграммы
+' ============================================================================
