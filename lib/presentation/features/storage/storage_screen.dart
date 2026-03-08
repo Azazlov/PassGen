@@ -12,6 +12,7 @@ import '../../../presentation/widgets/app_button.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import '../../../presentation/widgets/shimmer_effect.dart';
 import 'storage_controller.dart';
+import 'storage_adaptive_layout.dart';
 import '../../../core/constants/event_types.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/storage/get_passwords_usecase.dart';
@@ -63,7 +64,6 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final controller = context.watch<StorageController>();
 
     return Scaffold(
@@ -92,8 +92,12 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
         child: controller.isLoading
             ? ShimmerList(itemCount: 5, itemHeight: 120)
             : controller.isEmpty
-                ? _buildEmptyState(theme)
-                : _buildContent(controller, theme),
+                ? const StorageEmptyState(
+                    icon: Icons.archive,
+                    title: 'Нет сохранённых паролей',
+                    subtitle: 'Создайте первый пароль прямо сейчас',
+                  )
+                : const StorageAdaptiveLayout(),
       ),
     );
   }

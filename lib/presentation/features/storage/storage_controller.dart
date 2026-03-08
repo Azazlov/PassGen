@@ -41,9 +41,11 @@ class StorageController extends ChangeNotifier {
   // Фильтры
   int? _selectedCategoryId;
   String _searchQuery = '';
+  PasswordEntry? _selectedEntry; // Для двухпанельного макета
 
   int? get selectedCategoryId => _selectedCategoryId;
   String get searchQuery => _searchQuery;
+  PasswordEntry? get selectedEntry => _selectedEntry;
 
   // Геттеры
   List<PasswordEntry> get passwords => _passwords;
@@ -54,6 +56,18 @@ class StorageController extends ChangeNotifier {
   bool get isEmpty => _passwords.isEmpty;
   int get passwordsCount => _passwords.length;
   PasswordEntry? get currentPassword => _currentIndex < _passwords.length ? _passwords[_currentIndex] : null;
+
+  /// Выбор записи
+  void selectEntry(PasswordEntry? entry) {
+    _selectedEntry = entry;
+    notifyListeners();
+  }
+
+  /// Очистка выбора
+  void clearSelection() {
+    _selectedEntry = null;
+    notifyListeners();
+  }
 
   /// Установка категории фильтра
   void setCategoryFilter(int? categoryId) {
