@@ -12,7 +12,6 @@ import '../../../presentation/widgets/app_button.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import '../../../presentation/widgets/shimmer_effect.dart';
 import 'storage_controller.dart';
-import '../categories/categories_controller.dart';
 import '../../../core/constants/event_types.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/storage/get_passwords_usecase.dart';

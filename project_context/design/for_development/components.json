@@ -1,37 +1,71 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "lastUpdated": "2026-03-08",
   "components": {
     "buttons": {
       "primary": {
         "widget": "ElevatedButton",
-        "minHeight": 48,
-        "padding": {
-          "horizontal": 24,
-          "vertical": 16
+        "mobile": {
+          "minHeight": 48,
+          "minWidth": "fullWidth",
+          "fontSize": 16,
+          "padding": {
+            "horizontal": 24,
+            "vertical": 16
+          }
+        },
+        "desktop": {
+          "minHeight": 40,
+          "minWidth": 200,
+          "fontSize": 14,
+          "padding": {
+            "horizontal": 16,
+            "vertical": 12
+          }
         },
         "borderRadius": 8,
         "elevation": 2,
         "states": {
           "default": {
             "backgroundColor": "primary",
-            "textColor": "onPrimary"
+            "textColor": "onPrimary",
+            "elevation": 2
           },
           "hover": {
-            "backgroundColor": "primary + 10% brightness"
+            "backgroundColor": "primary + 10% brightness",
+            "elevation": 4
           },
           "pressed": {
-            "backgroundColor": "primary - 10% brightness"
+            "backgroundColor": "primary - 10% brightness",
+            "elevation": 1
           },
           "disabled": {
-            "opacity": 0.38
+            "backgroundColor": "outlineVariant",
+            "textColor": "onDisabled",
+            "opacity": 0.38,
+            "elevation": 0
+          },
+          "loading": {
+            "backgroundColor": "primary",
+            "content": "CircularProgressIndicator (color: onPrimary, strokeWidth: 2)",
+            "textColor": "onPrimary",
+            "enabled": false
           }
         },
-        "flutter": "ElevatedButton.styleFrom(\n  minimumSize: Size.fromHeight(48),\n  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),\n  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),\n)"
+        "flutter": "ElevatedButton.styleFrom(\n  minimumSize: Size(width < 900 ? double.infinity : 200, height: width < 600 ? 48 : 40),\n  padding: EdgeInsets.symmetric(horizontal: width < 900 ? 24 : 16, vertical: width < 600 ? 16 : 12),\n  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),\n  elevation: 2,\n)"
       },
       "secondary": {
         "widget": "OutlinedButton",
-        "minHeight": 48,
+        "mobile": {
+          "minHeight": 48,
+          "minWidth": "fullWidth",
+          "fontSize": 16
+        },
+        "desktop": {
+          "minHeight": 40,
+          "minWidth": 200,
+          "fontSize": 14
+        },
         "padding": {
           "horizontal": 24,
           "vertical": 16
@@ -42,16 +76,30 @@
         "states": {
           "default": {
             "backgroundColor": "transparent",
-            "textColor": "primary"
+            "textColor": "primary",
+            "borderColor": "outline"
           },
           "hover": {
-            "backgroundColor": "primary.withOpacity(0.08)"
+            "backgroundColor": "primary.withOpacity(0.08)",
+            "textColor": "primary",
+            "borderColor": "primary"
           },
           "pressed": {
-            "backgroundColor": "primary.withOpacity(0.12)"
+            "backgroundColor": "primary.withOpacity(0.12)",
+            "textColor": "primary",
+            "borderColor": "primary"
           },
           "disabled": {
+            "backgroundColor": "transparent",
+            "textColor": "onDisabled",
+            "borderColor": "outlineVariant",
             "opacity": 0.38
+          },
+          "loading": {
+            "backgroundColor": "transparent",
+            "content": "CircularProgressIndicator (color: primary, strokeWidth: 2)",
+            "textColor": "primary",
+            "enabled": false
           }
         }
       },
@@ -304,6 +352,92 @@
     },
     "textField": {
       "minHeight": 48
+    }
+  },
+  "accessibility": {
+    "semantics": {
+      "iconButton": {
+        "required": ["label", "button"],
+        "optional": ["hint"],
+        "example": "Semantics(label: 'Копировать пароль', button: true, child: IconButton(...))"
+      },
+      "textField": {
+        "required": ["label", "textField"],
+        "optional": ["hint", "error"],
+        "password": "obscured: true",
+        "example": "Semantics(label: 'Пароль', textField: true, obscured: true, child: TextField(...))"
+      },
+      "card": {
+        "required": ["label"],
+        "optional": ["button", "selected"],
+        "example": "Semantics(label: 'Пароль для Gmail, логин user@gmail', button: true, child: Card(...))"
+      },
+      "checkbox": {
+        "required": ["label", "checked"],
+        "optional": ["toggleable"],
+        "example": "Semantics(label: 'Заглавные буквы', checked: true, toggleable: true, child: Checkbox(...))"
+      },
+      "switch": {
+        "required": ["label", "checked"],
+        "optional": ["toggleable"],
+        "example": "Semantics(label: 'Тёмная тема', checked: false, toggleable: true, child: Switch(...))"
+      }
+    },
+    "keyboardNavigation": {
+      "tab": "Next focusable element",
+      "shiftTab": "Previous focusable element",
+      "enter": "Activate button / Submit form",
+      "space": "Toggle switch / Activate button",
+      "arrowUp": "Previous list item",
+      "arrowDown": "Next list item",
+      "arrowLeft": "Previous tab / Decrease slider",
+      "arrowRight": "Next tab / Increase slider",
+      "escape": "Close dialog / Cancel action",
+      "delete": "Delete character / Delete item"
+    },
+    "focusIndicators": {
+      "color": "primary",
+      "width": "2dp",
+      "shape": "RoundedRectangleBorder(borderRadius: 4dp)",
+      "flutter": "FocusBorder(side: BorderSide(color: primary, width: 2))"
+    },
+    "contrastRequirements": {
+      "normalText": "4.5:1 minimum (WCAG AA)",
+      "largeText": "3:1 minimum (WCAG AA)",
+      "uiComponents": "3:1 minimum (WCAG AA)",
+      "focusIndicators": "3:1 minimum (WCAG AA)"
+    },
+    "checklist": {
+      "screenReader": [
+        "All IconButton have label and tooltip",
+        "All TextField have label",
+        "Password cards have descriptive label",
+        "Checkbox/Switch have label and checked state",
+        "Images have alt text (Semantics.label)"
+      ],
+      "keyboard": [
+        "All interactive elements accessible via Tab",
+        "Focus is visible (FocusBorder/FocusColor)",
+        "Enter activates buttons",
+        "Escape closes dialogs",
+        "Arrow keys navigate lists"
+      ],
+      "visual": [
+        "Contrast ≥ 4.5:1 for normal text",
+        "Contrast ≥ 3:1 for UI components",
+        "Focus indicators are visible",
+        "Color is not the only way to convey information"
+      ],
+      "touch": [
+        "All tap targets ≥ 48x48dp",
+        "Buttons have sufficient padding",
+        "Text fields ≥ 48dp height"
+      ],
+      "dynamicType": [
+        "Text scales up to 200%",
+        "Layout doesn't break at larger text sizes",
+        "Content doesn't get clipped"
+      ]
     }
   }
 }

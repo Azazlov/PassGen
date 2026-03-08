@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/breakpoints.dart';
+import '../../../core/constants/spacing.dart';
 
 /// Адаптивная кнопка с иконкой и текстом
-/// 
+///
 /// Автоматически подстраивает высоту под тип устройства:
 /// - Мобильный: 48dp
 /// - Планшет/Десктоп: 40dp

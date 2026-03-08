@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'settings_controller.dart';
-import '../../../core/constants/event_types.dart';
 import '../../../domain/usecases/settings/get_setting_usecase.dart';
 import '../../../domain/usecases/settings/set_setting_usecase.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
@@ -9,7 +8,6 @@ import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
-import '../../widgets/app_dialogs.dart';
 import '../../widgets/app_text_field.dart';
 import '../categories/categories_screen.dart';
 import '../logs/logs_screen.dart';

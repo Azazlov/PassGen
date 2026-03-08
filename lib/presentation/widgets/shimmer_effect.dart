@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 /// Виджет эффекта shimmer (скелетон) для загрузки

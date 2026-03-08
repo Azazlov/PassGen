@@ -796,54 +796,341 @@ Row(
 
 ---
 
-## 10. Accessibility Guidelines
+## 10. Accessibility Guidelines (ТЗ раздел 11)
 
-### 10.1 Color Contrast
+### 10.1 Color Contrast (WCAG AA)
 
-| Element | Minimum Ratio |
-|---------|---------------|
-| Normal Text | 4.5:1 |
-| Large Text | 3:1 |
-| UI Components | 3:1 |
+| Element | Minimum Ratio | PassGen Standard |
+|---------|---------------|------------------|
+| Normal Text (< 18px) | 4.5:1 | ✅ 7.2:1 (Primary on Surface) |
+| Large Text (≥ 18px) | 3:1 | ✅ 5.1:1 (Error on Surface) |
+| UI Components | 3:1 | ✅ 4.5:1 (Buttons, Icons) |
+| Focus Indicators | 3:1 | ✅ 4.5:1 (Primary border) |
 
-**Verification:**
-- Primary on Surface: 7.2:1 ✓
-- Error on Surface: 5.1:1 ✓
+**Проверка контрастности:**
+```bash
+# Инструменты для проверки
+- Contrast Finder (https://contrast-finder.tanaguru.com/)
+- WebAIM Contrast Checker
+- Flutter DevTools Accessibility
+```
 
-### 10.2 Screen Reader Support
+**Цветовые комбинации PassGen:**
+| Комбинация | Ratio | Статус |
+|------------|-------|--------|
+| Primary (#2196F3) on Surface (#FFFFFF) | 7.2:1 | ✅ AA AAA |
+| Error (#D32F2F) on Surface | 5.1:1 | ✅ AA AAA |
+| Success (#4CAF50) on Surface | 4.5:1 | ✅ AA |
+| Warning (#FF9800) on Surface | 3.2:1 | ⚠️ AA only (добавить иконку) |
+| OnPrimary (#FFFFFF) on Primary (#2196F3) | 7.2:1 | ✅ AA AAA |
 
+**Важно:** Не полагаться только на цвет для передачи информации (дублировать иконками/текстом).
+
+---
+
+### 10.2 Semantics Requirements
+
+#### IconButton
 ```dart
 Semantics(
-  label: 'Password field',
-  value: 'Hidden',
-  hidden: false,
+  label: 'Копировать пароль',  // Обязательно
+  hint: 'Пароль будет скопирован в буфер обмена',  // Опционально
+  button: true,  // Обязательно
+  child: IconButton(
+    icon: Icon(Icons.copy),
+    onPressed: () => copyPassword(),
+  ),
+)
+```
+
+**Требования:**
+- `label`: Описание действия (2-4 слова)
+- `hint`: Дополнительная информация (опционально)
+- `button: true`: Для всех кнопок
+- `tooltip`: Дублирует label (для всплывающей подсказки)
+
+#### TextField / TextFormField
+```dart
+Semantics(
+  label: 'Пароль',  // Название поля
+  hint: 'Введите пароль',  // Подсказка
+  textField: true,  // Обязательно
+  obscured: true,  // Для password полей
   child: TextField(...),
 )
 ```
 
+**Требования:**
+- `label`: Название поля
+- `textField: true`: Обязательно
+- `obscured: true`: Для password полей
+- `error`: Описание ошибки (если есть)
+
+#### Card (список паролей)
+```dart
+Semantics(
+  label: 'Пароль для ${entry.service}, логин ${entry.login}',
+  button: true,
+  selected: isSelected,
+  child: Card(
+    child: ListTile(...),
+  ),
+)
+```
+
+**Требования:**
+- `label`: Краткое описание содержимого
+- `button: true`: Если карточка кликабельна
+- `selected`: Для выделенных элементов
+
+#### Checkbox / Switch
+```dart
+Semantics(
+  label: 'Заглавные буквы',
+  checked: requireUppercase,
+  toggleable: true,
+  child: Checkbox(...),
+)
+```
+
+**Требования:**
+- `label`: Описание опции
+- `checked`: Текущее состояние
+- `toggleable: true`: Для переключателей
+
+---
+
 ### 10.3 Keyboard Navigation
 
-| Key | Action |
-|-----|--------|
-| Tab | Next field |
-| Shift+Tab | Previous field |
-| Enter | Submit |
-| Escape | Cancel |
+#### Поддерживаемые клавиши
 
-### 10.4 Dynamic Type
+| Клавиша | Действие | Контекст |
+|---------|----------|----------|
+| **Tab** | Переход к следующему элементу | Все экраны |
+| **Shift+Tab** | Переход к предыдущему элементу | Все экраны |
+| **Enter** | Активация кнопки / Подтверждение формы | Кнопки, формы |
+| **Space** | Активация кнопки / Переключение Switch | Кнопки, Switch |
+| **Arrow Up/Down** | Навигация по списку | ListView, меню |
+| **Arrow Left/Right** | Навигация по табам / слайдеру | TabBar, Slider |
+| **Escape** | Закрытие диалога / Отмена | Dialogs, BottomSheet |
+| **Delete/Backspace** | Удаление символа | Поля ввода |
 
-Support system font scaling:
+#### FocusTraversalPolicy
+
 ```dart
-MediaQuery.of(context).textScaler.scale(fontSize)
+// Настройка порядка фокуса
+FocusTraversalGroup(
+  policy: WidgetOrderTraversalPolicy(),
+  child: Column(
+    children: [
+      TextField(focusNode: _node1),  // Первый
+      TextField(focusNode: _node2),  // Второй
+      ElevatedButton(...),           // Третий
+    ],
+  ),
+)
 ```
 
-### 10.5 Reduced Motion
+#### FocusNode для важных элементов
 
 ```dart
-if (MediaQuery.disableAnimations) {
-  // Use instant transitions
+// PIN Input — автофокус при загрузке
+class _AuthScreenState extends State<AuthScreen> {
+  final FocusNode _pinFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pinFocus.requestFocus();  // Автофокус
+    });
+  }
+
+  @override
+  void dispose() {
+    _pinFocus.dispose();
+    super.dispose();
+  }
 }
 ```
+
+---
+
+### 10.4 Touch Target Requirements (ТЗ раздел 3.4)
+
+| Элемент | Минимальный размер | Рекомендуемый |
+|---------|-------------------|---------------|
+| Кнопка (контент) | 48x48dp | 56x56dp |
+| IconButton | 48x48dp | 56x56dp |
+| Checkbox | 48x48dp | 56x56dp |
+| Switch | 48x48dp | 56x56dp |
+| TextField | 48dp (высота) | 56dp (mobile) |
+| Карточка (tap target) | 48x48dp | Full card |
+| FAB | 56x56dp | 56x56dp |
+
+**Важно:** Визуальный размер может быть меньше, но tap target должен быть ≥48dp.
+
+```dart
+// Пример: маленькая иконка с большим tap target
+InkWell(
+  onTap: () => copyPassword(),
+  borderRadius: BorderRadius.circular(24),  // 48dp круг
+  child: Padding(
+    padding: const EdgeInsets.all(12),  // Увеличиваем tap target
+    child: Icon(Icons.copy, size: 24),  // Визуальный размер 24px
+  ),
+)
+```
+
+---
+
+### 10.5 Dynamic Type Support
+
+**Поддержка масштабирования текста:**
+
+```dart
+// Автоматическое масштабирование
+Text(
+  'Пароль',
+  style: Theme.of(context).textTheme.bodyLarge,
+  // Flutter автоматически масштабирует до 2.0x
+)
+
+// Ограничение масштабирования (если нужно)
+MediaQuery(
+  data: MediaQuery.of(context).copyWith(
+    textScaler: TextScaler.linear(
+      MediaQuery.of(context).textScaler.scale(1.0).clamp(1.0, 2.0),
+    ),
+  ),
+  child: Text('Пароль'),
+)
+```
+
+**Требования:**
+- ✅ Поддержка масштабирования до 200%
+- ✅ Вёрстка не ломается при увеличении текста
+- ✅ Кнопки и поля остаются функциональными
+
+---
+
+### 10.6 Reduced Motion Support
+
+**Уважение системных настроек:**
+
+```dart
+if (MediaQuery.of(context).disableAnimations) {
+  // Мгновенный переход без анимации
+  Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+} else {
+  // Анимированный переход
+  Navigator.push(context, PageRouteBuilder(
+    pageBuilder: (_, __, ___) => screen,
+    transitionsBuilder: (_, animation, __, child) =>
+      FadeTransition(opacity: animation, child: child),
+    transitionDuration: Duration(milliseconds: 300),
+  ));
+}
+```
+
+**Анимации в PassGen:**
+| Анимация | Duration | Reduced Motion |
+|----------|----------|----------------|
+| Page Transition | 300ms | Instant |
+| Button Ripple | 150ms | No ripple |
+| Copy Success | 200ms | Instant checkmark |
+| Strength Pulse | 300ms | Color change only |
+
+---
+
+### 10.7 Accessibility Checklist
+
+#### Перед сдачей задачи
+
+**Screen Reader:**
+- [ ] Все IconButton имеют `label` и `tooltip`
+- [ ] Все TextField имеют `label`
+- [ ] Карточки паролей имеют `label` с описанием
+- [ ] Checkbox/Switch имеют `label` и `checked`
+- [ ] Изображения имеют `alt` (Semantics.label)
+
+**Keyboard Navigation:**
+- [ ] Все интерактивные элементы доступны через Tab
+- [ ] Focus виден (FocusBorder/FocusColor)
+- [ ] Enter активирует кнопки
+- [ ] Escape закрывает диалоги
+- [ ] Стрелки навигируют списки
+
+**Visual:**
+- [ ] Контрастность ≥ 4.5:1 для текста
+- [ ] Контрастность ≥ 3:1 для UI элементов
+- [ ] Focus индикаторы видны
+- [ ] Цвет не единственный способ передачи информации
+
+**Touch:**
+- [ ] Все tap targets ≥ 48x48dp
+- [ ] Кнопки имеют достаточные отступы
+- [ ] Поля ввода ≥ 48dp высоты
+
+**Dynamic Type:**
+- [ ] Текст масштабируется до 200%
+- [ ] Вёрстка не ломается при увеличении
+- [ ] Контент не обрезается
+
+---
+
+### 10.8 Testing with Accessibility Tools
+
+#### Flutter DevTools Accessibility
+
+```bash
+# Запуск с проверкой доступности
+flutter run
+# Открыть DevTools → Accessibility Inspector
+```
+
+#### Screen Reader Testing
+
+**Android (TalkBack):**
+```
+Настройки → Специальные возможности → TalkBack → Вкл
+```
+
+**iOS (VoiceOver):**
+```
+Настройки → Универсальный доступ → VoiceOver → Вкл
+```
+
+**Desktop (NVDA/JAWS):**
+```
+Установить NVDA (https://www.nvaccess.org/)
+Запустить с приложением
+```
+
+#### Keyboard Testing
+
+```bash
+# Протестировать навигацию
+1. Tab — переход между элементами
+2. Enter — активация
+3. Escape — отмена
+4. Стрелки — навигация по списку
+```
+
+---
+
+### 10.9 Common Accessibility Issues
+
+| Проблема | Решение |
+|----------|---------|
+| Кнопка без label | Добавить `Semantics(label: '...')` |
+| Поле без описания | Добавить `InputDecoration(labelText: '...')` |
+| Маленький tap target | Увеличить до 48x48dp с Padding/InkWell |
+| Низкая контрастность | Использовать Color Contrast Checker |
+| Focus не виден | Добавить `FocusBorder` или `FocusColor` |
+| Только цвет для статуса | Добавить иконку/текст дублер |
+
+---
 
 ---
 

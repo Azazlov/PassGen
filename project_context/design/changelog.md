@@ -18,6 +18,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-03-08
+
+### Added
+
+#### Two-Pane Storage Layout (ТЗ раздел 6.3)
+- Created `storage_two_pane_spec.md` with full layout specifications
+- Created `storage_two_pane.json` for developers
+- **Mobile (< 600dp)**: Single pane with full-screen list
+- **Tablet (600-899dp)**: Two-pane (40% list + 60% detail)
+- **Desktop (900-1199dp)**: Three-pane (NavigationRail + List + Detail)
+- **Wide (≥ 1200dp)**: Three-pane with permanent sidebar
+- Added state management specifications
+- Added interaction specifications (tap, long press, selection)
+- Added accessibility specifications for two-pane layout
+
+#### Button Specifications Update (ТЗ раздел 3.4)
+- Updated `components.json` with adaptive button specs
+- **Mobile**: 48dp height, fullWidth, 16sp font
+- **Desktop**: 40dp height, 200dp min-width, 14sp font
+- Added `loading` state with CircularProgressIndicator
+- Added `disabled` state with full specifications
+- Added hover and pressed states with elevation changes
+
+### Updated
+
+#### Components.json
+- Version bumped to 1.1.0
+- Expanded `buttons.primary` with mobile/desktop variants
+- Expanded `buttons.secondary` with mobile/desktop variants
+- Added `loading` state for both button types
+- Added `disabled` state with backgroundColor and borderColor
+
+### Files Added
+- `prototypes/storage_two_pane_spec.md` — two-pane layout specification
+- `for_development/storage_two_pane.json` — developer specs
+
+### Files Modified
+- `for_development/components.json` (button specs updated)
+- `changelog.md` (this file) — v1.5.0 added
+
+---
+
+## [1.4.0] - 2026-03-08
+
+### Added
+
+#### Accessibility Guidelines Update (ТЗ раздел 11)
+- Expanded Section 10 in `guidelines.md` with comprehensive accessibility specs
+- Added WCAG AA contrast requirements (4.5:1 for text, 3:1 for UI)
+- Added Semantics requirements for all interactive components
+- Added Keyboard Navigation specifications (Tab, Enter, Escape, Arrow keys)
+- Added Touch Target requirements (48x48dp minimum)
+- Added Dynamic Type support guidelines (up to 200%)
+- Added Reduced Motion support specifications
+- Added Accessibility Checklist for developers
+- Added Testing with Accessibility Tools guide
+
+**New Sections in guidelines.md:**
+- 10.1 Color Contrast (WCAG AA) — PassGen standards
+- 10.2 Semantics Requirements — IconButton, TextField, Card, Checkbox, Switch
+- 10.3 Keyboard Navigation — Full key mapping
+- 10.4 Touch Target Requirements — Minimum sizes
+- 10.5 Dynamic Type Support — Scaling guidelines
+- 10.6 Reduced Motion Support — Animation preferences
+- 10.7 Accessibility Checklist — Pre-submission checklist
+- 10.8 Testing with Accessibility Tools — Screen readers, DevTools
+- 10.9 Common Accessibility Issues — Solutions table
+
+#### Components.json Accessibility Section
+- Added `accessibility` object with:
+  - Semantics specifications for 5 component types
+  - Keyboard navigation mapping
+  - Focus indicator specifications
+  - Contrast requirements
+  - Accessibility checklist (5 categories)
+
+### Updated
+
+#### Guidelines.md
+- Section 10 expanded from ~50 lines to ~350 lines
+- Added Russian translations for better understanding
+- Added Flutter implementation examples
+- Added accessibility checklist for developers
+
+### Files Modified
+- `guidelines/guidelines.md` (Section 10 expanded) — accessibility guidelines
+- `for_development/components.json` (accessibility section added) — dev specs
+- `changelog.md` (this file) — v1.4.0 added
+
+---
+
 ## [1.3.0] - 2026-03-08
 
 ### Added

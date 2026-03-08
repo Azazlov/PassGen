@@ -1,0 +1,231 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-08",
+  "description": "Спецификации двухпанельного макета хранилища для PassGen (согласно ТЗ раздел 6.3)",
+  "layouts": {
+    "mobile": {
+      "breakpoint": "< 600dp",
+      "pattern": "Single pane with bottom navigation",
+      "characteristics": [
+        "Full-screen list of passwords",
+        "Search and filter at top",
+        "FAB for adding new password",
+        "Tap on item → Detail screen (new page)"
+      ],
+      "navigationFlow": "StorageScreen (list) → Tap item → PasswordDetailScreen (full screen)",
+      "listWidth": "100%",
+      "detailWidth": "N/A (separate screen)"
+    },
+    "tablet": {
+      "breakpoint": "600-899dp",
+      "pattern": "Two-pane master-detail (side by side)",
+      "characteristics": [
+        "Left pane (40%): Password list with search/filter",
+        "Right pane (60%): Password details",
+        "No navigation on item tap (selection only)",
+        "Edit/Delete actions in detail pane"
+      ],
+      "listWidth": "40%",
+      "detailWidth": "60%",
+      "listMinWidth": "280dp",
+      "detailMinWidth": "360dp"
+    },
+    "desktop": {
+      "breakpoint": "900-1199dp",
+      "pattern": "Three-pane (Navigation + List + Detail)",
+      "characteristics": [
+        "Left pane (80dp): NavigationRail",
+        "Middle pane (280dp): Password list with search/filter",
+        "Right pane (Expanded): Password details",
+        "All panes visible simultaneously"
+      ],
+      "navigationWidth": "80dp",
+      "listWidth": "280dp",
+      "detailWidth": "Expanded (max 800dp)",
+      "contentMaxWidth": "800dp",
+      "contentCentered": true
+    },
+    "wide": {
+      "breakpoint": "≥ 1200dp",
+      "pattern": "Three-pane (Navigation + List + Details)",
+      "characteristics": [
+        "NavigationRail (80dp)",
+        "Sidebar/List (280dp) with permanent categories",
+        "Details panel (Expanded) with full details",
+        "All panes visible simultaneously"
+      ],
+      "navigationWidth": "80dp",
+      "listWidth": "280dp",
+      "detailWidth": "Expanded (max 800dp)"
+    }
+  },
+  "listPane": {
+    "searchField": {
+      "height": 48,
+      "width": "full",
+      "hintText": "Поиск...",
+      "prefixIcon": "Icons.search",
+      "flutter": "TextField(\n  decoration: InputDecoration(\n    hintText: 'Поиск...',\n    prefixIcon: Icon(Icons.search),\n    border: OutlineInputBorder(),\n  ),\n  onChanged: (value) => controller.setSearchQuery(value),\n)"
+    },
+    "categoryFilter": {
+      "type": "DropdownButton or FilterChip",
+      "items": "All categories from database",
+      "defaultItem": "Все категории",
+      "flutter": "DropdownButton<int?>(\n  value: controller.selectedCategoryId,\n  items: [\n    DropdownMenuItem(value: null, child: Text('Все категории')),\n    ...categories.map((cat) => DropdownMenuItem(\n      value: cat.id,\n      child: Text('${cat.icon} ${cat.name}'),\n    )),\n  ],\n  onChanged: (value) => controller.setCategoryFilter(value),\n)"
+    },
+    "listItems": {
+      "widget": "ListTile",
+      "leading": "Category icon (32px)",
+      "title": "Service name (bold)",
+      "subtitle": "Login • Category name",
+      "trailing": "Row with IconButton (visibility, copy, edit)",
+      "selected": "Highlight with primaryContainer color",
+      "onTap": "Select entry",
+      "onLongPress": "Show delete confirmation"
+    },
+    "scroll": "Vertical (ListView.builder)",
+    "emptyState": {
+      "icon": "Icons.archive (size: 64)",
+      "title": "Нет сохранённых паролей",
+      "subtitle": "Создайте первый пароль прямо сейчас",
+      "action": "ElevatedButton.icon (label: 'Добавить пароль')"
+    },
+    "noResultsState": {
+      "icon": "Icons.search_off (size: 64)",
+      "title": "Ничего не найдено",
+      "subtitle": "По запросу \"[query]\"",
+      "action": "TextButton (label: 'Очистить поиск')"
+    }
+  },
+  "detailPane": {
+    "padding": "24dp (lg)",
+    "maxContentWidth": "800dp",
+    "centered": true,
+    "fields": {
+      "service": {
+        "label": "Сервис",
+        "widget": "TextFormField",
+        "readOnly": true,
+        "flutter": "TextFormField(\n  decoration: InputDecoration(\n    labelText: 'Сервис',\n    prefixIcon: Icon(Icons.business),\n  ),\n  controller: serviceController,\n  readOnly: true,\n)"
+      },
+      "login": {
+        "label": "Логин",
+        "widget": "TextFormField",
+        "readOnly": true,
+        "flutter": "TextFormField(\n  decoration: InputDecoration(\n    labelText: 'Логин',\n    prefixIcon: Icon(Icons.person),\n  ),\n  controller: loginController,\n  readOnly: true,\n)"
+      },
+      "password": {
+        "label": "Пароль",
+        "widget": "TextFormField + IconButton",
+        "obscureText": true,
+        "suffixIcon": "IconButton (visibility toggle)",
+        "copyButton": "IconButton (copy to clipboard)",
+        "flutter": "TextFormField(\n  decoration: InputDecoration(\n    labelText: 'Пароль',\n    prefixIcon: Icon(Icons.lock),\n    suffixIcon: Row(\n      mainAxisSize: MainAxisSize.min,\n      children: [\n        IconButton(\n          icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),\n          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),\n        ),\n        IconButton(\n          icon: Icon(Icons.copy),\n          onPressed: () => copyPassword(),\n        ),\n      ],\n    ),\n  ),\n  controller: passwordController,\n  obscureText: _obscurePassword,\n)"
+      },
+      "category": {
+        "label": "Категория",
+        "widget": "DropdownButton",
+        "items": "All categories",
+        "flutter": "DropdownButton<int>(\n  value: categoryId,\n  items: categories.map((cat) => DropdownMenuItem(\n    value: cat.id,\n    child: Text('${cat.icon} ${cat.name}'),\n  )).toList(),\n  onChanged: (value) => controller.updateCategory(value),\n)"
+      },
+      "notes": {
+        "label": "Заметки",
+        "widget": "TextFormField",
+        "maxLines": 3,
+        "readOnly": true
+      },
+      "createdAt": {
+        "label": "Создан",
+        "widget": "Text",
+        "format": "dd.MM.yyyy HH:mm"
+      },
+      "updatedAt": {
+        "label": "Обновлено",
+        "widget": "Text",
+        "format": "Relative (сегодня, вчера, etc.)"
+      }
+    },
+    "actions": {
+      "edit": {
+        "widget": "ElevatedButton.icon",
+        "icon": "Icons.edit",
+        "label": "Редактировать",
+        "onPressed": "Enable edit mode or open dialog"
+      },
+      "delete": {
+        "widget": "OutlinedButton.icon",
+        "icon": "Icons.delete",
+        "label": "Удалить",
+        "color": "error",
+        "onPressed": "Show confirmation dialog"
+      },
+      "copy": {
+        "widget": "IconButton",
+        "icon": "Icons.copy",
+        "tooltip": "Копировать пароль",
+        "onPressed": "Copy to clipboard with 60s auto-clear"
+      },
+      "layout": "Row with spacing: 16dp"
+    }
+  },
+  "stateManagement": {
+    "selectedEntry": "PasswordEntryEntity?",
+    "searchQuery": "String",
+    "selectedCategoryId": "int?",
+    "isEditing": "bool",
+    "flutter": "class StorageState extends State<StorageScreen> {\n  PasswordEntryEntity? _selectedEntry;\n  String _searchQuery = '';\n  int? _selectedCategoryId;\n  bool _isEditing = false;\n\n  void _selectEntry(PasswordEntryEntity entry) {\n    setState(() {\n      _selectedEntry = entry;\n    });\n  }\n\n  void _clearSelection() {\n    setState(() {\n      _selectedEntry = null;\n    });\n  }\n\n  void _setSearchQuery(String query) {\n    setState(() {\n      _searchQuery = query;\n    });\n  }\n\n  void _setCategoryFilter(int? categoryId) {\n    setState(() {\n      _selectedCategoryId = categoryId;\n    });\n  }\n}"
+  },
+  "interactions": {
+    "itemSelection": {
+      "mobile": "Navigate to detail screen",
+      "tabletDesktop": "Select item (highlight in list)"
+    },
+    "tap": {
+      "mobile": "Navigate to detail",
+      "tabletDesktop": "Select entry"
+    },
+    "longPress": {
+      "mobile": "Show context menu",
+      "tabletDesktop": "Show context menu"
+    },
+    "tapEmpty": {
+      "mobile": "Clear selection",
+      "tabletDesktop": "Clear selection"
+    }
+  },
+  "accessibility": {
+    "screenReader": {
+      "listItem": "Semantics(label: 'Пароль для ${service}, логин ${login}')",
+      "selected": "Semantics(selected: true)",
+      "actions": "tooltip on all IconButtons"
+    },
+    "keyboardNavigation": {
+      "tab": "Next field/button",
+      "shiftTab": "Previous field/button",
+      "arrowUp": "Navigate to previous list item",
+      "arrowDown": "Navigate to next list item",
+      "enter": "Select focused item",
+      "escape": "Clear selection",
+      "delete": "Delete selected item (with confirmation)"
+    }
+  },
+  "animations": {
+    "selection": {
+      "widget": "AnimatedContainer",
+      "duration": 200,
+      "property": "color (transparent → primaryContainer)",
+      "flutter": "AnimatedContainer(\n  duration: Duration(milliseconds: 200),\n  color: isSelected ? theme.colorScheme.primaryContainer : Colors.transparent,\n  child: ListTile(...),\n)"
+    },
+    "paneTransition": {
+      "widget": "AnimatedSwitcher",
+      "duration": 300,
+      "curve": "Curves.easeInOut",
+      "flutter": "AnimatedSwitcher(\n  duration: Duration(milliseconds: 300),\n  switchInCurve: Curves.easeInOut,\n  switchOutCurve: Curves.easeInOut,\n  child: isTablet ? TwoPaneLayout() : MobileLayout(),\n)"
+    }
+  },
+  "flutterImplementation": {
+    "responsive": "Widget build(BuildContext context) {\n  final width = MediaQuery.of(context).size.width;\n\n  if (width < Breakpoints.tabletMin) {\n    return _buildMobileLayout();\n  } else if (width < Breakpoints.desktopMin) {\n    return _buildTabletLayout();\n  } else {\n    return _buildDesktopLayout();\n  }\n}",
+    "twoPane": "Row(\n  children: [\n    // List Pane\n    Expanded(\n      flex: 40,\n      child: PasswordList(\n        selectedEntry: selectedEntry,\n        onSelect: _selectEntry,\n      ),\n    ),\n    VerticalDivider(thickness: 1, width: 1),\n    // Detail Pane\n    Expanded(\n      flex: 60,\n      child: selectedEntry != null\n          ? PasswordDetail(entry: selectedEntry)\n          : EmptyState(\n              icon: Icons.archive,\n              title: 'Выберите пароль',\n              subtitle: 'или создайте новый',\n            ),\n    ),\n  ],\n)",
+    "desktop": "Row(\n  children: [\n    NavigationRail(...),\n    VerticalDivider(thickness: 1, width: 1),\n    SizedBox(\n      width: 280,\n      child: PasswordList(...),\n    ),\n    VerticalDivider(thickness: 1, width: 1),\n    Expanded(\n      child: Center(\n        child: ConstrainedBox(\n          constraints: BoxConstraints(maxWidth: 800),\n          child: selectedEntry != null\n              ? PasswordDetail(entry: selectedEntry)\n              : EmptyState(),\n        ),\n      ),\n    ),\n  ],\n)"
+  }
+}

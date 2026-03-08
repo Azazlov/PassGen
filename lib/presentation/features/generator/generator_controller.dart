@@ -283,7 +283,7 @@ class GeneratorController extends ChangeNotifier {
           if (data is Map<String, dynamic>) {
             return data;
           }
-          return {'success': data is bool ? data : true, 'updated': false};
+          return {'success': true, 'updated': false};
         },
       );
     } catch (e) {

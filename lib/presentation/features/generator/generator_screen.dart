@@ -8,7 +8,6 @@ import '../../../presentation/widgets/character_set_display.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import 'generator_controller.dart';
 import '../storage/storage_controller.dart';
-import '../categories/categories_controller.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';

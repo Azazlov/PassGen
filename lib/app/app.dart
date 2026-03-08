@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 // Core
 import '../core/constants/breakpoints.dart';
 import '../core/constants/spacing.dart';
-import '../core/utils/page_transitions.dart';
 
 // Data sources
 import '../../data/datasources/encryptor_local_datasource.dart';
