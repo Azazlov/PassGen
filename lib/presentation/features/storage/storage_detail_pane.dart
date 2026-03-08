@@ -224,30 +224,70 @@ class StorageDetailPane extends StatelessWidget {
     ThemeData theme,
     StorageController controller,
   ) {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {
-              // Редактирование
-            },
-            icon: const Icon(Icons.edit),
-            label: const Text('Редактировать'),
-          ),
-        ),
-        const SizedBox(width: 16),
-        OutlinedButton.icon(
-          onPressed: () {
-            // Удаление
-            _showDeleteConfirmation(context, controller);
-          },
-          icon: const Icon(Icons.delete),
-          label: const Text('Удалить'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: theme.colorScheme.error,
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // На узких экранах (< 300px) располагаем кнопки вертикально
+        if (constraints.maxWidth < 300) {
+          return Column(
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    // Редактирование
+                  },
+                  icon: const Icon(Icons.edit),
+                  label: const Text('Редактировать'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    // Удаление
+                    _showDeleteConfirmation(context, controller);
+                  },
+                  icon: const Icon(Icons.delete),
+                  label: const Text('Удалить'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        // На широких экранах - горизонтально
+        return Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  // Редактирование
+                },
+                icon: const Icon(Icons.edit),
+                label: const Text('Редактировать'),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  // Удаление
+                  _showDeleteConfirmation(context, controller);
+                },
+                icon: const Icon(Icons.delete),
+                label: const Text('Удалить'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
