@@ -7,7 +7,6 @@ import '../../../domain/usecases/category/create_category_usecase.dart';
 import '../../../domain/usecases/category/update_category_usecase.dart';
 import '../../../domain/usecases/category/delete_category_usecase.dart';
 import '../../widgets/app_text_field.dart';
-import '../../widgets/app_button.dart';
 
 /// Экран управления категориями
 class CategoriesScreen extends StatelessWidget {

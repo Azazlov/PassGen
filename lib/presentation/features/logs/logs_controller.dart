@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
 import '../../../domain/entities/security_log.dart';
-import '../../widgets/app_dialogs.dart';
 
 /// Контроллер для просмотра логов
 class LogsController extends ChangeNotifier {

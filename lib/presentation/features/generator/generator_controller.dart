@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../core/errors/failures.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/event_types.dart';
 import '../../../domain/entities/password_generation_settings.dart';
 import '../../../domain/entities/password_result.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
-import '../../../domain/usecases/generator/validate_generator_settings_usecase.dart';
-import '../../../domain/validators/password_settings_validator.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
 
 /// Контроллер для экрана генератора паролей
