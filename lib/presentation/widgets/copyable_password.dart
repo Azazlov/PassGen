@@ -93,7 +93,8 @@ class _CopyablePasswordState extends State<CopyablePassword> {
                 ),
                 const SizedBox(width: 12),
                 Semantics(
-                  label: 'Копировать',
+                  label: 'Копировать пароль в буфер обмена',
+                  button: true,
                   child: Icon(
                     Icons.copy,
                     size: 20,

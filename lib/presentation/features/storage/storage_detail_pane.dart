@@ -106,23 +106,31 @@ class StorageDetailPane extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    entry.password,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontFamily: 'monospace',
-                      fontWeight: FontWeight.w500,
+                  child: Semantics(
+                    label: 'Пароль: ${entry.password}',
+                    value: entry.password,
+                    child: Text(
+                      entry.password,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.copy),
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: entry.password));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Пароль скопирован')),
-                    );
-                  },
-                  tooltip: 'Копировать пароль',
+                Semantics(
+                  label: 'Копировать пароль в буфер обмена',
+                  button: true,
+                  child: IconButton(
+                    icon: const Icon(Icons.copy),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: entry.password));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Пароль скопирован')),
+                      );
+                    },
+                    tooltip: 'Копировать пароль',
+                  ),
                 ),
               ],
             ),

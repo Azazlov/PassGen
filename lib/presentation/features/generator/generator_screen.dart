@@ -167,26 +167,46 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                     label: const Text('Стандартный'),
                     selected: controller.strength == 2,
                     onSelected: (_) => controller.updateStrength(2),
+                    avatar: Semantics(
+                      label: 'Стандартный профиль генерации пароля',
+                      child: const Icon(Icons.star, size: 18),
+                    ),
                   ),
                   FilterChip(
                     label: const Text('Надёжный'),
                     selected: controller.strength == 3,
                     onSelected: (_) => controller.updateStrength(3),
+                    avatar: Semantics(
+                      label: 'Надёжный профиль генерации пароля',
+                      child: const Icon(Icons.verified, size: 18),
+                    ),
                   ),
                   FilterChip(
                     label: const Text('Максимальный'),
                     selected: controller.strength == 4,
                     onSelected: (_) => controller.updateStrength(4),
+                    avatar: Semantics(
+                      label: 'Максимальный профиль генерации пароля',
+                      child: const Icon(Icons.shield, size: 18),
+                    ),
                   ),
                   FilterChip(
                     label: const Text('PIN'),
                     selected: controller.strength == 0,
                     onSelected: (_) => controller.updateStrength(0),
+                    avatar: Semantics(
+                      label: 'PIN код профиль',
+                      child: const Icon(Icons.pin, size: 18),
+                    ),
                   ),
                   FilterChip(
                     label: const Text('Свой+'),
                     selected: controller.strength == 1,
                     onSelected: (_) => controller.updateStrength(1),
+                    avatar: Semantics(
+                      label: 'Пользовательский профиль генерации пароля',
+                      child: const Icon(Icons.tune, size: 18),
+                    ),
                   ),
                 ],
               ),

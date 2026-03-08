@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'storage_controller.dart';
 import '../../../domain/entities/category.dart';
@@ -102,17 +103,26 @@ class StorageListPane extends StatelessWidget {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.visibility),
-                              onPressed: () => onEntrySelected?.call(entry),
-                              tooltip: 'Показать пароль',
+                            Semantics(
+                              label: 'Показать пароль для ${entry.service}',
+                              button: true,
+                              child: IconButton(
+                                icon: const Icon(Icons.visibility),
+                                onPressed: () => onEntrySelected?.call(entry),
+                                tooltip: 'Показать пароль',
+                              ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.copy),
-                              onPressed: () {
-                                // Копирование
-                              },
-                              tooltip: 'Копировать пароль',
+                            Semantics(
+                              label: 'Копировать пароль для ${entry.service}',
+                              button: true,
+                              child: IconButton(
+                                icon: const Icon(Icons.copy),
+                                onPressed: () {
+                                  // Копирование
+                                  Clipboard.setData(ClipboardData(text: entry.password));
+                                },
+                                tooltip: 'Копировать пароль',
+                              ),
                             ),
                           ],
                         ),
