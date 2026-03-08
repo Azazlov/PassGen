@@ -146,6 +146,9 @@ class PasswordGeneratorApp extends StatelessWidget {
           create: (context) => AppSettingsRepositoryImpl(),
         ),
         Provider(
+          create: (context) => PassgenFormat(),
+        ),
+        ChangeNotifierProvider(
           create: (context) => GlobalErrorHandler(),
         ),
 
