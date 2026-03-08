@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
 import 'auth_controller.dart';
@@ -270,10 +271,24 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
             children: [
               const SizedBox(height: 16),
               // Заголовок
-              Icon(
-                Icons.lock,
-                size: 64,
-                color: theme.colorScheme.primary,
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: controller.error != null
+                    ? SizedBox(
+                        width: 64,
+                        height: 64,
+                        child: Lottie.asset(
+                          'project_context/design/animations/pin_error.json',
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                    : Icon(
+                        Icons.lock,
+                        size: 64,
+                        color: theme.colorScheme.primary,
+                      ),
               ),
               const SizedBox(height: 16),
 

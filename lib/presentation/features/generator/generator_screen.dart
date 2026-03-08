@@ -6,6 +6,7 @@ import '../../../presentation/widgets/app_text_field.dart';
 import '../../../presentation/widgets/copyable_password.dart';
 import '../../../presentation/widgets/character_set_display.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
+import '../../../presentation/widgets/lottie_animations.dart';
 import 'generator_controller.dart';
 import '../storage/storage_controller.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
@@ -190,13 +191,24 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                 ],
               ),
               const SizedBox(height: 8),
-              // Индикатор стойкости
-              LinearProgressIndicator(
-                value: controller.strength / 4,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  controller.strengthColor,
-                ),
+              // Индикатор стойкости с Lottie анимацией
+              Row(
+                children: [
+                  Expanded(
+                    child: LinearProgressIndicator(
+                      value: controller.strength / 4,
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        controller.strengthColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  LottieStrengthPulse(
+                    size: 32,
+                    strength: controller.strengthValue / 100,
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(

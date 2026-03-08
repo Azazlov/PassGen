@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 
 /// Виджет для отображения копируемого текста (пароля)
-/// 
+///
 /// Копирует текст в буфер обмена с очисткой через 60 секунд
-class CopyablePassword extends StatelessWidget {
+/// Показывает Lottie анимацию при успешном копировании
+class CopyablePassword extends StatefulWidget {
   final String label;
   final String text;
   final VoidCallback? onTap;
@@ -19,6 +21,13 @@ class CopyablePassword extends StatelessWidget {
   });
 
   @override
+  State<CopyablePassword> createState() => _CopyablePasswordState();
+}
+
+class _CopyablePasswordState extends State<CopyablePassword> {
+  bool _showAnimation = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
@@ -26,7 +35,7 @@ class CopyablePassword extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -38,18 +47,18 @@ class CopyablePassword extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, ThemeData theme) {
-    if (isEmpty || text.isEmpty) {
+    if (widget.isEmpty || widget.text.isEmpty) {
       return _buildEmptyState(theme);
     }
 
     return Semantics(
-      label: '$label: $text',
+      label: '${widget.label}: ${widget.text}',
       button: true,
       hint: 'Дважды нажмите для копирования',
       child: GestureDetector(
         onTap: () {
-          _copyToClipboard(context, text);
-          onTap?.call();
+          _copyToClipboard(context, widget.text);
+          widget.onTap?.call();
         },
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
@@ -74,7 +83,7 @@ class CopyablePassword extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    text,
+                    widget.text,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontFamily: 'monospace',
@@ -101,6 +110,11 @@ class CopyablePassword extends StatelessWidget {
 
   /// Копирование в буфер обмена с очисткой через 60 секунд
   void _copyToClipboard(BuildContext context, String value) {
+    // Показываем Lottie анимацию
+    setState(() {
+      _showAnimation = true;
+    });
+
     // Копируем в буфер
     Clipboard.setData(ClipboardData(text: value));
 
@@ -109,7 +123,17 @@ class CopyablePassword extends StatelessWidget {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle, size: 20),
+            // Lottie анимация вместо иконки
+            SizedBox(
+              width: 24,
+              height: 24,
+              child: Lottie.asset(
+                'project_context/design/animations/copy_success.json',
+                width: 24,
+                height: 24,
+                fit: BoxFit.contain,
+              ),
+            ),
             const SizedBox(width: 12),
             const Text('Пароль скопирован'),
           ],
@@ -126,10 +150,19 @@ class CopyablePassword extends StatelessWidget {
       ),
     );
 
+    // Скрываем анимацию через 2 секунды
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _showAnimation = false;
+        });
+      }
+    });
+
     // Очищаем буфер через 60 секунд (согласно ТЗ)
     Future.delayed(const Duration(seconds: 60), () {
       Clipboard.setData(ClipboardData(text: ''));
-      
+
       // Показываем уведомление об очистке, если виджет ещё в дереве
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -152,7 +185,7 @@ class CopyablePassword extends StatelessWidget {
       ),
       child: Center(
         child: Text(
-          text.isEmpty ? 'Нет данных' : text,
+          widget.text.isEmpty ? 'Нет данных' : widget.text,
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyLarge?.copyWith(
             color: theme.colorScheme.onSurface.withOpacity(0.6),

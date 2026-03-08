@@ -69,6 +69,9 @@ dev_dependencies:
   mockito: ^5.4.4
   build_runner: ^2.4.9
 
+  # Lottie анимации
+  lottie: ^3.0.0
+
 # Конфигурация flutter_launcher_icons
 flutter_launcher_icons:
   android: true
@@ -104,6 +107,7 @@ flutter:
   # Assets (иконки приложения)
   assets:
     - assets/icons/
+    - project_context/design/animations/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
