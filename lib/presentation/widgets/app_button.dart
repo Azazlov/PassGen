@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/breakpoints.dart';
 
-/// Кнопка с иконкой и текстом
+/// Адаптивная кнопка с иконкой и текстом
+/// 
+/// Автоматически подстраивает высоту под тип устройства:
+/// - Мобильный: 48dp
+/// - Планшет/Десктоп: 40dp
 class AppButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
@@ -20,6 +25,11 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final width = MediaQuery.of(context).size.width;
+    final isDesktop = width >= Breakpoints.desktopMin;
+    
+    // Адаптивная высота: 48dp для мобильных, 40dp для десктопа
+    final buttonHeight = isDesktop ? 40.0 : 48.0;
 
     return Semantics(
       button: true,
@@ -28,7 +38,11 @@ class AppButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: style ??
             ElevatedButton.styleFrom(
-              padding: const EdgeInsets.all(16),
+              minimumSize: Size.fromHeight(buttonHeight),
+              padding: EdgeInsets.symmetric(
+                horizontal: Spacing.lg,
+                vertical: isDesktop ? Spacing.sm : Spacing.md,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

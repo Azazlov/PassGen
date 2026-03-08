@@ -77,6 +77,7 @@ class GeneratorController extends ChangeNotifier {
   bool get requireDigits => _settings.requireDigits;
   bool get requireSymbols => _settings.requireSymbols;
   bool get excludeSimilar => _settings.excludeSimilar;
+  bool get allUnique => _settings.allUnique;
   bool get useCustomLowercase => _settings.useCustomLowercase;
   bool get useCustomUppercase => _settings.useCustomUppercase;
   bool get useCustomDigits => _settings.useCustomDigits;
@@ -93,6 +94,12 @@ class GeneratorController extends ChangeNotifier {
   /// Переключает опцию "Исключить похожие символы"
   void toggleExcludeSimilar(bool value) {
     _settings = _settings.copyWith(excludeSimilar: value);
+    notifyListeners();
+  }
+
+  /// Переключает опцию "Без повторяющихся символов" (уникальные символы)
+  void toggleAllUnique(bool value) {
+    _settings = _settings.copyWith(allUnique: value);
     notifyListeners();
   }
 

@@ -161,23 +161,44 @@
         "showUnselectedLabels": true,
         "selectedItemColor": "primary",
         "unselectedItemColor": "onSurface.withOpacity(0.6)",
-        "breakpoint": "< 600px"
+        "backgroundColor": "surface",
+        "elevation": 8,
+        "breakpoint": "< 600dp",
+        "touchTarget": "48x48dp per item",
+        "items": 5,
+        "flutter": "BottomNavigationBar(\n  currentIndex: currentIndex,\n  onTap: onTabTapped,\n  type: BottomNavigationBarType.fixed,\n  selectedItemColor: theme.colorScheme.primary,\n  unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),\n  items: AppTab.values.map((tab) {\n    return BottomNavigationBarItem(\n      icon: Icon(tab.icon),\n      label: tab.label,\n      tooltip: tab.tooltip,\n    );\n  }).toList(),\n)"
       },
       "navigationRail": {
         "widget": "NavigationRail",
         "width": {
-          "default": 72,
+          "tablet": 72,
           "desktop": 80
         },
         "iconSize": {
-          "default": 24,
+          "tablet": 24,
           "desktop": 28
         },
         "labelType": "all",
         "backgroundColor": "surfaceContainerHighest",
-        "selectedIconColor": "primary",
-        "unselectedIconColor": "onSurface.withOpacity(0.6)",
-        "breakpoint": "≥ 600px"
+        "selectedItemColor": "primary",
+        "unselectedItemColor": "onSurface.withOpacity(0.6)",
+        "breakpoint": "≥ 600dp",
+        "touchTarget": "48x48dp per item",
+        "flutter": "NavigationRail(\n  selectedIndex: currentIndex,\n  onDestinationSelected: onTabTapped,\n  labelType: NavigationRailLabelType.all,\n  backgroundColor: theme.colorScheme.surfaceContainerHighest,\n  selectedIconTheme: IconThemeData(color: theme.colorScheme.primary),\n  unselectedIconTheme: IconThemeData(\n    color: theme.colorScheme.onSurface.withOpacity(0.6),\n  ),\n  destinations: AppTab.values.map((tab) {\n    return NavigationRailDestination(\n      icon: Icon(tab.icon),\n      label: Text(tab.label),\n    );\n  }).toList(),\n)"
+      },
+      "sidebar": {
+        "widget": "Sidebar (custom)",
+        "width": {
+          "desktop": 240,
+          "wide": 280
+        },
+        "collapsible": {
+          "desktop": true,
+          "wide": false
+        },
+        "backgroundColor": "surfaceContainerHighest",
+        "breakpoint": "≥ 900dp",
+        "usage": "Filter panel, category list, navigation extensions"
       }
     },
     "passwordStrength": {

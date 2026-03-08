@@ -21,6 +21,7 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
         lengthRange: settings.lengthRange,
         flags: settings.flags,
         excludeSimilar: settings.excludeSimilar,
+        allUnique: settings.allUnique,
         useLowercase: settings.useCustomLowercase,
         useUppercase: settings.useCustomUppercase,
         useDigits: settings.useCustomDigits,

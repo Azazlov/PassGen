@@ -1,0 +1,209 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-08",
+  "description": "Спецификации адаптивной навигации для PassGen (согласно ТЗ раздел 3.2, 3.4)",
+  "navigationTabs": {
+    "generator": {
+      "index": 0,
+      "label": "Генератор",
+      "icon": "Icons.create",
+      "tooltip": "Генератор паролей",
+      "route": "/generator",
+      "semanticsLabel": "Генератор паролей"
+    },
+    "encryptor": {
+      "index": 1,
+      "label": "Шифратор",
+      "icon": "Icons.lock",
+      "tooltip": "Шифратор сообщений",
+      "route": "/encryptor",
+      "semanticsLabel": "Шифратор сообщений"
+    },
+    "storage": {
+      "index": 2,
+      "label": "Хранилище",
+      "icon": "Icons.archive",
+      "tooltip": "Хранилище паролей",
+      "route": "/storage",
+      "semanticsLabel": "Хранилище паролей"
+    },
+    "settings": {
+      "index": 3,
+      "label": "Настройки",
+      "icon": "Icons.settings",
+      "tooltip": "Настройки приложения",
+      "route": "/settings",
+      "semanticsLabel": "Настройки приложения"
+    },
+    "about": {
+      "index": 4,
+      "label": "О приложении",
+      "icon": "Icons.info",
+      "tooltip": "О приложении",
+      "route": "/about",
+      "semanticsLabel": "О приложении"
+    }
+  },
+  "mobileNavigation": {
+    "breakpoint": "< 600dp",
+    "widget": "BottomNavigationBar",
+    "specifications": {
+      "height": 48,
+      "elevation": 8,
+      "type": "fixed",
+      "iconSize": 24,
+      "selectedFontSize": 12,
+      "unselectedFontSize": 12,
+      "showSelectedLabels": true,
+      "showUnselectedLabels": true,
+      "selectedItemColor": "primary",
+      "unselectedItemColor": "onSurface.withOpacity(0.6)",
+      "backgroundColor": "surface"
+    },
+    "touchTargets": {
+      "itemWidth": "flexible (20% each)",
+      "itemHeight": 48,
+      "minTouchTarget": "48x48dp"
+    },
+    "flutter": "BottomNavigationBar(\n  currentIndex: currentIndex,\n  onTap: onTabTapped,\n  type: BottomNavigationBarType.fixed,\n  selectedItemColor: theme.colorScheme.primary,\n  unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),\n  items: AppTab.values.map((tab) {\n    return BottomNavigationBarItem(\n      icon: Icon(tab.icon),\n      label: tab.label,\n      tooltip: tab.tooltip,\n    );\n  }).toList(),\n)"
+  },
+  "tabletNavigation": {
+    "breakpoint": "600-899dp",
+    "widget": "NavigationRail",
+    "specifications": {
+      "minWidth": 72,
+      "iconSize": 24,
+      "labelType": "all",
+      "backgroundColor": "surfaceContainerHighest",
+      "elevation": 0,
+      "selectedItemColor": "primary",
+      "unselectedItemColor": "onSurface.withOpacity(0.6)",
+      "selectedLabelTextStyle": "onSurfaceVariant",
+      "unselectedLabelTextStyle": "onSurface.withOpacity(0.6)"
+    },
+    "touchTargets": {
+      "itemWidth": 72,
+      "itemHeight": 56,
+      "minTouchTarget": "48x48dp"
+    },
+    "layout": {
+      "type": "two-column",
+      "leftPanel": "NavigationRail (72dp)",
+      "rightPanel": "Expanded (content)"
+    },
+    "flutter": "Row(\n  children: [\n    NavigationRail(\n      selectedIndex: currentIndex,\n      onDestinationSelected: onTabTapped,\n      labelType: NavigationRailLabelType.all,\n      backgroundColor: theme.colorScheme.surfaceContainerHighest,\n      selectedIconTheme: IconThemeData(color: theme.colorScheme.primary),\n      unselectedIconTheme: IconThemeData(\n        color: theme.colorScheme.onSurface.withOpacity(0.6),\n      ),\n      destinations: AppTab.values.map((tab) {\n        return NavigationRailDestination(\n          icon: Icon(tab.icon),\n          label: Text(tab.label),\n        );\n      }).toList(),\n    ),\n    VerticalDivider(thickness: 1, width: 1),\n    Expanded(\n      child: Scaffold(\n        appBar: AppBar(title: Text(currentTab.title)),\n        body: currentTab.content,\n      ),\n    ),\n  ],\n)"
+  },
+  "desktopNavigation": {
+    "breakpoint": "900-1199dp",
+    "widget": "NavigationRail + Sidebar",
+    "specifications": {
+      "navigationRail": {
+        "minWidth": 80,
+        "iconSize": 28,
+        "labelType": "all",
+        "backgroundColor": "surfaceContainerHighest"
+      },
+      "sidebar": {
+        "width": 240,
+        "collapsible": true,
+        "backgroundColor": "surfaceContainerHighest"
+      },
+      "content": {
+        "maxWidth": 800,
+        "centered": true
+      }
+    },
+    "layout": {
+      "type": "multi-column",
+      "panels": [
+        "NavigationRail (80dp)",
+        "Sidebar (240dp, collapsible)",
+        "Content (centered, max-width 800dp)"
+      ]
+    },
+    "flutter": "Row(\n  children: [\n    NavigationRail(\n      minWidth: 80,\n      selectedIndex: currentIndex,\n      onDestinationSelected: onTabTapped,\n      labelType: NavigationRailLabelType.all,\n      iconTheme: IconThemeData(size: 28),\n      destinations: AppTab.values.map((tab) {\n        return NavigationRailDestination(\n          icon: Icon(tab.icon, size: 28),\n          label: Text(tab.label),\n        );\n      }).toList(),\n    ),\n    VerticalDivider(thickness: 1, width: 1),\n    if (currentTab == AppTab.storage)\n      Sidebar(width: 240, child: FilterPanel()),\n    Expanded(\n      child: Center(\n        child: ConstrainedBox(\n          constraints: BoxConstraints(maxWidth: 800),\n          child: currentTab.content,\n        ),\n      ),\n    ),\n  ],\n)"
+  },
+  "wideNavigation": {
+    "breakpoint": "≥ 1200dp",
+    "widget": "Permanent Sidebar + NavigationRail",
+    "specifications": {
+      "navigationRail": {
+        "minWidth": 80,
+        "iconSize": 28,
+        "labelType": "all"
+      },
+      "sidebar": {
+        "width": 280,
+        "collapsible": false,
+        "permanent": true
+      },
+      "content": {
+        "type": "three-column",
+        "listPanel": "280dp",
+        "detailPanel": "Expanded (centered, max-width 800dp)"
+      }
+    },
+    "layout": {
+      "type": "three-column",
+      "panels": [
+        "NavigationRail (80dp)",
+        "Sidebar/List (280dp)",
+        "Details (Expanded, centered)"
+      ],
+      "description": "Навигация + список + детали одновременно"
+    }
+  },
+  "adaptiveBreakpoints": {
+    "mobileMax": 600,
+    "tabletMin": 600,
+    "desktopMin": 900,
+    "wideMin": 1200,
+    "unit": "dp",
+    "flutter": "class Breakpoints {\n  static const double mobileMax = 600;\n  static const double tabletMin = 600;\n  static const double desktopMin = 900;\n  static const double wideMin = 1200;\n}"
+  },
+  "animations": {
+    "tabSwitching": {
+      "type": "AnimatedSwitcher",
+      "duration": 300,
+      "unit": "milliseconds",
+      "curve": "Curves.easeInOut",
+      "flutter": "AnimatedSwitcher(\n  duration: Duration(milliseconds: 300),\n  switchInCurve: Curves.easeInOut,\n  switchOutCurve: Curves.easeInOut,\n  child: currentTabWidget,\n)"
+    },
+    "iconAnimation": {
+      "type": "scale",
+      "selectedScale": 1.1,
+      "unselectedScale": 1.0,
+      "duration": 200,
+      "unit": "milliseconds",
+      "flutter": "AnimatedContainer(\n  duration: Duration(milliseconds: 200),\n  transform: Matrix4.scale(isSelected ? 1.1 : 1.0),\n  child: Icon(tab.icon),\n)"
+    },
+    "rippleEffect": {
+      "type": "Material 3 ripple",
+      "duration": 150,
+      "unit": "milliseconds"
+    }
+  },
+  "accessibility": {
+    "screenReader": {
+      "semantics": true,
+      "tooltips": true,
+      "labels": "All items have semanticsLabel and tooltip"
+    },
+    "keyboardNavigation": {
+      "tab": "Focus next nav item",
+      "shiftTab": "Focus previous nav item",
+      "enter": "Select focused item",
+      "arrowKeys": "Move between items"
+    },
+    "touchTargets": {
+      "minimum": "48x48dp",
+      "visualFeedback": "Ripple effect on press"
+    }
+  },
+  "stateManagement": {
+    "currentIndex": "int (0-4)",
+    "onTabTapped": "VoidCallback(int index)",
+    "persistence": "Save to SharedPreferences",
+    "flutter": "class _AdaptiveNavigationState extends State<AdaptiveNavigation> {\n  int _currentIndex = 0;\n\n  void _onTabTapped(int index) {\n    setState(() {\n      _currentIndex = index;\n    });\n    widget.tabs[index].navigate(context);\n  }\n}"
+  }
+}

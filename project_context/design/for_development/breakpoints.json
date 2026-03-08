@@ -1,0 +1,139 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-08",
+  "description": "Адаптивные брейкпоинты для PassGen (согласно ТЗ раздел 3.1)",
+  "breakpoints": {
+    "mobileMax": {
+      "value": 600,
+      "unit": "dp",
+      "description": "Максимальная ширина для мобильных устройств",
+      "layout": "Однопанельный макет с BottomNavigationBar",
+      "navigation": "BottomNavigationBar",
+      "flutter": "constraints.maxWidth < Breakpoints.mobileMax"
+    },
+    "tabletMin": {
+      "value": 600,
+      "unit": "dp",
+      "description": "Минимальная ширина для планшетов",
+      "layout": "Двухпанельный макет с NavigationRail",
+      "navigation": "NavigationRail",
+      "flutter": "constraints.maxWidth >= Breakpoints.tabletMin && constraints.maxWidth < Breakpoints.desktopMin"
+    },
+    "desktopMin": {
+      "value": 900,
+      "unit": "dp",
+      "description": "Минимальная ширина для десктопов",
+      "layout": "Многопанельный макет с NavigationRail + Sidebar",
+      "navigation": "NavigationRail + Sidebar",
+      "flutter": "constraints.maxWidth >= Breakpoints.desktopMin"
+    },
+    "wideMin": {
+      "value": 1200,
+      "unit": "dp",
+      "description": "Минимальная ширина для широкоформатных экранов",
+      "layout": "Трёхпанельный макет (Навигация + список + детали)",
+      "navigation": "Permanent Sidebar",
+      "flutter": "constraints.maxWidth >= Breakpoints.wideMin"
+    }
+  },
+  "deviceTypes": {
+    "mobile": {
+      "range": "0-599 dp",
+      "breakpoint": "< mobileMax",
+      "navigation": "BottomNavigationBar",
+      "layout": "single-column",
+      "characteristics": [
+        "Вертикальный скролл",
+        "FAB для основных действий",
+        "Диалоги на весь экран",
+        "Кнопки fullWidth (48dp высота)"
+      ]
+    },
+    "tablet": {
+      "range": "600-899 dp",
+      "breakpoint": "tabletMin - desktopMin",
+      "navigation": "NavigationRail",
+      "layout": "two-column",
+      "characteristics": [
+        "Список + детали рядом",
+        "Кнопки в панели инструментов",
+        "Диалоги фиксированной ширины (500dp)",
+        "GridView для списков"
+      ]
+    },
+    "desktop": {
+      "range": "900-1199 dp",
+      "breakpoint": "desktopMin - wideMin",
+      "navigation": "NavigationRail + Sidebar",
+      "layout": "multi-column",
+      "characteristics": [
+        "Многопанельный макет",
+        "GridView с фиксированной шириной",
+        "Постоянная боковая панель",
+        "Кнопки фиксированной ширины (40dp высота)"
+      ]
+    },
+    "wide": {
+      "range": "≥1200 dp",
+      "breakpoint": "≥ wideMin",
+      "navigation": "Permanent Sidebar",
+      "layout": "three-column",
+      "characteristics": [
+        "Навигация + список + детали одновременно",
+        "Максимальная ширина контента 800dp",
+        "Центрированный макет",
+        "Расширенные возможности фильтрации"
+      ]
+    }
+  },
+  "flutterImplementation": {
+    "constants": "// lib/core/constants/breakpoints.dart\nclass Breakpoints {\n  static const double mobileMax = 600;      // <600dp: мобильные\n  static const double tabletMin = 600;      // ≥600dp: планшеты\n  static const double desktopMin = 900;     // ≥900dp: десктоп\n  static const double wideMin = 1200;       // ≥1200dp: широкоформатные\n}",
+    "usage": "Widget build(BuildContext context) {\n  return LayoutBuilder(\n    builder: (context, constraints) {\n      if (constraints.maxWidth < Breakpoints.mobileMax) {\n        return _buildMobileLayout();\n      } else if (constraints.maxWidth < Breakpoints.desktopMin) {\n        return _buildTabletLayout();\n      } else if (constraints.maxWidth < Breakpoints.wideMin) {\n        return _buildDesktopLayout();\n      } else {\n        return _buildWideLayout();\n      }\n    },\n  );\n}",
+    "mediaQuery": "// Альтернативный вариант с MediaQuery\nfinal width = MediaQuery.of(context).size.width;\n\nif (width < Breakpoints.mobileMax) {\n  // Мобильный\n} else if (width < Breakpoints.desktopMin) {\n  // Планшет\n} else {\n  // Десктоп\n}"
+  },
+  "componentAdaptivity": {
+    "buttons": {
+      "mobile": {
+        "height": 48,
+        "width": "fullWidth",
+        "fontSize": 14
+      },
+      "desktop": {
+        "height": 40,
+        "width": "fixed (200dp)",
+        "fontSize": 14
+      }
+    },
+    "textFields": {
+      "mobile": {
+        "height": 56,
+        "fontSize": 16
+      },
+      "desktop": {
+        "height": 48,
+        "fontSize": 14
+      }
+    },
+    "dialogs": {
+      "mobile": {
+        "width": "fullScreen",
+        "margin": 0
+      },
+      "desktop": {
+        "width": 500,
+        "margin": 24
+      }
+    },
+    "cards": {
+      "mobile": {
+        "elevation": 1,
+        "padding": 16
+      },
+      "desktop": {
+        "elevation": 0,
+        "border": "1px outline",
+        "padding": 24
+      }
+    }
+  }
+}

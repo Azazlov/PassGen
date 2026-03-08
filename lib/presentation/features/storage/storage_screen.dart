@@ -13,6 +13,7 @@ import '../../../presentation/widgets/app_dialogs.dart';
 import '../../../presentation/widgets/shimmer_effect.dart';
 import 'storage_controller.dart';
 import '../categories/categories_controller.dart';
+import '../../../core/constants/event_types.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../../domain/usecases/storage/delete_password_usecase.dart';
@@ -216,6 +217,17 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                       icon: const Icon(Icons.copy),
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: password.password));
+                        
+                        // Логирование просмотра пароля (PWD_ACCESSED)
+                        context.read<LogEventUseCase>().execute(
+                          EventTypes.pwdAccessed,
+                          details: {
+                            'service': password.service,
+                            'login': password.login,
+                            'category_id': password.categoryId,
+                          },
+                        );
+                        
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Пароль скопирован')),
                         );
@@ -235,6 +247,17 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
           label: 'Скопировать пароль',
           onPressed: () {
             Clipboard.setData(ClipboardData(text: password.password));
+            
+            // Логирование просмотра пароля (PWD_ACCESSED)
+            context.read<LogEventUseCase>().execute(
+              EventTypes.pwdAccessed,
+              details: {
+                'service': password.service,
+                'login': password.login,
+                'category_id': password.categoryId,
+              },
+            );
+            
             showAppDialog(
               context: context,
               title: 'Скопировано',

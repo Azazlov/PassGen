@@ -38,6 +38,7 @@ class PasswordGeneratorLocalDataSource {
     required List<int> lengthRange,
     required int flags,
     bool excludeSimilar = false,
+    bool allUnique = false,
     bool useLowercase = true,
     bool useUppercase = true,
     bool useDigits = true,
@@ -57,6 +58,7 @@ class PasswordGeneratorLocalDataSource {
         flags: flags,
         rands: rands,
         excludeSimilar: excludeSimilar,
+        allUnique: allUnique,
         useLowercase: useLowercase,
         useUppercase: useUppercase,
         useDigits: useDigits,
@@ -102,6 +104,7 @@ class PasswordGeneratorLocalDataSource {
     required int flags,
     required List<int> rands,
     bool excludeSimilar = false,
+    bool allUnique = false,
     bool useLowercase = true,
     bool useUppercase = true,
     bool useDigits = true,
@@ -128,14 +131,14 @@ class PasswordGeneratorLocalDataSource {
       for (final f in [1, 4, 16, 64]) {
         if ((flags & f) != 0) {
           String chars = getAlphabetByFlag(f);
-          
+
           // Исключаем похожие символы если нужно
           if (excludeSimilar) {
             for (final char in similarCharacters.split('')) {
               chars = chars.replaceAll(char, '');
             }
           }
-          
+
           if (chars.isNotEmpty) {
             // Проверяем соответствующие use* флаги
             bool shouldInclude = false;
@@ -145,13 +148,29 @@ class PasswordGeneratorLocalDataSource {
               case 16: shouldInclude = useUppercase; break;
               case 64: shouldInclude = useSymbols; break;
             }
-            
+
             if (shouldInclude) {
               allAllowedChars += chars;
 
               // Required проверка (флаг << 1)
               if ((flags & (f << 1)) != 0 && passwordChars.length < length) {
-                passwordChars.add(chars[getSafeRand(randCursor) % chars.length]);
+                var charIndex = getSafeRand(randCursor) % chars.length;
+                var char = chars[charIndex];
+                
+                // Если allUnique = true, проверяем уникальность
+                if (allUnique) {
+                  // Пытаемся найти уникальный символ
+                  var attempts = 0;
+                  while (passwordChars.contains(char) && attempts < chars.length) {
+                    charIndex = (charIndex + 1) % chars.length;
+                    char = chars[charIndex];
+                    attempts++;
+                  }
+                }
+                
+                if (!passwordChars.contains(char)) {
+                  passwordChars.add(char);
+                }
                 randCursor++;
               }
             }
@@ -173,7 +192,28 @@ class PasswordGeneratorLocalDataSource {
 
     // Заполнение до нужной длины
     while (passwordChars.length < length) {
-      passwordChars.add(allAllowedChars[getSafeRand(randCursor) % allAllowedChars.length]);
+      var charIndex = getSafeRand(randCursor) % allAllowedChars.length;
+      var char = allAllowedChars[charIndex];
+      
+      if (allUnique) {
+        // Если allUnique = true, пытаемся найти уникальный символ
+        var attempts = 0;
+        while (passwordChars.contains(char) && attempts < allAllowedChars.length) {
+          charIndex = (charIndex + 1) % allAllowedChars.length;
+          char = allAllowedChars[charIndex];
+          attempts++;
+        }
+        
+        // Если не нашли уникальный символ, добавляем только если не содержится
+        if (!passwordChars.contains(char)) {
+          passwordChars.add(char);
+        } else {
+          // Если все символы использованы, прерываем цикл
+          break;
+        }
+      } else {
+        passwordChars.add(char);
+      }
       randCursor++;
     }
 

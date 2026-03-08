@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/event_types.dart';
 import '../../../domain/usecases/settings/get_setting_usecase.dart';
 import '../../../domain/usecases/settings/set_setting_usecase.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
+import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../widgets/app_dialogs.dart';
 
 /// Контроллер экрана настроек
@@ -16,6 +18,7 @@ class SettingsController extends ChangeNotifier {
   final ChangePinUseCase _changePinUseCase;
   final RemovePinUseCase _removePinUseCase;
   final GetLogsUseCase _getLogsUseCase;
+  final LogEventUseCase _logEventUseCase;
 
   SettingsController({
     required GetSettingUseCase getSettingUseCase,
@@ -24,12 +27,14 @@ class SettingsController extends ChangeNotifier {
     required ChangePinUseCase changePinUseCase,
     required RemovePinUseCase removePinUseCase,
     required GetLogsUseCase getLogsUseCase,
+    required LogEventUseCase logEventUseCase,
   })  : _getSettingUseCase = getSettingUseCase,
         _setSettingUseCase = setSettingUseCase,
         _getCategoriesUseCase = getCategoriesUseCase,
         _changePinUseCase = changePinUseCase,
         _removePinUseCase = removePinUseCase,
-        _getLogsUseCase = getLogsUseCase;
+        _getLogsUseCase = getLogsUseCase,
+        _logEventUseCase = logEventUseCase;
 
   bool _isLoading = false;
   String? _error;
@@ -54,6 +59,16 @@ class SettingsController extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
       await _setSettingUseCase.execute(key, value, encrypted: encrypted);
+      
+      // Логирование изменения настроек (SETTINGS_CHG)
+      _logEventUseCase.execute(
+        EventTypes.settingsChanged,
+        details: {
+          'key': key,
+          'value': value,
+          'encrypted': encrypted,
+        },
+      );
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -68,6 +83,16 @@ class SettingsController extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
       final result = await _changePinUseCase.execute(oldPin, newPin);
+      
+      // Логирование смены PIN
+      result.fold(
+        (_) => null,
+        (_) => _logEventUseCase.execute(
+          EventTypes.pinChanged,
+          details: {'success': true},
+        ),
+      );
+      
       return result.fold(
         (failure) => false,
         (_) => true,
@@ -87,6 +112,16 @@ class SettingsController extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
       final result = await _removePinUseCase.execute(pin);
+      
+      // Логирование удаления PIN
+      result.fold(
+        (_) => null,
+        (_) => _logEventUseCase.execute(
+          EventTypes.pinRemoved,
+          details: {'success': true},
+        ),
+      );
+      
       return result.fold(
         (failure) => false,
         (_) => true,

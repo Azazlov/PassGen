@@ -1,0 +1,158 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-08",
+  "description": "Система отступов для PassGen (согласно ТЗ раздел 2.4)",
+  "spacingScale": {
+    "xs": {
+      "value": 4,
+      "unit": "dp",
+      "usage": "Минимальный отступ, tight spacing",
+      "examples": [
+        "Отступ между иконкой и текстом",
+        "Внутренние отступы в чипах",
+        "Малые разделители"
+      ]
+    },
+    "sm": {
+      "value": 8,
+      "unit": "dp",
+      "usage": "Малый отступ, icon padding",
+      "examples": [
+        "Отступ вокруг иконок",
+        "Расстояние между связанными элементами",
+        "Внутренние отступы в кнопках (вертикальный)"
+      ]
+    },
+    "md": {
+      "value": 16,
+      "unit": "dp",
+      "usage": "Стандартный отступ, standard padding",
+      "examples": [
+        "Отступы в карточках",
+        "Внутренние отступы в кнопках (горизонтальный)",
+        "Отступы полей ввода",
+        "Стандартные отступы контента"
+      ]
+    },
+    "lg": {
+      "value": 24,
+      "unit": "dp",
+      "usage": "Большой отступ, section padding",
+      "examples": [
+        "Отступы между секциями",
+        "Отступы в диалогах",
+        "Внешние отступы карточек"
+      ]
+    },
+    "xl": {
+      "value": 32,
+      "unit": "dp",
+      "usage": "Увеличенный отступ, large sections",
+      "examples": [
+        "Отступы между крупными секциями",
+        "Отступы в настройках",
+        "Расстояние между группами элементов"
+      ]
+    },
+    "xxl": {
+      "value": 48,
+      "unit": "dp",
+      "usage": "Максимальный отступ, page margins",
+      "examples": [
+        "Поля страницы",
+        "Отступы в экранах настроек",
+        "Расстояние между основными блоками"
+      ]
+    }
+  },
+  "baseGrid": {
+    "value": 8,
+    "unit": "dp",
+    "description": "Базовая сетка 8dp. Все отступы кратны 4dp (предпочтительно 8dp).",
+    "rule": "Все размеры и отступы должны быть кратны 4dp для консистентности"
+  },
+  "flutterImplementation": {
+    "constants": "// lib/core/constants/spacing.dart\nclass Spacing {\n  static const double xs = 4.0;\n  static const double sm = 8.0;\n  static const double md = 16.0;\n  static const double lg = 24.0;\n  static const double xl = 32.0;\n  static const double xxl = 48.0;\n}",
+    "usage": "// Пример использования в виджете\nclass MyWidget extends StatelessWidget {\n  @override\n  Widget build(BuildContext context) {\n    return Padding(\n      padding: const EdgeInsets.all(Spacing.md),\n      child: Column(\n        children: [\n          SizedBox(height: Spacing.sm),\n          Text('Заголовок'),\n          SizedBox(height: Spacing.md),\n          Text('Контент'),\n          SizedBox(height: Spacing.lg),\n        ],\n      ),\n    );\n  }\n}",
+    "extension": "// Extension для EdgeInsets (опционально)\nextension SpacingExtension on num {\n  EdgeInsets get all => EdgeInsets.all(this);\n  EdgeInsets get symmetric => EdgeInsets.symmetric(horizontal: this, vertical: this);\n  EdgeInsets get onlyLeft => EdgeInsets.only(left: this);\n  EdgeInsets get onlyRight => EdgeInsets.only(right: this);\n  EdgeInsets get onlyTop => EdgeInsets.only(top: this);\n  EdgeInsets get onlyBottom => EdgeInsets.only(bottom: this);\n}\n\n// Использование: 16.all, 16.symmetric"
+  },
+  "componentSpacing": {
+    "buttons": {
+      "padding": {
+        "horizontal": "md (16dp)",
+        "vertical": "sm (8dp)",
+        "minHeight": "48dp (mobile), 40dp (desktop)"
+      },
+      "gapBetweenButtons": "sm (8dp)"
+    },
+    "cards": {
+      "padding": "md (16dp)",
+      "gapBetweenCards": "md (16dp)",
+      "internalGap": "sm (8dp)"
+    },
+    "textFields": {
+      "padding": {
+        "horizontal": "md (16dp)",
+        "vertical": "sm (12dp)"
+      },
+      "height": "48dp (mobile), 56dp (desktop)"
+    },
+    "listTiles": {
+      "padding": {
+        "horizontal": "md (16dp)",
+        "vertical": "sm (8dp)"
+      },
+      "gapBetweenTiles": "xs (4dp)"
+    },
+    "dialogs": {
+      "padding": "lg (24dp)",
+      "actionsPadding": {
+        "top": "md (16dp)",
+        "horizontal": "lg (24dp)"
+      },
+      "buttonSpacing": "sm (8dp)"
+    },
+    "appBars": {
+      "padding": {
+        "horizontal": "md (16dp)"
+      },
+      "height": "56dp (mobile), 64dp (desktop)"
+    }
+  },
+  "screenSpacing": {
+    "mobile": {
+      "screenPadding": "md (16dp)",
+      "sectionGap": "lg (24dp)",
+      "edgeMargin": "md (16dp)"
+    },
+    "tablet": {
+      "screenPadding": "lg (24dp)",
+      "sectionGap": "xl (32dp)",
+      "edgeMargin": "lg (24dp)"
+    },
+    "desktop": {
+      "screenPadding": "xl (32dp)",
+      "sectionGap": "xxl (48dp)",
+      "edgeMargin": "xl (32dp)",
+      "maxContentWidth": "800dp"
+    }
+  },
+  "layoutPatterns": {
+    "column": {
+      "pattern": "Column с mainAxisSize: MainAxisSize.min",
+      "spacing": "children разделены SizedBox(height: Spacing.md)"
+    },
+    "row": {
+      "pattern": "Row с mainAxisSize: MainAxisSize.min",
+      "spacing": "children разделены SizedBox(width: Spacing.sm)"
+    },
+    "grid": {
+      "pattern": "GridView с SliverGridDelegateWithFixedCrossAxisCount",
+      "spacing": "crossAxisSpacing: Spacing.md, mainAxisSpacing: Spacing.md"
+    },
+    "list": {
+      "pattern": "ListView.builder с padding",
+      "spacing": "itemExtent или SizedBox между элементами"
+    }
+  }
+}

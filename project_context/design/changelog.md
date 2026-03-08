@@ -18,6 +18,174 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-03-08
+
+### Added
+
+#### Responsive Typography System (ТЗ раздел 2.3)
+- Updated `typography.json` with breakpoints for mobile/tablet/desktop
+- Added 3-tier font sizes for all 9 text styles
+- **Mobile (< 600dp)**: Optimized for small screens
+- **Tablet (600-899dp)**: Intermediate sizes
+- **Desktop (≥ 900dp)**: Full sizes per ТЗ
+
+**Font Size Changes:**
+| Style | Mobile | Tablet | Desktop |
+|-------|--------|--------|---------|
+| displayLarge | 48px | 52px | 57px |
+| headlineLarge | 28px | 30px | 32px |
+| headlineMedium | 24px | 26px | 28px |
+| titleLarge | 18px | 20px | 22px |
+| titleMedium | 15px | 15px | 16px |
+| bodyLarge | 15px | 15px | 16px |
+| bodyMedium | 13px | 13px | 14px |
+| labelLarge | 13px | 13px | 14px |
+| labelSmall | 10px | 10px | 11px |
+
+#### Flutter Implementation Guide
+- Added helper function `_fontSizeForWidth()` for responsive fonts
+- Added `ResponsiveText` extension for BuildContext
+- Updated Flutter implementation examples in `typography.json`
+
+### Updated
+
+#### Guidelines.md (Section 3: Typography)
+- Added responsive type scale table with all breakpoints
+- Added line height values for all styles
+- Updated Flutter implementation examples
+- Added responsive helper code snippet
+
+### Files Modified
+- `for_development/typography.json` (v1.1.0) — responsive typography
+- `guidelines/guidelines.md` (Section 3 updated) — typography documentation
+- `changelog.md` (this file)
+
+---
+
+## [1.2.0] - 2026-03-08
+
+### Added
+
+#### Adaptive Navigation (ТЗ раздел 3.2, 3.4)
+- Created `navigation.json` with full navigation specifications
+- **Mobile (< 600dp)**: BottomNavigationBar (80dp height, 5 tabs)
+- **Tablet (600-899dp)**: NavigationRail (72dp width)
+- **Desktop (900-1199dp)**: NavigationRail + Sidebar (80dp + 240dp)
+- **Wide (≥ 1200dp)**: Permanent Sidebar + NavigationRail (three-column)
+- Added 4 ASCII mockups for each device type
+- Added Flutter implementation examples
+- Added animation specifications (tab switching, icon scale)
+- Added accessibility specifications (screen reader, keyboard nav)
+
+#### Two-Pane Storage Layout (ТЗ раздел 6.3)
+- Created `storage_layout.json` with master-detail specifications
+- **Mobile**: Single pane with full-screen list
+- **Tablet**: Two-pane (40% list + 60% detail)
+- **Desktop**: Three-pane (NavigationRail + List + Detail)
+- Added detailed ASCII mockups for mobile/tablet/desktop
+- Added PasswordCard specifications
+- Added empty state designs (no passwords, no search results)
+- Added interaction specifications (tap, long press, selection)
+- Added state management examples
+
+#### Navigation Prototypes
+- Created `navigation_spec.md` with full prototype specification
+- Created 4 ASCII mockups in `final/`:
+  - `navigation_mobile.txt`
+  - `navigation_tablet.txt`
+  - `navigation_desktop.txt`
+  - `navigation_wide.txt`
+
+#### Storage Layout Prototypes
+- Created `storage_layout_spec.md` with two-pane specification
+- Created 3 ASCII mockups in `final/`:
+  - `storage_mobile.txt`
+  - `storage_tablet.txt`
+  - `storage_desktop.txt`
+
+### Updated
+
+#### Components.json
+- Expanded `navigation` section with detailed specs
+- Added `sidebar` component specification
+- Added Flutter implementation examples for all navigation types
+- Added touch target specifications (48x48dp)
+
+### Files Added (Этап 5: Критические исправления)
+- `for_development/breakpoints.json` ✅
+- `for_development/spacing.json` ✅
+- `for_development/navigation.json` ✅
+- `for_development/storage_layout.json` ✅
+- `prototypes/navigation_spec.md` ✅
+- `prototypes/storage_layout_spec.md` ✅
+- `final/navigation_mobile.txt` ✅
+- `final/navigation_tablet.txt` ✅
+- `final/navigation_desktop.txt` ✅
+- `final/navigation_wide.txt` ✅
+- `final/storage_mobile.txt` ✅
+- `final/storage_tablet.txt` ✅
+- `final/storage_desktop.txt` ✅
+
+### Files Modified
+- `guidelines/guidelines.md` (Sections 5 and 9 expanded)
+- `for_development/components.json` (navigation section)
+- `changelog.md` (this file)
+
+---
+
+## [1.1.0] - 2026-03-08
+
+### Added
+
+#### Breakpoints System (ТЗ раздел 3.1)
+- Created `breakpoints.json` with 4 breakpoint values
+- **mobileMax**: 600dp (BottomNavigationBar)
+- **tabletMin**: 600dp (NavigationRail)
+- **desktopMin**: 900dp (NavigationRail + Sidebar)
+- **wideMin**: 1200dp (Permanent Sidebar)
+- Added device type definitions (Mobile, Tablet, Desktop, Wide)
+- Flutter implementation guide in `breakpoints.json`
+
+#### Spacing System (ТЗ раздел 2.4)
+- Created `spacing.json` with 6-level spacing scale
+- **xs**: 4dp (tight spacing)
+- **sm**: 8dp (icon padding)
+- **md**: 16dp (standard padding)
+- **lg**: 24dp (section padding)
+- **xl**: 32dp (large sections)
+- **xxl**: 48dp (page margins)
+- Base grid rule: 8dp (all spacing multiples of 4dp)
+- Component spacing specifications
+- Screen spacing for mobile/tablet/desktop
+- Layout patterns (Column, Row, GridView)
+
+#### Updated Guidelines
+- **Section 5**: Expanded spacing documentation with Flutter implementation
+- **Section 9**: Complete responsive breakpoints documentation
+- Added adaptive component specifications (Buttons, Text Fields, Dialogs, Cards)
+- Added layout patterns for mobile/tablet/desktop
+
+### Changed
+
+#### Breakpoint Values
+- **Before**: mobileMax (599px), tabletMin (600px), desktopMin (1024px)
+- **After**: mobileMax (600dp), tabletMin (600dp), desktopMin (900dp), wideMin (1200dp)
+- **Reason**: Align with ТЗ v2.0 requirements
+
+#### Documentation Language
+- Updated guidelines with Russian translations for better developer understanding
+- Added ТЗ section references throughout documentation
+
+### Files Modified
+- `guidelines/guidelines.md` (Sections 5 and 9 expanded)
+- `changelog.md` (this file)
+
+### Files Added
+- `for_development/breakpoints.json` (new)
+- `for_development/spacing.json` (new)
+
+---
+
 ## [1.0.0] - 2026-03-08
 
 ### Added - Initial Design System

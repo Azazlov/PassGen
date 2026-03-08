@@ -273,6 +273,14 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                 title: const Text('Дополнительные настройки'),
                 children: [
                   AppSwitch(
+                    label: 'Без повторяющихся символов',
+                    subtitle: 'Все символы уникальны',
+                    value: controller.allUnique,
+                    icon: Icons.tag,
+                    onChanged: controller.toggleAllUnique,
+                  ),
+                  const SizedBox(height: 8),
+                  AppSwitch(
                     label: 'Исключить похожие символы',
                     subtitle: '1, l, I, 0, O, o',
                     value: controller.excludeSimilar,

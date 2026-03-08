@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "lastUpdated": "2026-03-08",
   "fontFamily": {
     "primary": "Lato",
@@ -10,72 +10,245 @@
     "import": "import 'package:google_fonts/google_fonts.dart';",
     "usage": "GoogleFonts.latoTextTheme(baseTheme.textTheme)"
   },
+  "breakpoints": {
+    "mobile": {
+      "maxWidth": 599,
+      "unit": "dp",
+      "description": "Мобильные устройства"
+    },
+    "tablet": {
+      "minWidth": 600,
+      "maxWidth": 899,
+      "unit": "dp",
+      "description": "Планшеты"
+    },
+    "desktop": {
+      "minWidth": 900,
+      "unit": "dp",
+      "description": "Десктопы"
+    }
+  },
   "typeScale": {
     "displayLarge": {
-      "fontSize": 57,
-      "fontWeight": "w400",
-      "letterSpacing": -0.25,
-      "lineHeight": 1.12,
+      "mobile": {
+        "fontSize": 48,
+        "fontWeight": "w400",
+        "letterSpacing": -0.25,
+        "lineHeight": 1.12,
+        "lineHeightValue": 54
+      },
+      "tablet": {
+        "fontSize": 52,
+        "fontWeight": "w400",
+        "letterSpacing": -0.25,
+        "lineHeight": 1.12,
+        "lineHeightValue": 58
+      },
+      "desktop": {
+        "fontSize": 57,
+        "fontWeight": "w400",
+        "letterSpacing": -0.25,
+        "lineHeight": 1.12,
+        "lineHeightValue": 64
+      },
       "usage": "Large headers, hero sections"
     },
     "headlineLarge": {
-      "fontSize": 32,
-      "fontWeight": "w600",
-      "letterSpacing": 0,
-      "lineHeight": 1.25,
+      "mobile": {
+        "fontSize": 28,
+        "fontWeight": "w600",
+        "letterSpacing": 0,
+        "lineHeight": 1.25,
+        "lineHeightValue": 35
+      },
+      "tablet": {
+        "fontSize": 30,
+        "fontWeight": "w600",
+        "letterSpacing": 0,
+        "lineHeight": 1.25,
+        "lineHeightValue": 38
+      },
+      "desktop": {
+        "fontSize": 32,
+        "fontWeight": "w600",
+        "letterSpacing": 0,
+        "lineHeight": 1.25,
+        "lineHeightValue": 40
+      },
       "usage": "Screen titles"
     },
     "headlineMedium": {
-      "fontSize": 28,
-      "fontWeight": "w600",
-      "letterSpacing": 0,
-      "lineHeight": 1.29,
+      "mobile": {
+        "fontSize": 24,
+        "fontWeight": "w600",
+        "letterSpacing": 0,
+        "lineHeight": 1.29,
+        "lineHeightValue": 31
+      },
+      "tablet": {
+        "fontSize": 26,
+        "fontWeight": "w600",
+        "letterSpacing": 0,
+        "lineHeight": 1.29,
+        "lineHeightValue": 34
+      },
+      "desktop": {
+        "fontSize": 28,
+        "fontWeight": "w600",
+        "letterSpacing": 0,
+        "lineHeight": 1.29,
+        "lineHeightValue": 36
+      },
       "usage": "Section headers"
     },
     "titleLarge": {
-      "fontSize": 22,
-      "fontWeight": "w600",
-      "letterSpacing": 0,
-      "lineHeight": 1.27,
+      "mobile": {
+        "fontSize": 18,
+        "fontWeight": "w600",
+        "letterSpacing": 0,
+        "lineHeight": 1.27,
+        "lineHeightValue": 23
+      },
+      "tablet": {
+        "fontSize": 20,
+        "fontWeight": "w600",
+        "letterSpacing": 0,
+        "lineHeight": 1.27,
+        "lineHeightValue": 25
+      },
+      "desktop": {
+        "fontSize": 22,
+        "fontWeight": "w600",
+        "letterSpacing": 0,
+        "lineHeight": 1.27,
+        "lineHeightValue": 28
+      },
       "usage": "Card titles, dialog titles"
     },
     "titleMedium": {
-      "fontSize": 16,
-      "fontWeight": "w500",
-      "letterSpacing": 0.15,
-      "lineHeight": 1.5,
+      "mobile": {
+        "fontSize": 15,
+        "fontWeight": "w500",
+        "letterSpacing": 0.15,
+        "lineHeight": 1.5,
+        "lineHeightValue": 23
+      },
+      "tablet": {
+        "fontSize": 15,
+        "fontWeight": "w500",
+        "letterSpacing": 0.15,
+        "lineHeight": 1.5,
+        "lineHeightValue": 23
+      },
+      "desktop": {
+        "fontSize": 16,
+        "fontWeight": "w500",
+        "letterSpacing": 0.15,
+        "lineHeight": 1.5,
+        "lineHeightValue": 24
+      },
       "usage": "Subtitles, list titles"
     },
     "bodyLarge": {
-      "fontSize": 16,
-      "fontWeight": "w400",
-      "letterSpacing": 0.5,
-      "lineHeight": 1.5,
+      "mobile": {
+        "fontSize": 15,
+        "fontWeight": "w400",
+        "letterSpacing": 0.5,
+        "lineHeight": 1.5,
+        "lineHeightValue": 23
+      },
+      "tablet": {
+        "fontSize": 15,
+        "fontWeight": "w400",
+        "letterSpacing": 0.5,
+        "lineHeight": 1.5,
+        "lineHeightValue": 23
+      },
+      "desktop": {
+        "fontSize": 16,
+        "fontWeight": "w400",
+        "letterSpacing": 0.5,
+        "lineHeight": 1.5,
+        "lineHeightValue": 24
+      },
       "usage": "Body text, paragraphs"
     },
     "bodyMedium": {
-      "fontSize": 14,
-      "fontWeight": "w400",
-      "letterSpacing": 0.25,
-      "lineHeight": 1.43,
+      "mobile": {
+        "fontSize": 13,
+        "fontWeight": "w400",
+        "letterSpacing": 0.25,
+        "lineHeight": 1.43,
+        "lineHeightValue": 19
+      },
+      "tablet": {
+        "fontSize": 13,
+        "fontWeight": "w400",
+        "letterSpacing": 0.25,
+        "lineHeight": 1.43,
+        "lineHeightValue": 19
+      },
+      "desktop": {
+        "fontSize": 14,
+        "fontWeight": "w400",
+        "letterSpacing": 0.25,
+        "lineHeight": 1.43,
+        "lineHeightValue": 20
+      },
       "usage": "Secondary text, captions"
     },
     "labelLarge": {
-      "fontSize": 14,
-      "fontWeight": "w600",
-      "letterSpacing": 0.1,
-      "lineHeight": 1.43,
+      "mobile": {
+        "fontSize": 13,
+        "fontWeight": "w600",
+        "letterSpacing": 0.1,
+        "lineHeight": 1.43,
+        "lineHeightValue": 19
+      },
+      "tablet": {
+        "fontSize": 13,
+        "fontWeight": "w600",
+        "letterSpacing": 0.1,
+        "lineHeight": 1.43,
+        "lineHeightValue": 19
+      },
+      "desktop": {
+        "fontSize": 14,
+        "fontWeight": "w600",
+        "letterSpacing": 0.1,
+        "lineHeight": 1.43,
+        "lineHeightValue": 20
+      },
       "usage": "Button labels, tab labels"
     },
     "labelSmall": {
-      "fontSize": 11,
-      "fontWeight": "w500",
-      "letterSpacing": 0.5,
-      "lineHeight": 1.45,
+      "mobile": {
+        "fontSize": 10,
+        "fontWeight": "w500",
+        "letterSpacing": 0.5,
+        "lineHeight": 1.45,
+        "lineHeightValue": 15
+      },
+      "tablet": {
+        "fontSize": 10,
+        "fontWeight": "w500",
+        "letterSpacing": 0.5,
+        "lineHeight": 1.45,
+        "lineHeightValue": 15
+      },
+      "desktop": {
+        "fontSize": 11,
+        "fontWeight": "w500",
+        "letterSpacing": 0.5,
+        "lineHeight": 1.45,
+        "lineHeightValue": 16
+      },
       "usage": "Captions, hints"
     }
   },
   "flutterImplementation": {
-    "theme": "textTheme: GoogleFonts.latoTextTheme(baseTheme.textTheme).copyWith(\n  displayLarge: const TextStyle(\n    fontSize: 57,\n    fontWeight: FontWeight.w400,\n    letterSpacing: -0.25,\n  ),\n  headlineLarge: const TextStyle(\n    fontSize: 32,\n    fontWeight: FontWeight.w600,\n  ),\n  headlineMedium: const TextStyle(\n    fontSize: 28,\n    fontWeight: FontWeight.w600,\n  ),\n  titleLarge: const TextStyle(\n    fontSize: 22,\n    fontWeight: FontWeight.w600,\n  ),\n  titleMedium: const TextStyle(\n    fontSize: 16,\n    fontWeight: FontWeight.w500,\n    letterSpacing: 0.15,\n  ),\n  bodyLarge: const TextStyle(\n    fontSize: 16,\n    fontWeight: FontWeight.w400,\n    letterSpacing: 0.5,\n  ),\n  bodyMedium: const TextStyle(\n    fontSize: 14,\n    fontWeight: FontWeight.w400,\n    letterSpacing: 0.25,\n  ),\n  labelLarge: const TextStyle(\n    fontSize: 14,\n    fontWeight: FontWeight.w600,\n    letterSpacing: 0.1,\n  ),\n)"
+    "theme": "textTheme: GoogleFonts.latoTextTheme(baseTheme.textTheme).copyWith(\n  displayLarge: TextStyle(fontSize: _fontSizeForWidth(57, 52, 48)),\n  headlineLarge: TextStyle(fontSize: _fontSizeForWidth(32, 30, 28)),\n  headlineMedium: TextStyle(fontSize: _fontSizeForWidth(28, 26, 24)),\n  titleLarge: TextStyle(fontSize: _fontSizeForWidth(22, 20, 18)),\n  titleMedium: TextStyle(fontSize: _fontSizeForWidth(16, 15, 15)),\n  bodyLarge: TextStyle(fontSize: _fontSizeForWidth(16, 15, 15)),\n  bodyMedium: TextStyle(fontSize: _fontSizeForWidth(14, 13, 13)),\n  labelLarge: TextStyle(fontSize: _fontSizeForWidth(14, 13, 13)),\n  labelSmall: TextStyle(fontSize: _fontSizeForWidth(11, 10, 10)),\n)",
+    "helper": "// Helper function for responsive font sizes\ndouble _fontSizeForWidth(double desktop, double tablet, double mobile) {\n  final width = MediaQuery.of(context).size.width;\n  if (width >= Breakpoints.desktopMin) return desktop;\n  if (width >= Breakpoints.tabletMin) return tablet;\n  return mobile;\n}",
+    "extension": "// Extension for responsive text (опционально)\nextension ResponsiveText on BuildContext {\n  double fontSizeForWidth(double desktop, double tablet, double mobile) {\n    final width = size.width;\n    if (width >= 900) return desktop;\n    if (width >= 600) return tablet;\n    return mobile;\n  }\n}"
   }
 }

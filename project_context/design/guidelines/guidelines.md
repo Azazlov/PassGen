@@ -137,32 +137,77 @@ PassGen follows a **security-first, user-centric** design approach:
 - **Primary Font**: `Lato` (Google Fonts)
 - **Fallback**: System default sans-serif
 
-### 3.2 Type Scale
+### 3.2 Type Scale (Desktop ≥ 900dp)
 
-| Style | Size | Weight | Letter Spacing | Usage |
-|-------|------|--------|----------------|-------|
-| `displayLarge` | 57px | 400 | -0.25 | Large headers |
-| `headlineLarge` | 32px | 600 | 0 | Screen titles |
-| `headlineMedium` | 28px | 600 | 0 | Section headers |
-| `titleLarge` | 22px | 600 | 0 | Card titles |
-| `titleMedium` | 16px | 500 | 0.15 | Subtitles |
-| `bodyLarge` | 16px | 400 | 0.5 | Body text |
-| `bodyMedium` | 14px | 400 | 0.25 | Secondary text |
-| `labelLarge` | 14px | 600 | 0.1 | Button labels |
-| `labelSmall` | 11px | 500 | 0.5 | Captions |
+| Style | Size | Weight | Letter Spacing | Line Height | Usage |
+|-------|------|--------|----------------|-------------|-------|
+| `displayLarge` | 57px | 400 | -0.25 | 64px | Large headers |
+| `headlineLarge` | 32px | 600 | 0 | 40px | Screen titles |
+| `headlineMedium` | 28px | 600 | 0 | 36px | Section headers |
+| `titleLarge` | 22px | 600 | 0 | 28px | Card titles |
+| `titleMedium` | 16px | 500 | 0.15 | 24px | Subtitles |
+| `bodyLarge` | 16px | 400 | 0.5 | 24px | Body text |
+| `bodyMedium` | 14px | 400 | 0.25 | 20px | Secondary text |
+| `labelLarge` | 14px | 600 | 0.1 | 20px | Button labels |
+| `labelSmall` | 11px | 500 | 0.5 | 16px | Captions |
 
-### 3.3 Implementation (Flutter)
+### 3.3 Responsive Type Scale
 
+| Style | Mobile (< 600dp) | Tablet (600-899dp) | Desktop (≥ 900dp) |
+|-------|------------------|-------------------|-------------------|
+| **displayLarge** | 48px / 54px | 52px / 58px | 57px / 64px |
+| **headlineLarge** | 28px / 35px | 30px / 38px | 32px / 40px |
+| **headlineMedium** | 24px / 31px | 26px / 34px | 28px / 36px |
+| **titleLarge** | 18px / 23px | 20px / 25px | 22px / 28px |
+| **titleMedium** | 15px / 23px | 15px / 23px | 16px / 24px |
+| **bodyLarge** | 15px / 23px | 15px / 23px | 16px / 24px |
+| **bodyMedium** | 13px / 19px | 13px / 19px | 14px / 20px |
+| **labelLarge** | 13px / 19px | 13px / 19px | 14px / 20px |
+| **labelSmall** | 10px / 15px | 10px / 15px | 11px / 16px |
+
+*Формат: fontSize / lineHeight*
+
+### 3.4 Implementation (Flutter)
+
+**Desktop sizes (по умолчанию):**
 ```dart
 textTheme: GoogleFonts.latoTextTheme(baseTheme.textTheme).copyWith(
   displayLarge: const TextStyle(
     fontSize: 57,
     fontWeight: FontWeight.w400,
     letterSpacing: -0.25,
+    height: 1.12,
   ),
   headlineLarge: const TextStyle(
     fontSize: 32,
     fontWeight: FontWeight.w600,
+    height: 1.25,
+  ),
+  // ... additional styles
+)
+```
+
+**Responsive helper:**
+```dart
+// Helper function for responsive font sizes
+double _fontSizeForWidth(double desktop, double tablet, double mobile) {
+  final width = MediaQuery.of(context).size.width;
+  if (width >= Breakpoints.desktopMin) return desktop;
+  if (width >= Breakpoints.tabletMin) return tablet;
+  return mobile;
+}
+
+// Usage in widget
+textTheme: GoogleFonts.latoTextTheme(baseTheme.textTheme).copyWith(
+  displayLarge: TextStyle(
+    fontSize: _fontSizeForWidth(57, 52, 48),
+    fontWeight: FontWeight.w400,
+    height: 1.12,
+  ),
+  headlineLarge: TextStyle(
+    fontSize: _fontSizeForWidth(32, 30, 28),
+    fontWeight: FontWeight.w600,
+    height: 1.25,
   ),
   // ... additional styles
 )
@@ -217,31 +262,113 @@ Formats:
 
 ## 5. Spacing & Layout
 
-### 5.1 Spacing Scale
+### 5.1 Spacing Scale (ТЗ раздел 2.4)
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `xs` | 4px | Tight spacing |
-| `sm` | 8px | Icon padding |
-| `md` | 16px | Standard padding |
-| `lg` | 24px | Section padding |
-| `xl` | 32px | Large sections |
-| `xxl` | 48px | Page margins |
+| Token | Value | Unit | Usage | Examples |
+|-------|-------|------|-------|----------|
+| `xs` | 4 | dp | Tight spacing | Отступ между иконкой и текстом, чипы |
+| `sm` | 8 | dp | Icon padding | Вокруг иконок, между связанными элементами |
+| `md` | 16 | dp | Standard padding | Отступы в карточках, кнопках, полях |
+| `lg` | 24 | dp | Section padding | Между секциями, в диалогах |
+| `xl` | 32 | dp | Large sections | Между крупными секциями, в настройках |
+| `xxl` | 48 | dp | Page margins | Поля страницы, между основными блоками |
 
-### 5.2 Component Spacing
+### 5.2 Base Grid
 
-| Component | Padding | Gap |
-|-----------|---------|-----|
-| Button | 16px horizontal, 12px vertical | - |
-| Card | 16px | 12px (internal) |
-| TextField | 16px | - |
-| List Item | 16px | 8px |
+**Правило:** Базовая сетка 8dp. Все отступы кратны 4dp (предпочтительно 8dp).
 
-### 5.3 Layout Grid
+```
+✓ Правильно: 4, 8, 12, 16, 24, 32, 48
+✗ Неправильно: 5, 7, 13, 15, 23
+```
 
-- **Mobile**: Single column, full width
-- **Tablet**: 2-column grid (min 600px)
-- **Desktop**: 3+ column grid (min 1024px)
+### 5.3 Flutter Implementation
+
+**Константы:**
+```dart
+// lib/core/constants/spacing.dart
+class Spacing {
+  static const double xs = 4.0;
+  static const double sm = 8.0;
+  static const double md = 16.0;
+  static const double lg = 24.0;
+  static const double xl = 32.0;
+  static const double xxl = 48.0;
+}
+```
+
+**Использование:**
+```dart
+Padding(
+  padding: const EdgeInsets.all(Spacing.md),
+  child: Column(
+    children: [
+      SizedBox(height: Spacing.sm),
+      Text('Заголовок'),
+      SizedBox(height: Spacing.md),
+      Text('Контент'),
+      SizedBox(height: Spacing.lg),
+    ],
+  ),
+)
+```
+
+### 5.4 Component Spacing
+
+| Component | Padding | Internal Gap | Between Components |
+|-----------|---------|--------------|-------------------|
+| **Button** | 16px horizontal, 8px vertical | - | 8px (sm) |
+| **Card** | 16px (md) | 8px (sm) | 16px (md) |
+| **TextField** | 16px horizontal, 12px vertical | - | 16px (md) |
+| **ListTile** | 16px horizontal, 8px vertical | 8px (sm) | 4px (xs) |
+| **Dialog** | 24px (lg) | 16px (md) | 8px (sm) between buttons |
+| **AppBar** | 16px horizontal | - | - |
+
+### 5.5 Screen Spacing
+
+| Device | Screen Padding | Section Gap | Edge Margin |
+|--------|---------------|-------------|-------------|
+| **Mobile** | 16dp (md) | 24dp (lg) | 16dp (md) |
+| **Tablet** | 24dp (lg) | 32dp (xl) | 24dp (lg) |
+| **Desktop** | 32dp (xl) | 48dp (xxl) | 32dp (xl) |
+
+### 5.6 Layout Patterns
+
+**Column:**
+```dart
+Column(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    Widget1(),
+    SizedBox(height: Spacing.md),
+    Widget2(),
+  ],
+)
+```
+
+**Row:**
+```dart
+Row(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    Widget1(),
+    SizedBox(width: Spacing.sm),
+    Widget2(),
+  ],
+)
+```
+
+**GridView:**
+```dart
+GridView.builder(
+  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 2,
+    crossAxisSpacing: Spacing.md,
+    mainAxisSpacing: Spacing.md,
+  ),
+  ...
+)
+```
 
 ---
 
@@ -527,39 +654,145 @@ NavigationRail(
 
 ## 9. Responsive Breakpoints
 
-### 9.1 Breakpoint Values
+### 9.1 Breakpoint Values (ТЗ раздел 3.1)
 
-| Name | Value | Layout |
-|------|-------|--------|
-| `mobileMax` | 599px | Single column, bottom nav |
-| `tabletMin` | 600px | Two columns, nav rail |
-| `desktopMin` | 1024px | Three columns, nav rail |
+| Name | Value | Unit | Layout | Navigation |
+|------|-------|------|--------|------------|
+| `mobileMax` | 600 | dp | Однопанельный макет | BottomNavigationBar |
+| `tabletMin` | 600 | dp | Двухпанельный макет | NavigationRail |
+| `desktopMin` | 900 | dp | Многопанельный макет | NavigationRail + Sidebar |
+| `wideMin` | 1200 | dp | Трёхпанельный макет | Permanent Sidebar |
 
-### 9.2 Adaptive Components
+### 9.2 Device Types
+
+| Device | Width Range | Layout | Characteristics |
+|--------|-------------|--------|-----------------|
+| **📱 Mobile** | 0-599 dp | Single column | Вертикальный скролл, FAB, диалоги на весь экран |
+| **📱 Tablet** | 600-899 dp | Two columns | Список + детали рядом, GridView |
+| **💻 Desktop** | 900-1199 dp | Multi-column | NavigationRail + Sidebar, фиксированная ширина контента |
+| **🖥️ Wide** | ≥1200 dp | Three columns | Навигация + список + детали одновременно |
+
+### 9.3 Flutter Implementation
+
+**Константы:**
+```dart
+// lib/core/constants/breakpoints.dart
+class Breakpoints {
+  static const double mobileMax = 600;      // <600dp: мобильные
+  static const double tabletMin = 600;      // ≥600dp: планшеты
+  static const double desktopMin = 900;     // ≥900dp: десктоп
+  static const double wideMin = 1200;       // ≥1200dp: широкоформатные
+}
+```
+
+**Использование:**
+```dart
+Widget build(BuildContext context) {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      if (constraints.maxWidth < Breakpoints.mobileMax) {
+        return _buildMobileLayout();    // BottomNav + ListView
+      } else if (constraints.maxWidth < Breakpoints.desktopMin) {
+        return _buildTabletLayout();    // NavRail + двухпанельный
+      } else if (constraints.maxWidth < Breakpoints.wideMin) {
+        return _buildDesktopLayout();   // NavRail + Sidebar
+      } else {
+        return _buildWideLayout();      // Three-column
+      }
+    },
+  );
+}
+```
+
+### 9.4 Adaptive Components
 
 #### Navigation
 
 | Breakpoint | Component |
 |------------|-----------|
-| < 600px | BottomNavigationBar |
-| ≥ 600px | NavigationRail |
+| < 600dp | BottomNavigationBar |
+| ≥ 600dp | NavigationRail |
+| ≥ 900dp | NavigationRail + Sidebar |
+| ≥ 1200dp | Permanent Sidebar |
 
-#### Card Layout
+#### Buttons
 
-| Breakpoint | Columns |
-|------------|---------|
-| < 600px | 1 |
-| 600-1023px | 2 |
-| ≥ 1024px | 3 |
+| Breakpoint | Height | Width | Font Size |
+|------------|--------|-------|-----------|
+| < 600dp | 48dp | fullWidth | 14sp |
+| ≥ 900dp | 40dp | fixed (200dp) | 14sp |
 
-### 9.3 Touch Targets
+#### Text Fields
+
+| Breakpoint | Height | Font Size |
+|------------|--------|-----------|
+| < 600dp | 56dp | 16sp |
+| ≥ 900dp | 48dp | 14sp |
+
+#### Dialogs
+
+| Breakpoint | Width | Margin |
+|------------|-------|--------|
+| < 600dp | fullScreen | 0 |
+| ≥ 900dp | 500dp | 24dp |
+
+#### Cards
+
+| Breakpoint | Elevation | Border | Padding |
+|------------|-----------|--------|---------|
+| < 600dp | 1 | none | 16dp |
+| ≥ 900dp | 0 | 1px outline | 24dp |
+
+### 9.5 Touch Targets (ТЗ раздел 3.4)
 
 | Element | Minimum Size |
 |---------|--------------|
-| Button | 48x48px |
-| Icon Button | 48x48px |
-| Text Field | 48px height |
-| Checkbox/Radio | 48x48px |
+| Button | 48x48dp |
+| Icon Button | 48x48dp |
+| Text Field | 48dp height (56dp mobile) |
+| Checkbox/Radio | 48x48dp |
+| Card | 48x48dp (tap target) |
+
+### 9.6 Layout Patterns
+
+**Mobile (single column):**
+```dart
+ListView(
+  padding: EdgeInsets.all(Spacing.md),
+  children: [...],
+)
+```
+
+**Tablet (two columns):**
+```dart
+Row(
+  children: [
+    NavigationRail(...),
+    Expanded(
+      child: TwoPaneLayout(
+        list: PasswordList(),
+        detail: PasswordDetail(),
+      ),
+    ),
+  ],
+)
+```
+
+**Desktop (multi-column):**
+```dart
+Row(
+  children: [
+    NavigationRail(...),
+    Sidebar(...),
+    Expanded(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 800),
+        child: PasswordGrid(),
+      ),
+    ),
+  ],
+)
+```
 
 ---
 
