@@ -115,6 +115,9 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
+          create: (context) => PassgenFormat(),
+        ),
+        Provider(
           create: (context) => StorageRepositoryImpl(
             context.read<StorageLocalDataSource>(),
           ),
@@ -144,9 +147,6 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
         Provider(
           create: (context) => AppSettingsRepositoryImpl(),
-        ),
-        Provider(
-          create: (context) => PassgenFormat(),
         ),
         ChangeNotifierProvider(
           create: (context) => GlobalErrorHandler(),
