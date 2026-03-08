@@ -1,0 +1,342 @@
+# GitHub Actions CI/CD for Flutter Password Generator
+# Optimized for fast builds and efficient resource usage
+
+name: Flutter CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main, develop]
+
+# Cancel redundant workflows
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+  JAVA_VERSION: '17'
+
+jobs:
+  # ===========================================
+  # Job 1: Code Quality & Static Analysis
+  # ===========================================
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --set-exit-if-changed lib/ test/
+
+      - name: Static analysis
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Check for TODOs
+        run: grep -r "TODO\|FIXME\|HACK" lib/ || true
+
+  # ===========================================
+  # Job 2: Unit & Widget Tests
+  # ===========================================
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: code-quality
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run tests with coverage
+        run: |
+          flutter test --coverage --machine > test-results.json || exit 1
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results.json
+          retention-days: 7
+
+  # ===========================================
+  # Job 3: Android Build
+  # ===========================================
+  build-android:
+    name: Android Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: test
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}
+          cache-path: ${{ runner.tool_cache }}/flutter
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build APK (Release)
+        run: flutter build apk --release --split-per-abi
+
+      - name: Build App Bundle (Release)
+        run: flutter build appbundle --release
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apks
+          path: build/app/outputs/flutter-apk/
+          retention-days: 14
+
+      - name: Upload App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: build/app/outputs/bundle/release/
+          retention-days: 14
+
+  # ===========================================
+  # Job 4: iOS Build
+  # ===========================================
+  build-ios:
+    name: iOS Build
+    runs-on: macos-latest
+    timeout-minutes: 45
+    needs: test
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build iOS (Release)
+        run: flutter build ios --release --no-codesign
+
+      - name: Upload iOS build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: build/ios/iphoneos/
+          retention-days: 14
+
+  # ===========================================
+  # Job 5: Web Build
+  # ===========================================
+  build-web:
+    name: Web Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: test
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Web (Release)
+        run: flutter build web --release
+
+      - name: Upload Web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web/
+          retention-days: 14
+
+  # ===========================================
+  # Job 6: Desktop Builds (Linux, Windows, macOS)
+  # ===========================================
+  build-desktop:
+    name: Desktop Builds
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    needs: test
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+          - os: windows-latest
+            target: windows
+          - os: macos-latest
+            target: macos
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Enable Desktop
+        if: matrix.target == 'linux'
+        run: flutter config --enable-linux-desktop
+
+      - name: Enable Desktop
+        if: matrix.target == 'windows'
+        run: flutter config --enable-windows-desktop
+
+      - name: Enable Desktop
+        if: matrix.target == 'macos'
+        run: flutter config --enable-macos-desktop
+
+      - name: Build Desktop (${{ matrix.target }})
+        run: flutter build ${{ matrix.target }} --release
+
+      - name: Upload Desktop build (${{ matrix.target }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.target }}
+          path: build/${{ matrix.target }}/
+          retention-days: 14
+
+  # ===========================================
+  # Job 7: Deploy to Firebase (on tag)
+  # ===========================================
+  deploy-firebase:
+    name: Deploy to Firebase
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build-android, build-web]
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Android AAB
+        uses: actions/download-artifact@v4
+        with:
+          name: android-aab
+          path: ./build/app/outputs/bundle/release/
+
+      - name: Download Web build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: ./build/web/
+
+      - name: Setup Firebase CLI
+        run: |
+          curl -sL https://firebase.tools | bash
+
+      - name: Deploy to Firebase App Distribution
+        run: |
+          firebase appdistribution:distribute \
+            build/app/outputs/bundle/release/app-release.aab \
+            --app ${{ secrets.FIREBASE_APP_ID }} \
+            --groups testers \
+            --token ${{ secrets.FIREBASE_TOKEN }}
+        if: ${{ secrets.FIREBASE_TOKEN != '' }}
+
+      - name: Deploy Web to Firebase Hosting
+        run: |
+          firebase hosting:channel:deploy preview \
+            --only hosting \
+            --token ${{ secrets.FIREBASE_TOKEN }}
+        if: ${{ secrets.FIREBASE_TOKEN != '' }}
+
+  # ===========================================
+  # Job 8: Notify Status
+  # ===========================================
+  notify:
+    name: Notify Status
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [code-quality, test, build-android, build-ios, build-web, build-desktop]
+    if: always()
+    
+    steps:
+      - name: Send notification
+        uses: ./.github/actions/notify
+        with:
+          status: ${{ job.status }}
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+        if: ${{ secrets.SLACK_WEBHOOK != '' }}

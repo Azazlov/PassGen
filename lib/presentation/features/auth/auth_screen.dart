@@ -27,6 +27,30 @@ class _AuthScreenContent extends StatefulWidget {
 class _AuthScreenContentState extends State<_AuthScreenContent> {
   final FocusNode _keyboardFocusNode = FocusNode();
 
+  // Маппинг клавиш для ввода цифр
+  static final Map<LogicalKeyboardKey, String> _digitKeys = {
+    LogicalKeyboardKey.digit0: '0',
+    LogicalKeyboardKey.numpad0: '0',
+    LogicalKeyboardKey.digit1: '1',
+    LogicalKeyboardKey.numpad1: '1',
+    LogicalKeyboardKey.digit2: '2',
+    LogicalKeyboardKey.numpad2: '2',
+    LogicalKeyboardKey.digit3: '3',
+    LogicalKeyboardKey.numpad3: '3',
+    LogicalKeyboardKey.digit4: '4',
+    LogicalKeyboardKey.numpad4: '4',
+    LogicalKeyboardKey.digit5: '5',
+    LogicalKeyboardKey.numpad5: '5',
+    LogicalKeyboardKey.digit6: '6',
+    LogicalKeyboardKey.numpad6: '6',
+    LogicalKeyboardKey.digit7: '7',
+    LogicalKeyboardKey.numpad7: '7',
+    LogicalKeyboardKey.digit8: '8',
+    LogicalKeyboardKey.numpad8: '8',
+    LogicalKeyboardKey.digit9: '9',
+    LogicalKeyboardKey.numpad9: '9',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -54,64 +78,24 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
     // Игнорируем если контроллер загружается
     if (controller.isLoading) return;
 
-    // Цифры 0-9 (верхний ряд и NumPad)
-    String? digit;
-    switch (event.logicalKey) {
-      case LogicalKeyboardKey.digit0:
-      case LogicalKeyboardKey.numpad0:
-        digit = '0';
-        break;
-      case LogicalKeyboardKey.digit1:
-      case LogicalKeyboardKey.numpad1:
-        digit = '1';
-        break;
-      case LogicalKeyboardKey.digit2:
-      case LogicalKeyboardKey.numpad2:
-        digit = '2';
-        break;
-      case LogicalKeyboardKey.digit3:
-      case LogicalKeyboardKey.numpad3:
-        digit = '3';
-        break;
-      case LogicalKeyboardKey.digit4:
-      case LogicalKeyboardKey.numpad4:
-        digit = '4';
-        break;
-      case LogicalKeyboardKey.digit5:
-      case LogicalKeyboardKey.numpad5:
-        digit = '5';
-        break;
-      case LogicalKeyboardKey.digit6:
-      case LogicalKeyboardKey.numpad6:
-        digit = '6';
-        break;
-      case LogicalKeyboardKey.digit7:
-      case LogicalKeyboardKey.numpad7:
-        digit = '7';
-        break;
-      case LogicalKeyboardKey.digit8:
-      case LogicalKeyboardKey.numpad8:
-        digit = '8';
-        break;
-      case LogicalKeyboardKey.digit9:
-      case LogicalKeyboardKey.numpad9:
-        digit = '9';
-        break;
-      case LogicalKeyboardKey.backspace:
-      case LogicalKeyboardKey.delete:
-        controller.removeDigit();
-        return;
-      case LogicalKeyboardKey.enter:
-        if (controller.isPinComplete) {
-          _handleConfirm();
-        }
-        return;
-      default:
-        return;
-    }
-
+    // Проверяем цифровые клавиши через маппинг
+    final digit = _digitKeys[event.logicalKey];
     if (digit != null) {
       controller.addDigit(digit);
+      return;
+    }
+
+    // Backspace / Delete
+    if (event.logicalKey == LogicalKeyboardKey.backspace ||
+        event.logicalKey == LogicalKeyboardKey.delete) {
+      controller.removeDigit();
+      return;
+    }
+
+    // Enter (только если PIN завершён)
+    if (event.logicalKey == LogicalKeyboardKey.enter &&
+        controller.isPinComplete) {
+      _handleConfirm();
     }
   }
 

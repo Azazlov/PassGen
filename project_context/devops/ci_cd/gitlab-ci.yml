@@ -1,0 +1,191 @@
+# GitLab CI/CD Configuration for Flutter Password Generator
+# Alternative to GitHub Actions for GitLab repositories
+
+stages:
+  - quality
+  - test
+  - build
+  - deploy
+  - notify
+
+variables:
+  FLUTTER_VERSION: '3.24.0'
+  JAVA_VERSION: '17'
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+
+# Cache configuration for faster builds
+cache:
+  key: flutter-${{ CI_COMMIT_REF_SLUG }}
+  paths:
+    - .pub-cache/
+    - .gradle/
+    - build/
+
+# ===========================================
+# Stage: Quality
+# ===========================================
+
+code-quality:
+  stage: quality
+  image: ghcr.io/cirruslabs/flutter:3.24.0
+  timeout: 15m
+  script:
+    - flutter pub get
+    - dart format --set-exit-if-changed lib/ test/
+    - flutter analyze --no-fatal-infos --no-fatal-warnings
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+# ===========================================
+# Stage: Test
+# ===========================================
+
+unit-tests:
+  stage: test
+  image: ghcr.io/cirruslabs/flutter:3.24.0
+  timeout: 20m
+  script:
+    - flutter pub get
+    - flutter test --coverage --machine > test-results.json
+  artifacts:
+    reports:
+      junit: test-results.json
+    paths:
+      - coverage/
+    expire_in: 7 days
+  coverage: '/lines\.*: \d+\.\d+\%/'
+
+# ===========================================
+# Stage: Build
+# ===========================================
+
+build-android-apk:
+  stage: build
+  image: ghcr.io/cirruslabs/flutter:3.24.0
+  timeout: 45m
+  needs: [unit-tests]
+  before_script:
+    - apt-get update && apt-get install -y openjdk-17-jdk
+    - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+  script:
+    - flutter pub get
+    - flutter build apk --release --split-per-abi
+  artifacts:
+    paths:
+      - build/app/outputs/flutter-apk/
+    expire_in: 14 days
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v.*/
+    - if: $CI_COMMIT_BRANCH == "main"
+
+build-android-aab:
+  stage: build
+  image: ghcr.io/cirruslabs/flutter:3.24.0
+  timeout: 45m
+  needs: [unit-tests]
+  before_script:
+    - apt-get update && apt-get install -y openjdk-17-jdk
+  script:
+    - flutter pub get
+    - flutter build appbundle --release
+  artifacts:
+    paths:
+      - build/app/outputs/bundle/release/
+    expire_in: 14 days
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v.*/
+
+build-web:
+  stage: build
+  image: ghcr.io/cirruslabs/flutter:3.24.0
+  timeout: 20m
+  needs: [unit-tests]
+  script:
+    - flutter pub get
+    - flutter build web --release
+  artifacts:
+    paths:
+      - build/web/
+    expire_in: 14 days
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+build-linux:
+  stage: build
+  image: ghcr.io/cirruslabs/flutter:3.24.0
+  timeout: 45m
+  needs: [unit-tests]
+  script:
+    - flutter pub get
+    - flutter config --enable-linux-desktop
+    - flutter build linux --release
+  artifacts:
+    paths:
+      - build/linux/
+    expire_in: 14 days
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v.*/
+
+# ===========================================
+# Stage: Deploy
+# ===========================================
+
+deploy-firebase:
+  stage: deploy
+  image: node:18
+  timeout: 15m
+  needs: [build-android-aab, build-web]
+  before_script:
+    - curl -sL https://firebase.tools | bash
+    - npm install -g firebase-tools
+  script:
+    - firebase appdistribution:distribute build/app/outputs/bundle/release/app-release.aab --app $FIREBASE_APP_ID --token $FIREBASE_TOKEN
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v.*/
+  when: manual
+
+deploy-pages:
+  stage: deploy
+  image: alpine:latest
+  timeout: 10m
+  needs: [build-web]
+  script:
+    - echo "Deploying to GitLab Pages"
+    - mkdir -p public
+    - cp -r build/web/* public/
+  artifacts:
+    paths:
+      - public/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+# ===========================================
+# Stage: Notify
+# ===========================================
+
+notify-slack:
+  stage: notify
+  image: curlimages/curl:latest
+  timeout: 5m
+  needs: [code-quality, unit-tests, build-android-apk]
+  when: always
+  script:
+    - |
+      if [ "$CI_JOB_STATUS" == "success" ]; then
+        COLOR="good"
+        EMOJI=":white_check_mark:"
+      else
+        COLOR="danger"
+        EMOJI=":x:"
+      fi
+    - |
+      curl -X POST -H 'Content-type: application/json' \
+        --data "{\"attachments\":[{\"color\":\"$COLOR\",\"emoji\":\"$EMOJI\",\"title\":\"Pipeline $CI_PIPELINE_STATUS\",\"text\":\"Project: $CI_PROJECT_NAME\nBranch: $CI_COMMIT_REF_NAME\nCommit: $CI_COMMIT_SHORT_SHA\nJob: $CI_JOB_NAME\"}]}" \
+        $SLACK_WEBHOOK_URL
+  rules:
+    - if: $SLACK_WEBHOOK_URL != null
+  when: on_failure

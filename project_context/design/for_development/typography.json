@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-08",
+  "fontFamily": {
+    "primary": "Lato",
+    "fallback": "system-ui, -apple-system, sans-serif"
+  },
+  "googleFonts": {
+    "package": "google_fonts",
+    "import": "import 'package:google_fonts/google_fonts.dart';",
+    "usage": "GoogleFonts.latoTextTheme(baseTheme.textTheme)"
+  },
+  "typeScale": {
+    "displayLarge": {
+      "fontSize": 57,
+      "fontWeight": "w400",
+      "letterSpacing": -0.25,
+      "lineHeight": 1.12,
+      "usage": "Large headers, hero sections"
+    },
+    "headlineLarge": {
+      "fontSize": 32,
+      "fontWeight": "w600",
+      "letterSpacing": 0,
+      "lineHeight": 1.25,
+      "usage": "Screen titles"
+    },
+    "headlineMedium": {
+      "fontSize": 28,
+      "fontWeight": "w600",
+      "letterSpacing": 0,
+      "lineHeight": 1.29,
+      "usage": "Section headers"
+    },
+    "titleLarge": {
+      "fontSize": 22,
+      "fontWeight": "w600",
+      "letterSpacing": 0,
+      "lineHeight": 1.27,
+      "usage": "Card titles, dialog titles"
+    },
+    "titleMedium": {
+      "fontSize": 16,
+      "fontWeight": "w500",
+      "letterSpacing": 0.15,
+      "lineHeight": 1.5,
+      "usage": "Subtitles, list titles"
+    },
+    "bodyLarge": {
+      "fontSize": 16,
+      "fontWeight": "w400",
+      "letterSpacing": 0.5,
+      "lineHeight": 1.5,
+      "usage": "Body text, paragraphs"
+    },
+    "bodyMedium": {
+      "fontSize": 14,
+      "fontWeight": "w400",
+      "letterSpacing": 0.25,
+      "lineHeight": 1.43,
+      "usage": "Secondary text, captions"
+    },
+    "labelLarge": {
+      "fontSize": 14,
+      "fontWeight": "w600",
+      "letterSpacing": 0.1,
+      "lineHeight": 1.43,
+      "usage": "Button labels, tab labels"
+    },
+    "labelSmall": {
+      "fontSize": 11,
+      "fontWeight": "w500",
+      "letterSpacing": 0.5,
+      "lineHeight": 1.45,
+      "usage": "Captions, hints"
+    }
+  },
+  "flutterImplementation": {
+    "theme": "textTheme: GoogleFonts.latoTextTheme(baseTheme.textTheme).copyWith(\n  displayLarge: const TextStyle(\n    fontSize: 57,\n    fontWeight: FontWeight.w400,\n    letterSpacing: -0.25,\n  ),\n  headlineLarge: const TextStyle(\n    fontSize: 32,\n    fontWeight: FontWeight.w600,\n  ),\n  headlineMedium: const TextStyle(\n    fontSize: 28,\n    fontWeight: FontWeight.w600,\n  ),\n  titleLarge: const TextStyle(\n    fontSize: 22,\n    fontWeight: FontWeight.w600,\n  ),\n  titleMedium: const TextStyle(\n    fontSize: 16,\n    fontWeight: FontWeight.w500,\n    letterSpacing: 0.15,\n  ),\n  bodyLarge: const TextStyle(\n    fontSize: 16,\n    fontWeight: FontWeight.w400,\n    letterSpacing: 0.5,\n  ),\n  bodyMedium: const TextStyle(\n    fontSize: 14,\n    fontWeight: FontWeight.w400,\n    letterSpacing: 0.25,\n  ),\n  labelLarge: const TextStyle(\n    fontSize: 14,\n    fontWeight: FontWeight.w600,\n    letterSpacing: 0.1,\n  ),\n)"
+  }
+}

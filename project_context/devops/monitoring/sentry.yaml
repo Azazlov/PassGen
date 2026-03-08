@@ -1,0 +1,33 @@
+# Sentry Configuration for PassGen
+
+# DSN (Data Source Name) - Replace with your actual DSN
+# Get this from: Project Settings > Client Keys (DSN)
+sentry_dsn: https://your-dsn@sentry.io/your-project-id
+
+# Environment settings
+environment: production
+
+# Release tracking
+release: passgen@0.3.2+1
+
+# Performance monitoring
+traces_sample_rate: 0.1  # 10% of transactions
+profiles_sample_rate: 0.1  # 10% of profiles
+
+# Error filtering
+ignore_errors:
+  - NetworkError
+  - TimeoutException
+
+# Breadcrumbs
+max_breadcrumbs: 100
+
+# PII (Personally Identifiable Information) settings
+send_default_pii: false
+before_send: |
+  # Custom callback to filter sensitive data
+  def before_send(event, hint):
+      # Remove any potential passwords from logs
+      if 'request' in event:
+          event['request'].pop('data', None)
+      return event

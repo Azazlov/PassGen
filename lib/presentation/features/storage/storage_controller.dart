@@ -71,8 +71,13 @@ class StorageController extends ChangeNotifier {
   void _applyFilters() {
     _passwords = _allPasswords.where((entry) {
       // Фильтр по категории
-      if (_selectedCategoryId != null && entry.categoryId != _selectedCategoryId) {
-        return false;
+      if (_selectedCategoryId != null) {
+        // Если категория выбрана, показываем только записи с этой категорией
+        // entry.categoryId может быть null, поэтому используем явное сравнение
+        final entryCategoryId = entry.categoryId;
+        if (entryCategoryId != _selectedCategoryId) {
+          return false;
+        }
       }
       // Поиск по сервису
       if (_searchQuery.isNotEmpty && !entry.service.toLowerCase().contains(_searchQuery)) {
@@ -81,6 +86,14 @@ class StorageController extends ChangeNotifier {
       return true;
     }).toList();
     _currentIndex = 0;
+    
+    // Отладка
+    debugPrint('Filter applied: categoryId=$_selectedCategoryId, query="$_searchQuery"');
+    debugPrint('  All passwords: ${_allPasswords.length}, Filtered: ${_passwords.length}');
+    if (_allPasswords.isNotEmpty) {
+      debugPrint('  Sample categoryId: ${_allPasswords.first.categoryId}');
+    }
+    
     notifyListeners();
   }
 
@@ -90,6 +103,8 @@ class StorageController extends ChangeNotifier {
     _searchQuery = '';
     _passwords = List.from(_allPasswords);
     _currentIndex = 0;
+    
+    debugPrint('Filters cleared');
     notifyListeners();
   }
 

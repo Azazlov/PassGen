@@ -99,8 +99,14 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
   }
 
   Widget _buildContent(StorageController controller, ThemeData theme) {
-    if (controller.isEmpty) {
+    // Если хранилище совсем пустое (нет паролей вообще)
+    if (controller.allPasswords.isEmpty) {
       return _buildEmptyState(theme);
+    }
+
+    // Если фильтры не вернули результатов
+    if (controller.isEmpty) {
+      return _buildFilteredEmptyState(theme, controller);
     }
 
     final password = controller.currentPassword;
@@ -335,6 +341,126 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             ),
             textAlign: TextAlign.center,
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Состояние когда фильтры не вернули результатов
+  Widget _buildFilteredEmptyState(ThemeData theme, StorageController controller) {
+    final hasCategoryFilter = controller.selectedCategoryId != null;
+    final hasSearchQuery = controller.searchQuery.isNotEmpty;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 32),
+          Icon(
+            Icons.filter_alt_off,
+            size: 80,
+            color: theme.colorScheme.onSurface.withOpacity(0.3),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            hasCategoryFilter && hasSearchQuery
+                ? 'Ничего не найдено'
+                : hasCategoryFilter
+                    ? 'В этой категории нет паролей'
+                    : 'Поиск не дал результатов',
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          
+          // Кнопка сброса фильтров
+          ElevatedButton.icon(
+            onPressed: () {
+              controller.clearFilters();
+            },
+            icon: const Icon(Icons.filter_alt_off),
+            label: const Text('Сбросить фильтры'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+          
+          const SizedBox(height: 32),
+          
+          // Разделитель
+          const Divider(),
+          
+          const SizedBox(height: 16),
+          
+          // Заголовок текущего фильтра
+          if (hasCategoryFilter)
+            Text(
+              'Выбрана категория:',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
+          
+          // Текущий выбранный фильтр
+          if (hasCategoryFilter)
+            FutureBuilder<List<Category>>(
+              future: context.read<GetCategoriesUseCase>().execute(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const SizedBox.shrink();
+                }
+                final categories = snapshot.data ?? [];
+                final selectedCategory = categories.cast<Category?>().firstWhere(
+                  (c) => c?.id == controller.selectedCategoryId,
+                  orElse: () => null,
+                );
+                if (selectedCategory == null) {
+                  return const SizedBox.shrink();
+                }
+                return Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        selectedCategory.icon ?? '📁',
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        selectedCategory.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          
+          const SizedBox(height: 24),
+          
+          // Подсказка
+          Text(
+            'Или выберите другую категорию:',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.5),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Фильтр категорий (всегда виден!)
+          _buildCategoryFilter(controller, theme),
         ],
       ),
     );
@@ -675,6 +801,10 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
     return FutureBuilder<List<Category>>(
       future: context.read<GetCategoriesUseCase>().execute(),
       builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox.shrink();
+        }
+        
         final categories = snapshot.data ?? [];
 
         return Wrap(
@@ -685,7 +815,9 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             FilterChip(
               label: const Text('Все'),
               selected: controller.selectedCategoryId == null,
-              onSelected: (_) => controller.setCategoryFilter(null),
+              onSelected: (_) {
+                controller.setCategoryFilter(null);
+              },
               avatar: const Icon(Icons.all_inclusive),
             ),
             // Фильтры по категориям
@@ -694,7 +826,11 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
               return FilterChip(
                 label: Text(category.name),
                 selected: isSelected,
-                onSelected: (_) => controller.setCategoryFilter(isSelected ? null : category.id),
+                onSelected: (_) {
+                  // Если выбрана эта же категория - сбрасываем фильтр
+                  // Если выбрана другая - устанавливаем новую
+                  controller.setCategoryFilter(isSelected ? null : category.id);
+                },
                 avatar: Text(category.icon ?? '📁', style: const TextStyle(fontSize: 16)),
               );
             }),

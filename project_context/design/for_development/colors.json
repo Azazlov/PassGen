@@ -1,0 +1,116 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-08",
+  "colors": {
+    "light": {
+      "primary": "#2196F3",
+      "onPrimary": "#FFFFFF",
+      "primaryContainer": "#BBDEFB",
+      "onPrimaryContainer": "#0D47A1",
+      "secondary": "#1976D2",
+      "onSecondary": "#FFFFFF",
+      "secondaryContainer": "#E3F2FD",
+      "onSecondaryContainer": "#0D47A1",
+      "tertiary": "#00897B",
+      "onTertiary": "#FFFFFF",
+      "error": "#D32F2F",
+      "onError": "#FFFFFF",
+      "errorContainer": "#FFEBEE",
+      "onErrorContainer": "#B71C1C",
+      "success": "#4CAF50",
+      "onSuccess": "#FFFFFF",
+      "warning": "#FF9800",
+      "onWarning": "#000000",
+      "info": "#2196F3",
+      "onInfo": "#FFFFFF",
+      "surface": "#FFFFFF",
+      "onSurface": "#000000",
+      "surfaceContainerHighest": "#F5F5F5",
+      "onSurfaceContainerHighest": "#000000",
+      "outline": "#757575",
+      "outlineVariant": "#BDBDBD",
+      "shadow": "#000000",
+      "scrim": "#000000"
+    },
+    "dark": {
+      "primary": "#64B5F6",
+      "onPrimary": "#0D47A1",
+      "primaryContainer": "#1565C0",
+      "onPrimaryContainer": "#BBDEFB",
+      "secondary": "#42A5F5",
+      "onSecondary": "#0D47A1",
+      "secondaryContainer": "#0D47A1",
+      "onSecondaryContainer": "#BBDEFB",
+      "tertiary": "#26A69A",
+      "onTertiary": "#FFFFFF",
+      "error": "#EF5350",
+      "onError": "#000000",
+      "errorContainer": "#B71C1C",
+      "onErrorContainer": "#FFEBEE",
+      "success": "#81C784",
+      "onSuccess": "#000000",
+      "warning": "#FFB74D",
+      "onWarning": "#000000",
+      "info": "#64B5F6",
+      "onInfo": "#0D47A1",
+      "surface": "#121212",
+      "onSurface": "#FFFFFF",
+      "surfaceContainerHighest": "#2C2C2C",
+      "onSurfaceContainerHighest": "#FFFFFF",
+      "outline": "#BDBDBD",
+      "outlineVariant": "#757575",
+      "shadow": "#000000",
+      "scrim": "#000000"
+    },
+    "passwordStrength": {
+      "veryWeak": {
+        "light": "#D32F2F",
+        "dark": "#EF5350"
+      },
+      "weak": {
+        "light": "#FF9800",
+        "dark": "#FFB74D"
+      },
+      "medium": {
+        "light": "#FFEB3B",
+        "dark": "#FFF176"
+      },
+      "strong": {
+        "light": "#8BC34A",
+        "dark": "#AED581"
+      },
+      "veryStrong": {
+        "light": "#4CAF50",
+        "dark": "#81C784"
+      }
+    }
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "xl": 32,
+    "xxl": 48
+  },
+  "borderRadius": {
+    "sm": 4,
+    "md": 8,
+    "lg": 12,
+    "xl": 16,
+    "full": 9999
+  },
+  "elevation": {
+    "none": 0,
+    "sm": 1,
+    "md": 2,
+    "lg": 4,
+    "xl": 8,
+    "xxl": 16
+  },
+  "opacity": {
+    "disabled": 0.38,
+    "hint": 0.6,
+    "overlay": 0.8
+  }
+}

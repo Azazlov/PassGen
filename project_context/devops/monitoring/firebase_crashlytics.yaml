@@ -1,0 +1,76 @@
+# Firebase Crashlytics Configuration
+# Add this to your pubspec.yaml dependencies
+
+dependencies:
+  firebase_core: ^2.24.0
+  firebase_crashlytics: ^3.4.0
+
+# ===========================================
+# Setup Instructions
+# ===========================================
+# 1. Run: flutter pub add firebase_core firebase_crashlytics
+# 2. Run: flutterfire configure
+# 3. Follow platform-specific setup below
+
+# ===========================================
+# Android Setup
+# ===========================================
+# android/app/build.gradle:
+# - Apply Google Services plugin
+# - Add google-services.json to android/app/
+
+# ===========================================
+# iOS Setup  
+# ===========================================
+# ios/Runner/Info.plist:
+# - Add GoogleService-Info.plist
+# - Run: pod install in ios/ directory
+
+# ===========================================
+# Web Setup
+# ===========================================
+# web/index.html:
+# - Add Firebase SDK scripts
+# - Initialize Firebase config
+
+# ===========================================
+# Crashlytics Configuration Options
+# ===========================================
+
+# Enable automatic collection
+crashlytics_collection_enabled: true
+
+# Custom keys for better filtering
+custom_keys:
+  - user_id: hashed_user_identifier
+  - app_version: auto
+  - device_model: auto
+  - os_version: auto
+
+# Log settings
+log_level: debug  # Change to 'error' in production
+max_log_entries: 100
+
+# Non-fatal error reporting
+report_non_fatal: true
+
+# ===========================================
+# Usage in Code
+# ===========================================
+# 
+# // Initialize in main.dart
+# await Firebase.initializeApp();
+# await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+#
+# // Record custom logs
+# await FirebaseCrashlytics.instance.log('User action: generated password');
+#
+# // Record non-fatal errors
+# try {
+#   // risky operation
+# } catch (e, stack) {
+#   await FirebaseCrashlytics.instance.recordError(e, stack);
+# }
+#
+# // Set user identifier (hashed!)
+# await FirebaseCrashlytics.instance.setUserIdentifier(hash(userId));

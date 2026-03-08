@@ -1,0 +1,288 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-08",
+  "components": {
+    "buttons": {
+      "primary": {
+        "widget": "ElevatedButton",
+        "minHeight": 48,
+        "padding": {
+          "horizontal": 24,
+          "vertical": 16
+        },
+        "borderRadius": 8,
+        "elevation": 2,
+        "states": {
+          "default": {
+            "backgroundColor": "primary",
+            "textColor": "onPrimary"
+          },
+          "hover": {
+            "backgroundColor": "primary + 10% brightness"
+          },
+          "pressed": {
+            "backgroundColor": "primary - 10% brightness"
+          },
+          "disabled": {
+            "opacity": 0.38
+          }
+        },
+        "flutter": "ElevatedButton.styleFrom(\n  minimumSize: Size.fromHeight(48),\n  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),\n  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),\n)"
+      },
+      "secondary": {
+        "widget": "OutlinedButton",
+        "minHeight": 48,
+        "padding": {
+          "horizontal": 24,
+          "vertical": 16
+        },
+        "borderRadius": 8,
+        "borderWidth": 1,
+        "borderColor": "outline",
+        "states": {
+          "default": {
+            "backgroundColor": "transparent",
+            "textColor": "primary"
+          },
+          "hover": {
+            "backgroundColor": "primary.withOpacity(0.08)"
+          },
+          "pressed": {
+            "backgroundColor": "primary.withOpacity(0.12)"
+          },
+          "disabled": {
+            "opacity": 0.38
+          }
+        }
+      },
+      "text": {
+        "widget": "TextButton",
+        "minHeight": 48,
+        "padding": {
+          "horizontal": 12,
+          "vertical": 8
+        },
+        "states": {
+          "default": {
+            "backgroundColor": "transparent",
+            "textColor": "primary"
+          },
+          "hover": {
+            "backgroundColor": "primary.withOpacity(0.08)"
+          }
+        }
+      },
+      "icon": {
+        "widget": "IconButton",
+        "size": 48,
+        "iconSize": 24,
+        "states": {
+          "default": {
+            "iconColor": "onSurface"
+          },
+          "hover": {
+            "backgroundColor": "onSurface.withOpacity(0.08)"
+          }
+        }
+      }
+    },
+    "textFields": {
+      "standard": {
+        "widget": "TextField",
+        "height": 48,
+        "borderRadius": 8,
+        "borderWidth": 1,
+        "padding": {
+          "horizontal": 16,
+          "vertical": 12
+        },
+        "states": {
+          "default": {
+            "borderColor": "outline"
+          },
+          "focused": {
+            "borderColor": "primary",
+            "borderWidth": 2
+          },
+          "error": {
+            "borderColor": "error"
+          },
+          "disabled": {
+            "opacity": 0.38,
+            "borderColor": "outline"
+          }
+        },
+        "flutter": "TextField(\n  decoration: InputDecoration(\n    labelText: 'Label',\n    hintText: 'Placeholder',\n    prefixIcon: Icon(Icons.icon),\n    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),\n  ),\n)"
+      },
+      "password": {
+        "extends": "standard",
+        "suffixIcon": {
+          "widget": "IconButton",
+          "icon": "Icons.visibility_off",
+          "onPressed": "toggleVisibility"
+        }
+      },
+      "pin": {
+        "cells": 8,
+        "cellSize": 48,
+        "cellGap": 8,
+        "fillIndicator": {
+          "type": "circle",
+          "size": 8,
+          "color": "primary"
+        },
+        "errorState": {
+          "animation": "shake",
+          "duration": 400,
+          "iterations": 3,
+          "color": "error"
+        }
+      }
+    },
+    "cards": {
+      "standard": {
+        "widget": "Card",
+        "borderRadius": 12,
+        "elevation": {
+          "light": 1,
+          "dark": 0
+        },
+        "padding": 16,
+        "flutter": "Card(\n  elevation: 1,\n  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),\n  child: Padding(\n    padding: EdgeInsets.all(16),\n    child: Column(...),\n  ),\n)"
+      }
+    },
+    "navigation": {
+      "bottomNavigationBar": {
+        "widget": "BottomNavigationBar",
+        "height": 80,
+        "iconSize": 24,
+        "fontSize": 12,
+        "type": "fixed",
+        "showUnselectedLabels": true,
+        "selectedItemColor": "primary",
+        "unselectedItemColor": "onSurface.withOpacity(0.6)",
+        "breakpoint": "< 600px"
+      },
+      "navigationRail": {
+        "widget": "NavigationRail",
+        "width": {
+          "default": 72,
+          "desktop": 80
+        },
+        "iconSize": {
+          "default": 24,
+          "desktop": 28
+        },
+        "labelType": "all",
+        "backgroundColor": "surfaceContainerHighest",
+        "selectedIconColor": "primary",
+        "unselectedIconColor": "onSurface.withOpacity(0.6)",
+        "breakpoint": "≥ 600px"
+      }
+    },
+    "passwordStrength": {
+      "widget": "LinearProgressIndicator + Text",
+      "segments": 5,
+      "height": 8,
+      "borderRadius": 4,
+      "labels": [
+        "Very Weak",
+        "Weak",
+        "Medium",
+        "Strong",
+        "Very Strong"
+      ],
+      "colors": {
+        "veryWeak": "error",
+        "weak": "warning",
+        "medium": "warning",
+        "strong": "success",
+        "veryStrong": "success"
+      },
+      "animation": {
+        "duration": 300,
+        "curve": "Curves.easeInOut"
+      }
+    },
+    "dialogs": {
+      "alert": {
+        "widget": "AlertDialog",
+        "borderRadius": 12,
+        "padding": 24,
+        "actionsPadding": {
+          "horizontal": 24,
+          "vertical": 16
+        },
+        "buttonSpacing": 8
+      },
+      "confirm": {
+        "extends": "alert",
+        "actions": [
+          {
+            "label": "Cancel",
+            "type": "text"
+          },
+          {
+            "label": "Confirm",
+            "type": "primary"
+          }
+        ]
+      }
+    },
+    "feedback": {
+      "snackbar": {
+        "widget": "SnackBar",
+        "height": 48,
+        "borderRadius": 4,
+        "duration": 4000,
+        "actionTextColor": "secondary",
+        "backgroundColor": "inverseSurface"
+      },
+      "progressIndicator": {
+        "circular": {
+          "widget": "CircularProgressIndicator",
+          "strokeWidth": 4
+        },
+        "linear": {
+          "widget": "LinearProgressIndicator",
+          "height": 4,
+          "borderRadius": 2
+        }
+      }
+    }
+  },
+  "responsiveBreakpoints": {
+    "mobile": {
+      "max": 599,
+      "layout": "single-column",
+      "navigation": "bottom"
+    },
+    "tablet": {
+      "min": 600,
+      "max": 1023,
+      "layout": "two-column",
+      "navigation": "rail"
+    },
+    "desktop": {
+      "min": 1024,
+      "layout": "three-column",
+      "navigation": "rail"
+    }
+  },
+  "touchTargets": {
+    "minimum": 48,
+    "button": {
+      "minWidth": 80,
+      "minHeight": 48
+    },
+    "iconButton": {
+      "size": 48
+    },
+    "checkbox": {
+      "size": 48
+    },
+    "textField": {
+      "minHeight": 48
+    }
+  }
+}
