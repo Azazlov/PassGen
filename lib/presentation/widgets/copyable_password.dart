@@ -25,8 +25,6 @@ class CopyablePassword extends StatefulWidget {
 }
 
 class _CopyablePasswordState extends State<CopyablePassword> {
-  bool _showAnimation = false;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

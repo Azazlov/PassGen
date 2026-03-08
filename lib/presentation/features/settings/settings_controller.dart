@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/event_types.dart';
 import '../../../domain/usecases/settings/get_setting_usecase.dart';
 import '../../../domain/usecases/settings/set_setting_usecase.dart';
-import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
@@ -12,7 +11,6 @@ import '../../../domain/usecases/log/log_event_usecase.dart';
 class SettingsController extends ChangeNotifier {
   final GetSettingUseCase _getSettingUseCase;
   final SetSettingUseCase _setSettingUseCase;
-  final GetCategoriesUseCase _getCategoriesUseCase;
   final ChangePinUseCase _changePinUseCase;
   final RemovePinUseCase _removePinUseCase;
   final GetLogsUseCase _getLogsUseCase;
@@ -21,14 +19,12 @@ class SettingsController extends ChangeNotifier {
   SettingsController({
     required GetSettingUseCase getSettingUseCase,
     required SetSettingUseCase setSettingUseCase,
-    required GetCategoriesUseCase getCategoriesUseCase,
     required ChangePinUseCase changePinUseCase,
     required RemovePinUseCase removePinUseCase,
     required GetLogsUseCase getLogsUseCase,
     required LogEventUseCase logEventUseCase,
   })  : _getSettingUseCase = getSettingUseCase,
         _setSettingUseCase = setSettingUseCase,
-        _getCategoriesUseCase = getCategoriesUseCase,
         _changePinUseCase = changePinUseCase,
         _removePinUseCase = removePinUseCase,
         _getLogsUseCase = getLogsUseCase,

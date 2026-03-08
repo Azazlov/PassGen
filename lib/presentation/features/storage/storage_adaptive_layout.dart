@@ -12,7 +12,6 @@ class StorageAdaptiveLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final controller = context.watch<StorageController>();
 
     // Мобильный режим (< 600dp)
     if (width < Breakpoints.tabletMin) {
@@ -35,8 +34,6 @@ class StorageMobileLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<StorageController>();
-
     return Column(
       children: [
         // Список паролей

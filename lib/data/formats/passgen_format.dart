@@ -118,7 +118,6 @@ class PassgenFormat {
       }
 
       // FLAGS (1 байт)
-      final flags = allBytes[offset];
       offset += 1;
 
       // NONCE (32 байта)

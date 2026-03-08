@@ -122,12 +122,12 @@ class MigrationFromSharedPreferences {
 
     try {
       final List<dynamic> jsonList = jsonDecode(jsonString);
-      for (final json in jsonList) {
+      for (final _ in jsonList) {
         // Конфиги уже были мигрированы вместе с паролями
         count++;
       }
     } catch (e) {
-      print('Ошибка миграции конфигов: $e');
+      debugPrint('Ошибка миграции конфигов: $e');
     }
 
     return count;
