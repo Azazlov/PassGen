@@ -147,4 +147,9 @@ class SettingsController extends ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 }

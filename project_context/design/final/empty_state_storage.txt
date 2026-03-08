@@ -1,0 +1,68 @@
+┌─────────────────────────────────────────────────┐
+│                                                 │
+│                                                 │
+│              [📦 Иконка 64px]                   │
+│                                                 │
+│                                                 │
+│         Нет сохранённых паролей                 │
+│                                                 │
+│    Нажмите + чтобы добавить первый пароль       │
+│                                                 │
+│                                                 │
+│          [➕ Добавить пароль]                   │
+│                                                 │
+│                                                 │
+└─────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+ХАРАКТЕРИСТИКИ:
+───────────────────────────────────────────────────────────────
+• Иконка: Icons.archive (64px, grey[400])
+• Заголовок: headlineSmall (24px, onSurface)
+• Подзаголовок: bodyMedium (14px, onSurfaceVariant)
+• Кнопка: ElevatedButton.icon (primary)
+• Выравнивание: Center (mainAxisAlignment.center)
+
+═══════════════════════════════════════════════════════════════
+
+FLUTTER IMPLEMENTATION:
+───────────────────────────────────────────────────────────────
+
+class EmptyStorageState extends StatelessWidget {
+  const EmptyStorageState({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.archive,
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Нет сохранённых паролей',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Нажмите + чтобы добавить первый пароль',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => _addPassword(context),
+            icon: const Icon(Icons.add),
+            label: const Text('Добавить пароль'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+═══════════════════════════════════════════════════════════════

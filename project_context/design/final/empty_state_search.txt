@@ -1,0 +1,88 @@
+┌─────────────────────────────────────────────────┐
+│                                                 │
+│                                                 │
+│              [🔍 Иконка 64px]                   │
+│                                                 │
+│                                                 │
+│         Ничего не найдено                       │
+│                                                 │
+│      По запросу "[поисковый запрос]"            │
+│                                                 │
+│                                                 │
+│       [Очистить поиск]  [Сбросить фильтры]      │
+│                                                 │
+│                                                 │
+└─────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+ХАРАКТЕРИСТИКИ:
+───────────────────────────────────────────────────────────────
+• Иконка: Icons.search_off (64px, grey[400])
+• Заголовок: headlineSmall (24px, onSurface)
+• Подзаголовок: bodyMedium (14px, onSurfaceVariant)
+• Кнопки: TextButton (2 шт, horizontal)
+• Выравнивание: Center (mainAxisAlignment.center)
+
+═══════════════════════════════════════════════════════════════
+
+FLUTTER IMPLEMENTATION:
+───────────────────────────────────────────────────────────────
+
+class EmptySearchResults extends StatelessWidget {
+  final String query;
+  final VoidCallback onClearSearch;
+  final VoidCallback? onResetFilters;
+
+  const EmptySearchResults({
+    Key? key,
+    required this.query,
+    required this.onClearSearch,
+    this.onResetFilters,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.search_off,
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Ничего не найдено',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'По запросу "$query"',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: onClearSearch,
+                child: const Text('Очистить поиск'),
+              ),
+              if (onResetFilters != null) ...[
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: onResetFilters,
+                  child: const Text('Сбросить фильтры'),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+═══════════════════════════════════════════════════════════════

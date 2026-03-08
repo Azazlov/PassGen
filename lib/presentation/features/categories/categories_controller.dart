@@ -140,4 +140,10 @@ class CategoriesController extends ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  @override
+  void dispose() {
+    _categories.clear();
+    super.dispose();
+  }
 }

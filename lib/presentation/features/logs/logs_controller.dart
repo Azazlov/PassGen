@@ -124,4 +124,10 @@ class LogsController extends ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  @override
+  void dispose() {
+    _logs.clear();
+    super.dispose();
+  }
 }

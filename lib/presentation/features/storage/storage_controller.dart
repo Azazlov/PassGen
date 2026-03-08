@@ -315,4 +315,11 @@ class StorageController extends ChangeNotifier {
       _isLoading = false;
     }
   }
+
+  @override
+  void dispose() {
+    _allPasswords.clear();
+    _passwords.clear();
+    super.dispose();
+  }
 }
