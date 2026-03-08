@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'storage_controller.dart';
 import '../../../domain/entities/category.dart';
+import '../../../domain/entities/password_entry.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 
 /// Панель списка паролей
@@ -63,8 +64,11 @@ class StorageListPane extends StatelessWidget {
 
         // Список паролей
         Expanded(
-          child: controller.isEmpty
-              ? const StorageEmptyListState()
+          child: controller.isFilterEmpty
+              ? StorageFilterEmptyState(
+                  hasActiveFilter: controller.hasActiveFilter,
+                  searchQuery: controller.searchQuery,
+                )
               : ListView.builder(
                   itemCount: controller.passwordsCount,
                   itemBuilder: (context, index) {
@@ -126,9 +130,13 @@ class StorageListPane extends StatelessWidget {
                             ),
                           ],
                         ),
-                        onTap: () => onEntrySelected?.call(entry),
+                        onTap: () {
+                          // Выбираем запись в контроллере
+                          final controller = context.read<StorageController>();
+                          controller.selectEntry(entry);
+                        },
                         onLongPress: () {
-                          // Показать меню удаления
+                          _showDeleteConfirmation(context, entry);
                         },
                       ),
                     );
@@ -136,6 +144,32 @@ class StorageListPane extends StatelessWidget {
                 ),
         ),
       ],
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, PasswordEntry entry) {
+    final controller = context.read<StorageController>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Удалить пароль?'),
+        content: Text('Вы точно хотите удалить пароль для сервиса "${entry.service}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () {
+              controller.deleteCurrentPassword();
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Удалить'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -172,6 +206,75 @@ class StorageEmptyListState extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Пустое состояние при фильтрации
+class StorageFilterEmptyState extends StatelessWidget {
+  final bool hasActiveFilter;
+  final String searchQuery;
+
+  const StorageFilterEmptyState({
+    super.key,
+    required this.hasActiveFilter,
+    required this.searchQuery,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              hasActiveFilter ? Icons.filter_alt_off : Icons.search_off,
+              size: 64,
+              color: theme.colorScheme.onSurface.withOpacity(0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              hasActiveFilter
+                  ? 'Нет записей по фильтру'
+                  : 'Ничего не найдено',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (hasActiveFilter) ...[
+              Text(
+                'Измените параметры фильтра или сбросьте его',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final controller = context.read<StorageController>();
+                  controller.clearFilters();
+                },
+                icon: const Icon(Icons.clear_all),
+                label: const Text('Сбросить фильтры'),
+              ),
+            ] else ...[
+              Text(
+                'Попробуйте другой поисковый запрос',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

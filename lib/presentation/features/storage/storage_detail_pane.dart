@@ -300,3 +300,50 @@ class StorageDetailPane extends StatelessWidget {
     }
   }
 }
+
+/// Пустое состояние панели деталей
+class StorageEmptyDetailState extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const StorageEmptyDetailState({
+    super.key,
+    this.icon = Icons.touch_app,
+    this.title = 'Выберите пароль',
+    this.subtitle = 'или создайте новый',
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 64,
+            color: theme.colorScheme.onSurface.withOpacity(0.3),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}

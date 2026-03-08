@@ -54,6 +54,9 @@ class StorageController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isEmpty => _passwords.isEmpty;
+  bool get hasNoPasswords => _allPasswords.isEmpty;
+  bool get isFilterEmpty => _passwords.isEmpty;
+  bool get hasActiveFilter => _selectedCategoryId != null || _searchQuery.isNotEmpty;
   int get passwordsCount => _passwords.length;
   PasswordEntry? get currentPassword => _currentIndex < _passwords.length ? _passwords[_currentIndex] : null;
 
@@ -117,7 +120,10 @@ class StorageController extends ChangeNotifier {
     _searchQuery = '';
     _passwords = List.from(_allPasswords);
     _currentIndex = 0;
-    
+
+    // Восстанавливаем выбор первой записи
+    _selectedEntry = _passwords.isNotEmpty ? _passwords.first : null;
+
     debugPrint('Filters cleared');
     notifyListeners();
   }

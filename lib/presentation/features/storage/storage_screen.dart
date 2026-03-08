@@ -91,7 +91,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
       body: SafeArea(
         child: controller.isLoading
             ? ShimmerList(itemCount: 5, itemHeight: 120)
-            : controller.isEmpty
+            : controller.hasNoPasswords
                 ? const StorageEmptyState(
                     icon: Icons.archive,
                     title: 'Нет сохранённых паролей',

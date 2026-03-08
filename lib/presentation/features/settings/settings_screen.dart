@@ -115,28 +115,7 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
 
           const SizedBox(height: 16),
 
-          // Секция: О приложении
-          _buildSectionHeader('О приложении', theme),
-          _buildListTile(
-            icon: Icons.info,
-            title: 'Версия',
-            subtitle: '0.4.0',
-            onTap: () => _showInfoDialog(
-              context,
-              'PassGen',
-              'Менеджер паролей с локальным шифрованием\n\nВерсия: 0.4.0\nFlutter + SQLite\nChaCha20-Poly1305',
-            ),
-          ),
-          _buildListTile(
-            icon: Icons.description,
-            title: 'Лицензия',
-            subtitle: 'MIT License',
-            onTap: () => _showInfoDialog(
-              context,
-              'Лицензия',
-              'MIT License\n\nCopyright (c) 2024',
-            ),
-          ),
+          // Секция: О приложении (удалено - дублирует AboutScreen)
         ],
       ),
     );
@@ -323,24 +302,8 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     );
 
     if (confirmed == true && context.mounted) {
-      _showInfoDialog(context, 'Очистка', 'Очистка логов будет реализована в следующей версии');
+      // Очистка логов будет реализована в следующей версии
     }
-  }
-
-  void _showInfoDialog(BuildContext context, String title, String message) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showSuccessDialog(BuildContext context, String message) {

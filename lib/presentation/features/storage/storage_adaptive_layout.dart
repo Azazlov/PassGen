@@ -65,13 +65,24 @@ class StorageTabletLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = context.watch<StorageController>();
 
+    // Автовыбор первой записи при загрузке
+    if (controller.passwords.isNotEmpty && controller.selectedEntry == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (controller.selectedEntry == null && controller.passwords.isNotEmpty) {
+          controller.selectEntry(controller.passwords.first);
+        }
+      });
+    }
+
     return Row(
       children: [
         // Левая панель: Список (40%)
         SizedBox(
           width: MediaQuery.of(context).size.width * 0.4,
           child: StorageListPane(
-            onEntrySelected: (entry) => controller.selectEntry(entry),
+            onEntrySelected: (entry) {
+              controller.selectEntry(entry);
+            },
           ),
         ),
         const VerticalDivider(thickness: 1, width: 1),
@@ -80,8 +91,8 @@ class StorageTabletLayout extends StatelessWidget {
           flex: 6,
           child: controller.selectedEntry != null
               ? StorageDetailPane(entry: controller.selectedEntry!)
-              : const StorageEmptyState(
-                  icon: Icons.archive,
+              : const StorageEmptyDetailState(
+                  icon: Icons.touch_app,
                   title: 'Выберите пароль',
                   subtitle: 'или создайте новый',
                 ),
@@ -98,6 +109,15 @@ class StorageDesktopLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<StorageController>();
+
+    // Автовыбор первой записи при загрузке
+    if (controller.passwords.isNotEmpty && controller.selectedEntry == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (controller.selectedEntry == null && controller.passwords.isNotEmpty) {
+          controller.selectEntry(controller.passwords.first);
+        }
+      });
+    }
 
     return Row(
       children: [
@@ -118,8 +138,8 @@ class StorageDesktopLayout extends StatelessWidget {
                 padding: const EdgeInsets.all(24),
                 child: controller.selectedEntry != null
                     ? StorageDetailPane(entry: controller.selectedEntry!)
-                    : const StorageEmptyState(
-                        icon: Icons.archive,
+                    : const StorageEmptyDetailState(
+                        icon: Icons.touch_app,
                         title: 'Выберите пароль',
                         subtitle: 'или создайте новый',
                       ),
