@@ -22,7 +22,6 @@ class SettingsScreen extends StatelessWidget {
       create: (context) => SettingsController(
         getSettingUseCase: context.read<GetSettingUseCase>(),
         setSettingUseCase: context.read<SetSettingUseCase>(),
-        getCategoriesUseCase: context.read<GetCategoriesUseCase>(),
         changePinUseCase: context.read<ChangePinUseCase>(),
         removePinUseCase: context.read<RemovePinUseCase>(),
         getLogsUseCase: context.read<GetLogsUseCase>(),

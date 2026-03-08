@@ -109,11 +109,6 @@ class _CopyablePasswordState extends State<CopyablePassword> {
 
   /// Копирование в буфер обмена с очисткой через 60 секунд
   void _copyToClipboard(BuildContext context, String value) {
-    // Показываем Lottie анимацию
-    setState(() {
-      _showAnimation = true;
-    });
-
     // Копируем в буфер
     Clipboard.setData(ClipboardData(text: value));
 
@@ -148,15 +143,6 @@ class _CopyablePasswordState extends State<CopyablePassword> {
         ),
       ),
     );
-
-    // Скрываем анимацию через 2 секунды
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _showAnimation = false;
-        });
-      }
-    });
 
     // Очищаем буфер через 60 секунд (согласно ТЗ)
     Future.delayed(const Duration(seconds: 60), () {

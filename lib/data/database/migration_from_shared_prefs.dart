@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import '../database/database_helper.dart';
 import '../models/password_entry_model.dart';
 import '../models/password_config_model.dart';

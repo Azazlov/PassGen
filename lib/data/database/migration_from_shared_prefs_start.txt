@@ -1,0 +1,17 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../database/database_helper.dart';
+import '../models/password_entry_model.dart';
+import '../models/password_config_model.dart';
+import '../../domain/entities/password_entry.dart';
+
+/// Миграция данных из SharedPreferences в SQLite
+class MigrationFromSharedPreferences {
+  final DatabaseHelper _dbHelper;
+  final SharedPreferences _prefs;
+
+  static const String _migrationKey = 'sqlite_migration_completed';
+  static const String _passwordsKey = 'saved_passwords';
+  static const String _configsKey = 'password_configs';
