@@ -21,8 +21,6 @@ export 'usecases/password/generate_password_usecase.dart';
 export 'usecases/password/save_password_usecase.dart';
 export 'usecases/encryptor/encrypt_message_usecase.dart';
 export 'usecases/encryptor/decrypt_message_usecase.dart';
-export 'usecases/storage/get_configs_usecase.dart';
-export 'usecases/storage/save_configs_usecase.dart';
 export 'usecases/storage/get_passwords_usecase.dart';
 export 'usecases/storage/delete_password_usecase.dart';
 export 'usecases/storage/export_passwords_usecase.dart';

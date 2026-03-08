@@ -16,18 +16,19 @@ import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/repositories/password_generator_repository_impl.dart';
 import '../../data/repositories/encryptor_repository_impl.dart';
 import '../../data/repositories/storage_repository_impl.dart';
+import '../../data/repositories/password_export_repository_impl.dart';
+import '../../data/repositories/password_import_repository_impl.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/security_log_repository_impl.dart';
 import '../../data/repositories/category_repository_impl.dart';
 import '../../data/repositories/app_settings_repository_impl.dart';
+import '../../data/formats/passgen_format.dart';
 
 // Use cases
 import '../../domain/usecases/password/generate_password_usecase.dart';
 import '../../domain/usecases/password/save_password_usecase.dart';
 import '../../domain/usecases/encryptor/encrypt_message_usecase.dart';
 import '../../domain/usecases/encryptor/decrypt_message_usecase.dart';
-import '../../domain/usecases/storage/get_configs_usecase.dart';
-import '../../domain/usecases/storage/save_configs_usecase.dart';
 import '../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../domain/usecases/storage/delete_password_usecase.dart';
 import '../../domain/usecases/storage/export_passwords_usecase.dart';
@@ -113,6 +114,18 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
+          create: (context) => PasswordExportRepositoryImpl(
+            context.read<StorageLocalDataSource>(),
+            context.read<PassgenFormat>(),
+          ),
+        ),
+        Provider(
+          create: (context) => PasswordImportRepositoryImpl(
+            context.read<StorageLocalDataSource>(),
+            context.read<PassgenFormat>(),
+          ),
+        ),
+        Provider(
           create: (context) => AuthRepositoryImpl(
             context.read<AuthLocalDataSource>(),
           ),
@@ -149,16 +162,6 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
-          create: (context) => GetConfigsUseCase(
-            context.read<StorageRepositoryImpl>(),
-          ),
-        ),
-        Provider(
-          create: (context) => SaveConfigsUseCase(
-            context.read<StorageRepositoryImpl>(),
-          ),
-        ),
-        Provider(
           create: (context) => GetPasswordsUseCase(
             context.read<StorageRepositoryImpl>(),
           ),
@@ -170,22 +173,22 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
         Provider(
           create: (context) => ExportPasswordsUseCase(
-            context.read<StorageRepositoryImpl>(),
+            context.read<PasswordExportRepositoryImpl>(),
           ),
         ),
         Provider(
           create: (context) => ImportPasswordsUseCase(
-            context.read<StorageRepositoryImpl>(),
+            context.read<PasswordImportRepositoryImpl>(),
           ),
         ),
         Provider(
           create: (context) => ExportPassgenUseCase(
-            context.read<StorageRepositoryImpl>(),
+            context.read<PasswordExportRepositoryImpl>(),
           ),
         ),
         Provider(
           create: (context) => ImportPassgenUseCase(
-            context.read<StorageRepositoryImpl>(),
+            context.read<PasswordImportRepositoryImpl>(),
           ),
         ),
         Provider(

@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
-import '../../repositories/storage_repository.dart';
+import '../../repositories/password_import_repository.dart';
 
 /// Использование: Импорт паролей из формата .passgen
 class ImportPassgenUseCase {
-  final StorageRepository repository;
+  final PasswordImportRepository repository;
 
   const ImportPassgenUseCase(this.repository);
 
@@ -12,7 +12,7 @@ class ImportPassgenUseCase {
     required String data,
     required String masterPassword,
   }) async {
-    return await repository.importPassgen(
+    return await repository.importFromPassgen(
       data: data,
       masterPassword: masterPassword,
     );

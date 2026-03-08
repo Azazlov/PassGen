@@ -1,14 +1,14 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
-import '../../repositories/storage_repository.dart';
+import '../../repositories/password_import_repository.dart';
 
-/// Использование: Импорт паролей
+/// Использование: Импорт паролей из JSON
 class ImportPasswordsUseCase {
-  final StorageRepository repository;
+  final PasswordImportRepository repository;
 
   const ImportPasswordsUseCase(this.repository);
 
   Future<Either<StorageFailure, bool>> execute(String jsonString) async {
-    return await repository.importPasswords(jsonString);
+    return await repository.importFromJson(jsonString);
   }
 }
