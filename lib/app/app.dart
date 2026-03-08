@@ -58,9 +58,7 @@ import '../../presentation/features/encryptor/encryptor_controller.dart';
 import '../../presentation/features/storage/storage_controller.dart';
 import '../../presentation/features/auth/auth_controller.dart';
 import '../../presentation/widgets/global_error_handler.dart';
-
 import '../../presentation/widgets/global_error_banner.dart';
-import '../../presentation/widgets/global_error_handler.dart';
 
 // Screens
 import '../../presentation/features/generator/generator_screen.dart';

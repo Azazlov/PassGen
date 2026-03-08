@@ -25,9 +25,10 @@ class PasswordImportRepositoryImpl implements PasswordImportRepository {
           .map((e) => PasswordEntry.fromJson(e as Map<String, dynamic>))
           .toList();
 
+      // ignore: dead_null_aware_expression
       final existing = await dataSource.getPasswords() ?? [];
       existing.addAll(passwords);
-      
+
       await dataSource.savePasswords(existing);
       return Right(true);
     } catch (e) {
@@ -52,10 +53,11 @@ class PasswordImportRepositoryImpl implements PasswordImportRepository {
       final passwords = (decrypted as List)
           .map((e) => PasswordEntry.fromJson(e as Map<String, dynamic>))
           .toList();
-      
+
+      // ignore: dead_null_aware_expression
       final existing = await dataSource.getPasswords() ?? [];
       existing.addAll(passwords);
-      
+
       await dataSource.savePasswords(existing);
       return Right(true);
     } catch (e) {

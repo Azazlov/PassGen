@@ -71,17 +71,19 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
         final success = result['success'] as bool? ?? false;
         final updated = result['updated'] as bool? ?? false;
 
-        if (success) {
+        if (success && context.mounted) {
           // Автообновление хранилища
           await storageController.loadPasswords();
-          
-          showAppDialog(
-            context: context,
-            title: 'Успешно',
-            content: updated
-                ? 'Пароль для сервиса обновлён'
-                : 'Пароль сохранён в хранилище',
-          );
+
+          if (context.mounted) {
+            showAppDialog(
+              context: context,
+              title: 'Успешно',
+              content: updated
+                  ? 'Пароль для сервиса обновлён'
+                  : 'Пароль сохранён в хранилище',
+            );
+          }
         } else {
           final error = controller.error;
           if (error != null && context.mounted) {

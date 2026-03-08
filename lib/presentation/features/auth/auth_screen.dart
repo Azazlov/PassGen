@@ -60,6 +60,8 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
       context.read<AuthController>().refreshState();
       // Запрашиваем фокус для захвата клавиатуры
       _keyboardFocusNode.requestFocus();
+      // Устанавливаем защиту от скриншотов
+      _setSecureFlag();
     });
   }
 

@@ -15,8 +15,8 @@ class PasswordExportRepositoryImpl implements PasswordExportRepository {
   @override
   Future<Either<StorageFailure, String>> exportToJson() async {
     try {
-      final passwords = await dataSource.getPasswords();
-      if (passwords == null) {
+      final passwords = await dataSource.getPasswords() ?? [];
+      if (passwords.isEmpty) {
         return Left(StorageFailure(message: 'Нет паролей для экспорта'));
       }
 
@@ -34,8 +34,8 @@ class PasswordExportRepositoryImpl implements PasswordExportRepository {
   @override
   Future<Either<StorageFailure, String>> exportToPassgen(String masterPassword) async {
     try {
-      final passwords = await dataSource.getPasswords();
-      if (passwords == null) {
+      final passwords = await dataSource.getPasswords() ?? [];
+      if (passwords.isEmpty) {
         return Left(StorageFailure(message: 'Нет паролей для экспорта'));
       }
 
