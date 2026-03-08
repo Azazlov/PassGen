@@ -79,16 +79,19 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
   Widget _buildLogsList(LogsController controller, ThemeData theme) {
     final groupedLogs = controller.getLogsByDate();
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: groupedLogs.entries.map((entry) {
+    return ListView.builder(
+      key: const PageStorageKey('logs_list'),
+      itemCount: groupedLogs.length,
+      itemBuilder: (context, index) {
+        final entry = groupedLogs.entries.elementAt(index);
         return _buildDateSection(entry.key, entry.value, controller, theme);
-      }).toList(),
+      },
     );
   }
 
   Widget _buildDateSection(String date, List<SecurityLog> logs, LogsController controller, ThemeData theme) {
     return Column(
+      key: ValueKey('date_$date'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
@@ -113,6 +116,7 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
     final time = controller.formatTime(log.timestamp);
 
     return Card(
+      key: ValueKey('log_${log.id}_${log.timestamp.millisecondsSinceEpoch}'),
       margin: const EdgeInsets.only(bottom: 4),
       child: ListTile(
         leading: CircleAvatar(

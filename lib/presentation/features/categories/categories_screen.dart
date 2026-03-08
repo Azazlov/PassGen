@@ -84,6 +84,7 @@ class _CategoriesScreenContent extends StatelessWidget {
 
     return Builder(
       builder: (context) => ListView(
+        key: const PageStorageKey('categories_list'),
         padding: const EdgeInsets.all(16),
         children: [
           if (systemCategories.isNotEmpty) ...[
@@ -115,6 +116,7 @@ class _CategoriesScreenContent extends StatelessWidget {
 
   Widget _buildCategoryTile(Category category, CategoriesController controller, ThemeData theme, {bool isSystem = false, required BuildContext context}) {
     return Card(
+      key: ValueKey('category_${category.id}'),
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: Text(category.icon ?? '📁', style: const TextStyle(fontSize: 24)),
@@ -126,10 +128,12 @@ class _CategoriesScreenContent extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
+                    key: ValueKey('edit_${category.id}'),
                     icon: const Icon(Icons.edit, size: 20),
                     onPressed: () => _showEditCategoryDialog(context, controller, category),
                   ),
                   IconButton(
+                    key: ValueKey('delete_${category.id}'),
                     icon: const Icon(Icons.delete, size: 20, color: Colors.red),
                     onPressed: () => _confirmDelete(context, controller, category),
                   ),

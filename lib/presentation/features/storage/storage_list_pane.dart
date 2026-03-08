@@ -70,12 +70,14 @@ class StorageListPane extends StatelessWidget {
                   searchQuery: controller.searchQuery,
                 )
               : ListView.builder(
+                  key: const PageStorageKey('storage_passwords_list'),
                   itemCount: controller.passwordsCount,
                   itemBuilder: (context, index) {
                     final entry = controller.passwords[index];
                     final isSelected = controller.selectedEntry == entry;
 
                     return AnimatedContainer(
+                      key: ValueKey('password_${entry.id}'),
                       duration: const Duration(milliseconds: 200),
                       color: isSelected
                           ? theme.colorScheme.primaryContainer
