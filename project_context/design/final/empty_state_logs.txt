@@ -1,0 +1,91 @@
+┌─────────────────────────────────────────────────┐
+│                                                 │
+│                                                 │
+│              [📋 Иконка 64px]                   │
+│                                                 │
+│                                                 │
+│       Нет событий безопасности                  │
+│                                                 │
+│    Здесь будут отображаться события входа       │
+│         и изменения настроек                    │
+│                                                 │
+│                                                 │
+│          [↻ Обновить]  [🗑️ Очистить логи]       │
+│                                                 │
+│                                                 │
+└─────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+ХАРАКТЕРИСТИКИ:
+───────────────────────────────────────────────────────────────
+• Иконка: Icons.receipt_long (64px, grey[400])
+• Заголовок: headlineSmall (24px, onSurface)
+• Подзаголовок: bodyMedium (14px, onSurfaceVariant, 2 строки)
+• Кнопки: TextButton (2 шт, horizontal)
+• Выравнивание: Center (mainAxisAlignment.center)
+
+═══════════════════════════════════════════════════════════════
+
+FLUTTER IMPLEMENTATION:
+───────────────────────────────────────────────────────────────
+
+class EmptyLogsState extends StatelessWidget {
+  final VoidCallback onRefresh;
+  final VoidCallback? onClearLogs;
+
+  const EmptyLogsState({
+    Key? key,
+    required this.onRefresh,
+    this.onClearLogs,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.receipt_long,
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Нет событий безопасности',
+            style: Theme.of(context).textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Здесь будут отображаться события входа\nи изменения настроек',
+            style: Theme.of(context).textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: onRefresh,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Обновить'),
+              ),
+              if (onClearLogs != null) ...[
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: onClearLogs,
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Очистить логи'),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+═══════════════════════════════════════════════════════════════

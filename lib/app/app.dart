@@ -57,6 +57,10 @@ import '../../presentation/features/generator/generator_controller.dart';
 import '../../presentation/features/encryptor/encryptor_controller.dart';
 import '../../presentation/features/storage/storage_controller.dart';
 import '../../presentation/features/auth/auth_controller.dart';
+import '../../presentation/widgets/global_error_handler.dart';
+
+import '../../presentation/widgets/global_error_banner.dart';
+import '../../presentation/widgets/global_error_handler.dart';
 
 // Screens
 import '../../presentation/features/generator/generator_screen.dart';
@@ -140,6 +144,9 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
         Provider(
           create: (context) => AppSettingsRepositoryImpl(),
+        ),
+        Provider(
+          create: (context) => GlobalErrorHandler(),
         ),
 
         // Use Cases
@@ -551,20 +558,29 @@ class _TabScaffoldState extends State<TabScaffold> {
         context.read<AuthController>().resetInactivityTimer();
       },
       child: Scaffold(
-        body: Row(
+        body: Column(
           children: [
-            // NavigationRail для планшетов/десктопов
-            if (!isMobile) _buildNavigationRail(),
+            // Глобальный баннер ошибок
+            const GlobalErrorBanner(),
             // Основной контент
             Expanded(
-              child: IndexedStack(
-                index: _currentTab.index,
-                children: const [
-                  GeneratorScreen(),
-                  EncryptorScreen(),
-                  StorageScreen(),
-                  SettingsScreen(),
-                  AboutScreen(),
+              child: Row(
+                children: [
+                  // NavigationRail для планшетов/десктопов
+                  if (!isMobile) _buildNavigationRail(),
+                  // Основной контент
+                  Expanded(
+                    child: IndexedStack(
+                      index: _currentTab.index,
+                      children: const [
+                        GeneratorScreen(),
+                        EncryptorScreen(),
+                        StorageScreen(),
+                        SettingsScreen(),
+                        AboutScreen(),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

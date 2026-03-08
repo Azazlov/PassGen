@@ -1,0 +1,76 @@
+┌─────────────────────────────────────────────────┐
+│                                                 │
+│                                                 │
+│              [📂 Иконка 64px]                   │
+│                                                 │
+│                                                 │
+│    Нет пользовательских категорий               │
+│                                                 │
+│    Используйте системные категории или          │
+│         создайте новую категорию                │
+│                                                 │
+│                                                 │
+│          [➕ Создать категорию]                 │
+│                                                 │
+│                                                 │
+└─────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+ХАРАКТЕРИСТИКИ:
+───────────────────────────────────────────────────────────────
+• Иконка: Icons.folder_open (64px, grey[400])
+• Заголовок: headlineSmall (24px, onSurface)
+• Подзаголовок: bodyMedium (14px, onSurfaceVariant, 2 строки)
+• Кнопка: ElevatedButton.icon (primary)
+• Выравнивание: Center (mainAxisAlignment.center)
+
+═══════════════════════════════════════════════════════════════
+
+FLUTTER IMPLEMENTATION:
+───────────────────────────────────────────────────────────────
+
+class EmptyCategoriesState extends StatelessWidget {
+  final VoidCallback onCreateCategory;
+
+  const EmptyCategoriesState({
+    Key? key,
+    required this.onCreateCategory,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.folder_open,
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Нет пользовательских категорий',
+            style: Theme.of(context).textTheme.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Используйте системные категории или\nсоздайте новую категорию',
+            style: Theme.of(context).textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: onCreateCategory,
+            icon: const Icon(Icons.add),
+            label: const Text('Создать категорию'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+═══════════════════════════════════════════════════════════════

@@ -18,6 +18,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.9.0] - 2026-03-08
+
+### Added
+
+#### Empty States (ТЗ раздел 7)
+- Created 4 ASCII mockups for empty states
+- Added Flutter implementation examples
+- Added to `guidelines/guidelines.md` (Section 11.6)
+
+**Empty State Types:**
+- `empty_state_storage.txt` — No passwords (archive icon)
+- `empty_state_search.txt` — No search results (search_off icon)
+- `empty_state_logs.txt` — No security events (receipt_long icon)
+- `empty_state_categories.txt` — No user categories (folder_open icon)
+
+**Common Elements:**
+- Icon: 64px, grey[400]
+- Title: headlineSmall (24px)
+- Subtitle: bodyMedium (14px, 2 lines max)
+- Action buttons: TextButton or ElevatedButton
+
+### Files Added
+- `final/empty_state_storage.txt` — empty storage mockup
+- `final/empty_state_search.txt` — empty search results mockup
+- `final/empty_state_logs.txt` — empty logs mockup
+- `final/empty_state_categories.txt` — empty categories mockup
+
+### Files Modified
+- `changelog.md` (this file) — v1.9.0 added
+
+---
+
 ## [1.8.0] - 2026-03-08
 
 ### Added
