@@ -18,6 +18,123 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.8.0] - 2026-03-08
+
+### Added
+
+#### Category Icons Specification (ТЗ раздел 6.4)
+- Created `category_icons_spec.md` with icon specifications
+- Documented all 7 existing category icons
+- Added Flutter implementation guide
+- Added accessibility guidelines for icons
+- Added asset organization structure
+
+**Icon Set:**
+- `social.svg` — Social networks (👥)
+- `finance.svg` — Banks, finance (🏦)
+- `shopping.svg` — Shopping, stores (🛒)
+- `entertainment.svg` — Entertainment, media (🎬)
+- `work.svg` — Work, business (💼)
+- `health.svg` — Health, medical (❤️)
+- `other.svg` — Default, other (📁)
+
+**Technical Specifications:**
+- Format: SVG 1.1
+- Size: 24x24px (viewBox)
+- Stroke: 2px
+- Fill: CurrentColor
+- Style: Material Design Outlined
+
+### Files Added
+- `prototypes/category_icons_spec.md` — category icon specifications
+
+### Files Modified
+- `changelog.md` (this file) — v1.8.0 added
+
+---
+
+## [1.7.0] - 2026-03-08
+
+### Added
+
+#### Error Handling UI Guidelines (ТЗ раздел 10)
+- Created `error_states_spec.md` with comprehensive error handling specs
+- Added Section 11 to `guidelines.md` — Error Handling UI
+- Added error type classification (Validation, Success, Warning, Critical)
+- Added validation error specifications for TextFields
+- Added success notification specs (SnackBar)
+- Added warning notification specs (Banner)
+- Added critical error specs (AlertDialog)
+- Added empty state specifications (No passwords, No search results)
+- Added loading state specs (Shimmer, Circular Progress)
+- Added error handling best practices
+- Added accessibility guidelines for errors
+
+**New Sections in guidelines.md:**
+- 11.1 Error Types
+- 11.2 Validation Errors
+- 11.3 Success Notifications (SnackBar)
+- 11.4 Warning Notifications (Banner)
+- 11.5 Critical Errors (AlertDialog)
+- 11.6 Empty States (No passwords, No search results)
+- 11.7 Loading States (Shimmer, Circular Progress)
+- 11.8 Best Practices
+- 11.9 Accessibility
+
+### Files Added
+- `prototypes/error_states_spec.md` — error handling specifications
+
+### Files Modified
+- `guidelines/guidelines.md` (Section 11 added) — error handling guidelines
+- `changelog.md` (this file) — v1.7.0 added
+
+---
+
+## [1.6.0] - 2026-03-08
+
+### Added
+
+#### Micro-interactions & Animations (ТЗ раздел 10.2)
+- Created `animations_spec.md` with full animation specifications
+- Created 3 Lottie JSON animations:
+  - `copy_success.json` — Checkmark animation (200ms, scale+fade)
+  - `pin_error.json` — Shake animation (400ms, 3 iterations)
+  - `strength_pulse.json` — Strength indicator pulse (300ms, color transition)
+- Added Animation Timing Chart with 9 animations
+- Added Flutter implementation examples for all animations
+- Added Reduced Motion support specifications
+
+**New Sections in guidelines.md:**
+- 8.1 Animation Timing Chart
+- 8.2 Button Press Animation (Ripple Effect)
+- 8.3 Copy Success Animation
+- 8.4 Password Strength Pulse
+- 8.5 PIN Input Animations (Dot Fill + Error Shake)
+- 8.6 List Item Swipe-to-Delete
+- 8.7 Page Transitions
+- 8.8 Loading States (Button + Shimmer)
+- 8.9 Reduced Motion Support
+
+### Updated
+
+#### Guidelines.md
+- Section 8 expanded from ~50 lines to ~300 lines
+- Added Lottie file references
+- Added Flutter implementation examples
+- Added Reduced Motion support guide
+
+### Files Added
+- `prototypes/animations_spec.md` — animation specifications
+- `animations/copy_success.json` — Lottie animation
+- `animations/pin_error.json` — Lottie animation
+- `animations/strength_pulse.json` — Lottie animation
+
+### Files Modified
+- `guidelines/guidelines.md` (Section 8 expanded) — animation guidelines
+- `changelog.md` (this file) — v1.6.0 added
+
+---
+
 ## [1.5.0] - 2026-03-08
 
 ### Added

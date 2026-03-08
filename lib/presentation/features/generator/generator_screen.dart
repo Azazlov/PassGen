@@ -11,6 +11,7 @@ import '../storage/storage_controller.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
+import '../../../domain/usecases/generator/validate_generator_settings_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/entities/category.dart';
 
@@ -24,6 +25,7 @@ class GeneratorScreen extends StatelessWidget {
       create: (_) => GeneratorController(
         generatePasswordUseCase: context.read<GeneratePasswordUseCase>(),
         savePasswordUseCase: context.read<SavePasswordUseCase>(),
+        validateSettingsUseCase: context.read<ValidateGeneratorSettingsUseCase>(),
         logEventUseCase: context.read<LogEventUseCase>(),
       ),
       child: const _GeneratorScreenContent(),

@@ -6,17 +6,21 @@ import '../../../domain/entities/password_generation_settings.dart';
 import '../../../domain/entities/password_result.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
+import '../../../domain/usecases/generator/validate_generator_settings_usecase.dart';
+import '../../../domain/validators/password_settings_validator.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
 
 /// Контроллер для экрана генератора паролей
 class GeneratorController extends ChangeNotifier {
   final GeneratePasswordUseCase generatePasswordUseCase;
   final SavePasswordUseCase savePasswordUseCase;
+  final ValidateGeneratorSettingsUseCase validateSettingsUseCase;
   final LogEventUseCase logEventUseCase;
 
   GeneratorController({
     required this.generatePasswordUseCase,
     required this.savePasswordUseCase,
+    required this.validateSettingsUseCase,
     required this.logEventUseCase,
   }) {
     _updateSettingsByStrength(_strength);
@@ -218,20 +222,29 @@ class GeneratorController extends ChangeNotifier {
       final min = int.tryParse(minLengthController.text) ?? _settings.lengthRange.first;
       final max = int.tryParse(maxLengthController.text) ?? _settings.lengthRange.last;
 
-      if (min > max || min < 1 || max > 64) {
-        throw const PasswordGenerationFailure(message: 'Недопустимый диапазон длин');
-      }
-
       _settings = _settings.copyWith(lengthRange: [min, max]);
 
-      final result = await generatePasswordUseCase.execute(_settings);
+      // Валидация настроек в Domain слое
+      final validationResult = validateSettingsUseCase.execute(_settings);
 
-      result.fold(
+      validationResult.fold(
         (failure) {
           _error = failure.message;
+          _isLoading = false;
+          notifyListeners();
+          return;
         },
-        (passwordResult) {
-          _lastResult = passwordResult;
+        (validatedSettings) async {
+          final result = await generatePasswordUseCase.execute(validatedSettings);
+
+          result.fold(
+            (failure) {
+              _error = failure.message;
+            },
+            (passwordResult) {
+              _lastResult = passwordResult;
+            },
+          );
         },
       );
     } catch (e) {

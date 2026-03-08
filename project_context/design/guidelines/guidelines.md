@@ -609,46 +609,290 @@ NavigationRail(
 
 ## 8. Animations & Micro-interactions
 
-### 8.1 Page Transitions
+### 8.1 Animation Timing Chart
 
-| Platform | Animation | Duration |
-|----------|-----------|----------|
-| Android/iOS | Cupertino (slide) | 300ms |
-| Desktop | Fade upwards | 250ms |
+| Animation | Duration | Easing | Use Case |
+|-----------|----------|--------|----------|
+| Button Press | 150ms | easeOut | All buttons |
+| Copy Success | 200ms | easeOutCubic | Password copy |
+| Strength Change | 300ms | easeInOut | Generator |
+| Page Transition | 300ms | easeInOut | Navigation |
+| PIN Dot Fill | 150ms | easeOut | Auth screen |
+| PIN Error Shake | 400ms | linear | Auth error |
+| List Swipe | 300ms | easeOut | Delete item |
+| Loading Spinner | 200ms | linear | Async operations |
+| Shimmer | 1500ms | linear | Loading state |
 
-### 8.2 Button Feedback
+---
 
-- **Tap**: Ripple effect (Material 3)
-- **Long Press**: Scale down to 95%
-- **Loading**: Spinner replaces text
+### 8.2 Button Press Animation (Ripple Effect)
 
-### 8.3 PIN Input Animation
+**Specification:**
+- **Type:** Material Ripple
+- **Duration:** 150ms
+- **Easing:** easeOut
+- **Color:** primary.withOpacity(0.1)
 
-```json
-{
-  "error": {
-    "type": "shake",
-    "duration": 400,
-    "offset": 10,
-    "iterations": 3
+**Implementation:**
+```dart
+InkWell(
+  onTap: () => onPressed(),
+  borderRadius: BorderRadius.circular(8),
+  splashColor: theme.colorScheme.primary.withOpacity(0.1),
+  highlightColor: theme.colorScheme.primary.withOpacity(0.05),
+  child: child,
+)
+```
+
+---
+
+### 8.3 Copy Success Animation
+
+**Specification:**
+- **Type:** Scale + Fade
+- **Duration:** 200ms
+- **Easing:** easeOutCubic
+- **Stages:** 3 (start, peak, end)
+
+**Animation Stages:**
+| Time | Scale | Opacity |
+|------|-------|---------|
+| 0ms | 0.8 | 0 |
+| 100ms | 1.2 | 1 |
+| 200ms | 1.0 | 1 |
+
+**Implementation:**
+```dart
+AnimatedScale(
+  scale: _copied ? 1.2 : 1.0,
+  duration: Duration(milliseconds: 100),
+  curve: Curves.easeOutCubic,
+  child: AnimatedOpacity(
+    opacity: _copied ? 1.0 : 0.0,
+    duration: Duration(milliseconds: 100),
+    child: Icon(Icons.check_circle, color: Colors.green),
+  ),
+)
+```
+
+**Lottie File:** `project_context/design/animations/copy_success.json`
+
+---
+
+### 8.4 Password Strength Pulse
+
+**Specification:**
+- **Type:** Color transition + Scale
+- **Duration:** 300ms
+- **Easing:** easeInOut
+- **Trigger:** Password change
+
+**Strength Colors:**
+| Strength | Color | Hex |
+|----------|-------|-----|
+| Very Weak | Red | #D32F2F |
+| Weak | Orange | #FF9800 |
+| Medium | Yellow | #FFEB3B |
+| Strong | Light Green | #8BC34A |
+| Very Strong | Green | #4CAF50 |
+
+**Implementation:**
+```dart
+AnimatedContainer(
+  duration: Duration(milliseconds: 300),
+  curve: Curves.easeInOut,
+  decoration: BoxDecoration(
+    color: strengthColor,
+    borderRadius: BorderRadius.circular(4),
+  ),
+  child: LinearProgressIndicator(
+    value: strengthValue,
+    backgroundColor: Colors.transparent,
+    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+  ),
+)
+```
+
+**Lottie File:** `project_context/design/animations/strength_pulse.json`
+
+---
+
+### 8.5 PIN Input Animations
+
+#### PIN Dot Fill
+
+| Property | Value |
+|----------|-------|
+| **Type** | Scale + Color |
+| **Duration** | 150ms |
+| **Easing** | easeOut |
+
+**Implementation:**
+```dart
+AnimatedContainer(
+  duration: Duration(milliseconds: 150),
+  width: isFilled ? 12 : 8,
+  height: isFilled ? 12 : 8,
+  decoration: BoxDecoration(
+    shape: BoxShape.circle,
+    color: isFilled ? primary : outline,
+  ),
+)
+```
+
+#### PIN Error Shake
+
+| Property | Value |
+|----------|-------|
+| **Type** | Shake |
+| **Duration** | 400ms |
+| **Iterations** | 3 |
+| **Offset** | 10px |
+
+**Implementation:**
+```dart
+AnimatedShake(
+  duration: Duration(milliseconds: 400),
+  offset: 10,
+  iterations: 3,
+  child: PINInputWidget(),
+)
+```
+
+**Lottie File:** `project_context/design/animations/pin_error.json`
+
+---
+
+### 8.6 List Item Swipe-to-Delete
+
+**Specification:**
+- **Type:** Dismissible
+- **Duration:** 300ms
+- **Direction:** EndToStart
+- **Background:** Red with delete icon
+
+**Implementation:**
+```dart
+Dismissible(
+  key: Key(entry.id),
+  direction: DismissDirection.endToStart,
+  background: Container(
+    color: Colors.red,
+    alignment: Alignment.centerRight,
+    padding: EdgeInsets.only(right: 16),
+    child: Icon(Icons.delete, color: Colors.white),
+  ),
+  confirmDismiss: (direction) => showDeleteConfirmation(),
+  onDismissed: (direction) => deletePassword(entry),
+  child: PasswordCard(entry: entry),
+)
+```
+
+---
+
+### 8.7 Page Transitions
+
+**Specification:**
+- **Type:** Fade + Slide
+- **Duration:** 300ms
+- **Easing:** easeInOut
+
+**Implementation:**
+```dart
+PageRouteBuilder(
+  pageBuilder: (context, animation, secondaryAnimation) => screen,
+  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: Offset(0.1, 0),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
+    );
   },
-  "success": {
-    "type": "fade_out",
-    "duration": 200
-  }
+  transitionDuration: Duration(milliseconds: 300),
+)
+```
+
+---
+
+### 8.8 Loading States
+
+#### Button Loading
+
+| Property | Value |
+|----------|-------|
+| **Type** | Text → Spinner |
+| **Duration** | 200ms |
+| **Widget** | CircularProgressIndicator |
+
+**Implementation:**
+```dart
+AnimatedSwitcher(
+  duration: Duration(milliseconds: 200),
+  child: isLoading
+      ? SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: theme.colorScheme.onPrimary,
+          ),
+        )
+      : Text(label),
+)
+```
+
+#### List Loading (Shimmer)
+
+| Property | Value |
+|----------|-------|
+| **Type** | Shimmer Effect |
+| **Duration** | 1.5s |
+| **Loop** | true |
+
+**Implementation:**
+```dart
+Shimmer.fromColors(
+  baseColor: Colors.grey[300]!,
+  highlightColor: Colors.grey[100]!,
+  child: ListView.builder(
+    itemCount: 5,
+    itemBuilder: (_, __) => PasswordCardShimmer(),
+  ),
+)
+```
+
+---
+
+### 8.9 Reduced Motion Support
+
+**Detection:**
+```dart
+final reduceMotion = MediaQuery.of(context).disableAnimations;
+```
+
+**Fallback:**
+```dart
+if (reduceMotion) {
+  // Instant transition
+  Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+} else {
+  // Animated transition
+  Navigator.push(context, createFadeSlideRoute(screen));
 }
 ```
 
-### 8.4 Password Generation
-
-- **Generating**: Pulse animation on password field
-- **Complete**: Scale in + fade in
-- **Copy**: Checkmark animation (200ms)
-
-### 8.5 Strength Indicator
-
-- **Change**: Smooth color transition (300ms)
-- **Update**: Progress bar animation
+**Animation Preferences:**
+| Animation | Normal | Reduced Motion |
+|-----------|--------|----------------|
+| Page Transition | 300ms fade+slide | Instant |
+| Button Ripple | 150ms | No ripple |
+| Copy Success | 200ms scale | Instant checkmark |
+| Strength Pulse | 300ms | Color change only |
 
 ---
 
@@ -1193,6 +1437,242 @@ project_context/design/
 - [x] Dialog
 - [x] Progress Indicator
 - [x] Toast
+
+---
+
+## 11. Error Handling UI (ТЗ раздел 10)
+
+### 11.1 Error Types
+
+| Type | Component | Duration | Example |
+|------|-----------|----------|---------|
+| **Validation Error** | TextField helper text | While active | "PIN: 4-8 digits" |
+| **Success** | SnackBar | 2 seconds | "Password copied" |
+| **Warning** | Banner | Until dismissed | "Buffer clears in 60s" |
+| **Critical Error** | AlertDialog | Until action | "Encryption failed" |
+
+---
+
+### 11.2 Validation Errors
+
+**TextField with error:**
+```dart
+TextFormField(
+  controller: pinController,
+  decoration: InputDecoration(
+    labelText: 'PIN-код',
+    errorText: _pinError,
+    errorIcon: Icon(Icons.error, size: 20),
+  ),
+  validator: (value) {
+    if (value == null || value.isEmpty) return 'Введите PIN-код';
+    if (!RegExp(r'^\d{4,8}$').hasMatch(value)) {
+      return 'PIN должен быть 4-8 цифр';
+    }
+    return null;
+  },
+)
+```
+
+**Error messages:**
+| Field | Error | Message |
+|-------|-------|---------|
+| PIN | Empty | "Введите PIN-код" |
+| PIN | Invalid | "PIN должен быть 4-8 цифр" |
+| Password | Weak | "Пароль слишком слабый" |
+
+---
+
+### 11.3 Success Notifications (SnackBar)
+
+**Specification:**
+- **Duration:** 2 seconds
+- **Color:** success (#4CAF50)
+- **Icon:** Check circle
+- **Position:** Bottom (floating)
+
+**Implementation:**
+```dart
+ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(
+    content: Row(
+      children: [
+        Icon(Icons.check_circle, color: Colors.white),
+        SizedBox(width: 8),
+        Text('Пароль скопирован!'),
+      ],
+    ),
+    backgroundColor: Theme.of(context).colorScheme.success,
+    behavior: SnackBarBehavior.floating,
+    duration: Duration(seconds: 2),
+  ),
+);
+```
+
+---
+
+### 11.4 Warning Notifications (Banner)
+
+**Specification:**
+- **Position:** Top of screen
+- **Color:** warning (#FF9800)
+- **Icon:** Warning icon
+- **Dismiss:** Manual or auto
+
+**Implementation:**
+```dart
+if (_showClipboardWarning) {
+  Banner(
+    message: 'Буфер будет очищен через 60 секунд',
+    location: BannerLocation.top,
+    color: Theme.of(context).colorScheme.warning,
+  );
+}
+```
+
+---
+
+### 11.5 Critical Errors (AlertDialog)
+
+**Specification:**
+- **Modal:** Yes (blocks interaction)
+- **Color:** error (#D32F2F)
+- **Icon:** Error icon (48px)
+- **Actions:** Retry / Cancel
+
+**Implementation:**
+```dart
+showDialog(
+  context: context,
+  builder: (context) => AlertDialog(
+    icon: Icon(Icons.error, color: Colors.red, size: 48),
+    title: Text('Ошибка шифрования'),
+    content: Text('Не удалось зашифровать данные'),
+    actions: [
+      TextButton(onPressed: () => Navigator.pop(context), child: Text('Отмена')),
+      ElevatedButton(onPressed: () => _retry(), child: Text('Повторить')),
+    ],
+  ),
+);
+```
+
+**Critical error messages:**
+| Error | Title | Message |
+|-------|-------|---------|
+| Encryption failed | "Ошибка шифрования" | "Не удалось зашифровать данные" |
+| Auth failed | "Ошибка аутентификации" | "Неверный PIN-код" |
+| Database error | "Ошибка БД" | "Не удалось сохранить данные" |
+
+---
+
+### 11.6 Empty States
+
+#### No Passwords
+```dart
+Center(
+  child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.archive, size: 64, color: Colors.grey),
+      SizedBox(height: 16),
+      Text('Нет сохранённых паролей', style: theme.headlineSmall),
+      SizedBox(height: 8),
+      Text('Создайте первый пароль', style: theme.bodyMedium),
+      SizedBox(height: 24),
+      ElevatedButton.icon(
+        onPressed: _addPassword,
+        icon: Icon(Icons.add),
+        label: Text('Добавить пароль'),
+      ),
+    ],
+  ),
+)
+```
+
+#### No Search Results
+```dart
+Center(
+  child: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.search_off, size: 64, color: Colors.grey),
+      SizedBox(height: 16),
+      Text('Ничего не найдено', style: theme.headlineSmall),
+      SizedBox(height: 8),
+      Text('По запросу "[query]"', style: theme.bodyMedium),
+      SizedBox(height: 24),
+      TextButton(onPressed: _clearSearch, child: Text('Очистить поиск')),
+    ],
+  ),
+)
+```
+
+---
+
+### 11.7 Loading States
+
+#### Shimmer Effect
+```dart
+Shimmer.fromColors(
+  baseColor: Colors.grey[300]!,
+  highlightColor: Colors.grey[100]!,
+  child: ListView.builder(
+    itemCount: 5,
+    itemBuilder: (_, __) => PasswordCardShimmer(),
+  ),
+)
+```
+
+#### Circular Progress
+```dart
+CircularProgressIndicator(
+  strokeWidth: 4,
+  color: Theme.of(context).colorScheme.primary,
+)
+```
+
+---
+
+### 11.8 Best Practices
+
+**User-friendly messages:**
+- ✅ "Неверный PIN-код. Осталось 3 попытки."
+- ❌ "Error 401: Unauthorized"
+
+**Error recovery:**
+1. Clear explanation
+2. Actionable steps
+3. Recovery option (retry/cancel)
+
+**Error logging:**
+```dart
+_logEventUseCase.execute(
+  EventTypes.errorOccurred,
+  details: {
+    'error_type': error.type,
+    'error_message': error.message,
+    'screen': 'StorageScreen',
+    'action': 'delete_password',
+  },
+);
+```
+
+---
+
+### 11.9 Accessibility
+
+**Screen reader:**
+```dart
+Semantics(
+  label: 'Ошибка: PIN должен быть 4-8 цифр',
+  isError: true,
+  child: Text(_pinError),
+)
+```
+
+**Color independence:**
+- ✅ Error icon + red color + text
+- ❌ Only red text
 
 ---
 

@@ -49,6 +49,8 @@ import '../../domain/usecases/category/update_category_usecase.dart';
 import '../../domain/usecases/settings/get_setting_usecase.dart';
 import '../../domain/usecases/settings/set_setting_usecase.dart';
 import '../../domain/usecases/settings/remove_setting_usecase.dart';
+import '../../domain/usecases/generator/validate_generator_settings_usecase.dart';
+import '../../domain/validators/password_settings_validator.dart';
 
 // Controllers
 import '../../presentation/features/generator/generator_controller.dart';
@@ -141,6 +143,14 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
 
         // Use Cases
+        Provider(
+          create: (context) => const PasswordSettingsValidator(),
+        ),
+        Provider(
+          create: (context) => ValidateGeneratorSettingsUseCase(
+            context.read<PasswordSettingsValidator>(),
+          ),
+        ),
         Provider(
           create: (context) => GeneratePasswordUseCase(
             context.read<PasswordGeneratorRepositoryImpl>(),
@@ -258,19 +268,22 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
 
         // Controllers
-        ChangeNotifierProxyProvider3<
+        ChangeNotifierProxyProvider4<
           GeneratePasswordUseCase,
           SavePasswordUseCase,
+          ValidateGeneratorSettingsUseCase,
           LogEventUseCase,
           GeneratorController>(
           create: (context) => GeneratorController(
             generatePasswordUseCase: context.read<GeneratePasswordUseCase>(),
             savePasswordUseCase: context.read<SavePasswordUseCase>(),
+            validateSettingsUseCase: context.read<ValidateGeneratorSettingsUseCase>(),
             logEventUseCase: context.read<LogEventUseCase>(),
           ),
-          update: (_, genUc, saveUc, logUc, controller) => GeneratorController(
+          update: (_, genUc, saveUc, valUc, logUc, controller) => GeneratorController(
             generatePasswordUseCase: genUc,
             savePasswordUseCase: saveUc,
+            validateSettingsUseCase: valUc,
             logEventUseCase: logUc,
           ),
         ),
