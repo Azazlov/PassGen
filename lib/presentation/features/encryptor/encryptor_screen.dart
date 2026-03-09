@@ -3,13 +3,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
+import '../../../domain/usecases/encryptor/decrypt_message_usecase.dart';
+import '../../../domain/usecases/encryptor/encrypt_message_usecase.dart';
 import '../../../presentation/widgets/app_button.dart';
+import '../../../presentation/widgets/app_dialogs.dart';
 import '../../../presentation/widgets/app_text_field.dart';
 import '../../../presentation/widgets/copyable_password.dart';
-import '../../../presentation/widgets/app_dialogs.dart';
 import 'encryptor_controller.dart';
-import '../../../domain/usecases/encryptor/encrypt_message_usecase.dart';
-import '../../../domain/usecases/encryptor/decrypt_message_usecase.dart';
 
 /// Экран шифратора/дешифратора
 class EncryptorScreen extends StatelessWidget {
@@ -31,7 +32,8 @@ class _EncryptorScreenContent extends StatefulWidget {
   const _EncryptorScreenContent();
 
   @override
-  State<_EncryptorScreenContent> createState() => _EncryptorScreenContentState();
+  State<_EncryptorScreenContent> createState() =>
+      _EncryptorScreenContentState();
 }
 
 class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
@@ -46,7 +48,9 @@ class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
         actions: [
           IconButton(
             icon: Icon(controller.isEncryptMode ? Icons.lock_open : Icons.lock),
-            tooltip: controller.isEncryptMode ? 'Режим дешифрования' : 'Режим шифрования',
+            tooltip: controller.isEncryptMode
+                ? 'Режим дешифрования'
+                : 'Режим шифрования',
             onPressed: controller.toggleMode,
           ),
         ],
@@ -71,7 +75,9 @@ class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            controller.isEncryptMode ? 'Шифрование' : 'Дешифрование',
+                            controller.isEncryptMode
+                                ? 'Шифрование'
+                                : 'Дешифрование',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -81,7 +87,9 @@ class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
                                 ? 'Зашифруйте сообщение паролем'
                                 : 'Расшифруйте сообщение паролем',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
                             ),
                           ),
                         ],
@@ -95,7 +103,10 @@ class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
             // Результат
             CopyablePassword(
               label: controller.resultLabel,
-              text: controller.result.substring(0, min(40, controller.result.length)),
+              text: controller.result.substring(
+                0,
+                min(40, controller.result.length),
+              ),
               isEmpty: controller.result.isEmpty,
               onTap: () {
                 Clipboard.setData(ClipboardData(text: controller.result));
@@ -111,8 +122,12 @@ class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
 
             // Поле сообщения/шифра
             AppTextField(
-              label: controller.isEncryptMode ? 'Сообщение' : 'Зашифрованные данные',
-              hint: controller.isEncryptMode ? 'Введите текст для шифрования' : 'Вставьте зашифрованные данные',
+              label: controller.isEncryptMode
+                  ? 'Сообщение'
+                  : 'Зашифрованные данные',
+              hint: controller.isEncryptMode
+                  ? 'Введите текст для шифрования'
+                  : 'Вставьте зашифрованные данные',
               controller: controller.messageController,
               keyboardType: TextInputType.multiline,
             ),
@@ -150,9 +165,7 @@ class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
                 ),
                 child: Text(
                   controller.error!,
-                  style: TextStyle(
-                    color: theme.colorScheme.onErrorContainer,
-                  ),
+                  style: TextStyle(color: theme.colorScheme.onErrorContainer),
                 ),
               ),
 

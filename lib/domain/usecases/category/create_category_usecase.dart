@@ -3,11 +3,10 @@ import '../../repositories/category_repository.dart';
 
 /// Использование: Создание категории
 class CreateCategoryUseCase {
+  const CreateCategoryUseCase(this.repository);
   final CategoryRepository repository;
 
-  const CreateCategoryUseCase(this.repository);
-
   Future<Category> execute(Category category) async {
-    return await repository.create(category);
+    return repository.create(category);
   }
 }

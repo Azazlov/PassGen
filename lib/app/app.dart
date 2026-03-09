@@ -1,72 +1,67 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
-// Core
-import '../core/constants/breakpoints.dart';
-import '../core/constants/spacing.dart';
-
+import '../../data/datasources/auth_local_datasource.dart';
 // Data sources
 import '../../data/datasources/encryptor_local_datasource.dart';
 import '../../data/datasources/password_generator_local_datasource.dart';
 import '../../data/datasources/storage_local_datasource.dart';
-import '../../data/datasources/auth_local_datasource.dart';
-
+import '../../data/formats/passgen_format.dart';
+import '../../data/repositories/app_settings_repository_impl.dart';
+import '../../data/repositories/auth_repository_impl.dart';
+import '../../data/repositories/category_repository_impl.dart';
+import '../../data/repositories/encryptor_repository_impl.dart';
+import '../../data/repositories/password_export_repository_impl.dart';
 // Repositories
 import '../../data/repositories/password_generator_repository_impl.dart';
-import '../../data/repositories/encryptor_repository_impl.dart';
-import '../../data/repositories/storage_repository_impl.dart';
-import '../../data/repositories/password_export_repository_impl.dart';
 import '../../data/repositories/password_import_repository_impl.dart';
-import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/security_log_repository_impl.dart';
-import '../../data/repositories/category_repository_impl.dart';
-import '../../data/repositories/app_settings_repository_impl.dart';
-import '../../data/formats/passgen_format.dart';
-
+import '../../data/repositories/storage_repository_impl.dart';
+import '../../domain/usecases/auth/change_pin_usecase.dart';
+import '../../domain/usecases/auth/get_auth_state_usecase.dart';
+import '../../domain/usecases/auth/remove_pin_usecase.dart';
+import '../../domain/usecases/auth/setup_pin_usecase.dart';
+import '../../domain/usecases/auth/verify_pin_usecase.dart';
+import '../../domain/usecases/category/create_category_usecase.dart';
+import '../../domain/usecases/category/delete_category_usecase.dart';
+import '../../domain/usecases/category/get_categories_usecase.dart';
+import '../../domain/usecases/category/update_category_usecase.dart';
+import '../../domain/usecases/encryptor/decrypt_message_usecase.dart';
+import '../../domain/usecases/encryptor/encrypt_message_usecase.dart';
+import '../../domain/usecases/generator/validate_generator_settings_usecase.dart';
+import '../../domain/usecases/log/get_logs_usecase.dart';
+import '../../domain/usecases/log/log_event_usecase.dart';
 // Use cases
 import '../../domain/usecases/password/generate_password_usecase.dart';
 import '../../domain/usecases/password/save_password_usecase.dart';
-import '../../domain/usecases/encryptor/encrypt_message_usecase.dart';
-import '../../domain/usecases/encryptor/decrypt_message_usecase.dart';
-import '../../domain/usecases/storage/get_passwords_usecase.dart';
-import '../../domain/usecases/storage/delete_password_usecase.dart';
-import '../../domain/usecases/storage/export_passwords_usecase.dart';
-import '../../domain/usecases/storage/import_passwords_usecase.dart';
-import '../../domain/usecases/storage/export_passgen_usecase.dart';
-import '../../domain/usecases/storage/import_passgen_usecase.dart';
-import '../../domain/usecases/auth/setup_pin_usecase.dart';
-import '../../domain/usecases/auth/verify_pin_usecase.dart';
-import '../../domain/usecases/auth/change_pin_usecase.dart';
-import '../../domain/usecases/auth/remove_pin_usecase.dart';
-import '../../domain/usecases/auth/get_auth_state_usecase.dart';
-import '../../domain/usecases/log/log_event_usecase.dart';
-import '../../domain/usecases/log/get_logs_usecase.dart';
-import '../../domain/usecases/category/get_categories_usecase.dart';
-import '../../domain/usecases/category/create_category_usecase.dart';
-import '../../domain/usecases/category/delete_category_usecase.dart';
-import '../../domain/usecases/category/update_category_usecase.dart';
 import '../../domain/usecases/settings/get_setting_usecase.dart';
-import '../../domain/usecases/settings/set_setting_usecase.dart';
 import '../../domain/usecases/settings/remove_setting_usecase.dart';
-import '../../domain/usecases/generator/validate_generator_settings_usecase.dart';
+import '../../domain/usecases/settings/set_setting_usecase.dart';
+import '../../domain/usecases/storage/delete_password_usecase.dart';
+import '../../domain/usecases/storage/export_passgen_usecase.dart';
+import '../../domain/usecases/storage/export_passwords_usecase.dart';
+import '../../domain/usecases/storage/get_passwords_usecase.dart';
+import '../../domain/usecases/storage/import_passgen_usecase.dart';
+import '../../domain/usecases/storage/import_passwords_usecase.dart';
 import '../../domain/validators/password_settings_validator.dart';
-
+import '../../presentation/features/about/about_screen.dart';
+import '../../presentation/features/auth/auth_controller.dart';
+import '../../presentation/features/auth/auth_screen.dart';
+import '../../presentation/features/encryptor/encryptor_controller.dart';
+import '../../presentation/features/encryptor/encryptor_screen.dart';
 // Controllers
 import '../../presentation/features/generator/generator_controller.dart';
-import '../../presentation/features/encryptor/encryptor_controller.dart';
-import '../../presentation/features/storage/storage_controller.dart';
-import '../../presentation/features/auth/auth_controller.dart';
-import '../../presentation/widgets/global_error_handler.dart';
-import '../../presentation/widgets/global_error_banner.dart';
-
 // Screens
 import '../../presentation/features/generator/generator_screen.dart';
-import '../../presentation/features/encryptor/encryptor_screen.dart';
-import '../../presentation/features/storage/storage_screen.dart';
-import '../../presentation/features/about/about_screen.dart';
-import '../../presentation/features/auth/auth_screen.dart';
 import '../../presentation/features/settings/settings_screen.dart';
+import '../../presentation/features/storage/storage_controller.dart';
+import '../../presentation/features/storage/storage_screen.dart';
+import '../../presentation/widgets/global_error_banner.dart';
+import '../../presentation/widgets/global_error_handler.dart';
+// Core
+import '../core/constants/breakpoints.dart';
+import '../core/constants/spacing.dart';
 
 /// Перечисление для типобезопасного управления вкладками
 enum AppTab {
@@ -80,7 +75,8 @@ enum AppTab {
   final IconData icon;
   final String label;
 
-  static AppTab fromIndex(int index) => values[index.clamp(0, values.length - 1)];
+  static AppTab fromIndex(int index) =>
+      values[index.clamp(0, values.length - 1)];
 }
 
 class PasswordGeneratorApp extends StatelessWidget {
@@ -108,17 +104,13 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
-          create: (context) => EncryptorRepositoryImpl(
-            context.read<EncryptorLocalDataSource>(),
-          ),
+          create: (context) =>
+              EncryptorRepositoryImpl(context.read<EncryptorLocalDataSource>()),
         ),
+        Provider(create: (context) => PassgenFormat()),
         Provider(
-          create: (context) => PassgenFormat(),
-        ),
-        Provider(
-          create: (context) => StorageRepositoryImpl(
-            context.read<StorageLocalDataSource>(),
-          ),
+          create: (context) =>
+              StorageRepositoryImpl(context.read<StorageLocalDataSource>()),
         ),
         Provider(
           create: (context) => PasswordExportRepositoryImpl(
@@ -133,27 +125,16 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
-          create: (context) => AuthRepositoryImpl(
-            context.read<AuthLocalDataSource>(),
-          ),
+          create: (context) =>
+              AuthRepositoryImpl(context.read<AuthLocalDataSource>()),
         ),
-        Provider(
-          create: (context) => SecurityLogRepositoryImpl(),
-        ),
-        Provider(
-          create: (context) => CategoryRepositoryImpl(),
-        ),
-        Provider(
-          create: (context) => AppSettingsRepositoryImpl(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GlobalErrorHandler(),
-        ),
+        Provider(create: (context) => SecurityLogRepositoryImpl()),
+        Provider(create: (context) => CategoryRepositoryImpl()),
+        Provider(create: (context) => AppSettingsRepositoryImpl()),
+        ChangeNotifierProvider(create: (context) => GlobalErrorHandler()),
 
         // Use Cases
-        Provider(
-          create: (context) => const PasswordSettingsValidator(),
-        ),
+        Provider(create: (context) => const PasswordSettingsValidator()),
         Provider(
           create: (context) => ValidateGeneratorSettingsUseCase(
             context.read<PasswordSettingsValidator>(),
@@ -170,24 +151,20 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
-          create: (context) => EncryptMessageUseCase(
-            context.read<EncryptorRepositoryImpl>(),
-          ),
+          create: (context) =>
+              EncryptMessageUseCase(context.read<EncryptorRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => DecryptMessageUseCase(
-            context.read<EncryptorRepositoryImpl>(),
-          ),
+          create: (context) =>
+              DecryptMessageUseCase(context.read<EncryptorRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => GetPasswordsUseCase(
-            context.read<StorageRepositoryImpl>(),
-          ),
+          create: (context) =>
+              GetPasswordsUseCase(context.read<StorageRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => DeletePasswordUseCase(
-            context.read<StorageRepositoryImpl>(),
-          ),
+          create: (context) =>
+              DeletePasswordUseCase(context.read<StorageRepositoryImpl>()),
         ),
         Provider(
           create: (context) => ExportPasswordsUseCase(
@@ -210,69 +187,56 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
-          create: (context) => VerifyPinUseCase(
-            context.read<AuthRepositoryImpl>(),
-          ),
+          create: (context) =>
+              VerifyPinUseCase(context.read<AuthRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => ChangePinUseCase(
-            context.read<AuthRepositoryImpl>(),
-          ),
+          create: (context) =>
+              ChangePinUseCase(context.read<AuthRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => RemovePinUseCase(
-            context.read<AuthRepositoryImpl>(),
-          ),
+          create: (context) =>
+              RemovePinUseCase(context.read<AuthRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => GetAuthStateUseCase(
-            context.read<AuthRepositoryImpl>(),
-          ),
+          create: (context) =>
+              GetAuthStateUseCase(context.read<AuthRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => LogEventUseCase(
-            context.read<SecurityLogRepositoryImpl>(),
-          ),
+          create: (context) =>
+              LogEventUseCase(context.read<SecurityLogRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => GetLogsUseCase(
-            context.read<SecurityLogRepositoryImpl>(),
-          ),
+          create: (context) =>
+              GetLogsUseCase(context.read<SecurityLogRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => GetCategoriesUseCase(
-            context.read<CategoryRepositoryImpl>(),
-          ),
+          create: (context) =>
+              GetCategoriesUseCase(context.read<CategoryRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => CreateCategoryUseCase(
-            context.read<CategoryRepositoryImpl>(),
-          ),
+          create: (context) =>
+              CreateCategoryUseCase(context.read<CategoryRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => DeleteCategoryUseCase(
-            context.read<CategoryRepositoryImpl>(),
-          ),
+          create: (context) =>
+              DeleteCategoryUseCase(context.read<CategoryRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => UpdateCategoryUseCase(
-            context.read<CategoryRepositoryImpl>(),
-          ),
+          create: (context) =>
+              UpdateCategoryUseCase(context.read<CategoryRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => GetSettingUseCase(
-            context.read<AppSettingsRepositoryImpl>(),
-          ),
+          create: (context) =>
+              GetSettingUseCase(context.read<AppSettingsRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => SetSettingUseCase(
-            context.read<AppSettingsRepositoryImpl>(),
-          ),
+          create: (context) =>
+              SetSettingUseCase(context.read<AppSettingsRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => RemoveSettingUseCase(
-            context.read<AppSettingsRepositoryImpl>(),
-          ),
+          create: (context) =>
+              RemoveSettingUseCase(context.read<AppSettingsRepositoryImpl>()),
         ),
 
         // Controllers
@@ -281,21 +245,28 @@ class PasswordGeneratorApp extends StatelessWidget {
           SavePasswordUseCase,
           ValidateGeneratorSettingsUseCase,
           LogEventUseCase,
-          GeneratorController>(
+          GeneratorController
+        >(
           create: (context) => GeneratorController(
             generatePasswordUseCase: context.read<GeneratePasswordUseCase>(),
             savePasswordUseCase: context.read<SavePasswordUseCase>(),
-            validateSettingsUseCase: context.read<ValidateGeneratorSettingsUseCase>(),
+            validateSettingsUseCase: context
+                .read<ValidateGeneratorSettingsUseCase>(),
             logEventUseCase: context.read<LogEventUseCase>(),
           ),
-          update: (_, genUc, saveUc, valUc, logUc, controller) => GeneratorController(
-            generatePasswordUseCase: genUc,
-            savePasswordUseCase: saveUc,
-            validateSettingsUseCase: valUc,
-            logEventUseCase: logUc,
-          ),
+          update: (_, genUc, saveUc, valUc, logUc, controller) =>
+              GeneratorController(
+                generatePasswordUseCase: genUc,
+                savePasswordUseCase: saveUc,
+                validateSettingsUseCase: valUc,
+                logEventUseCase: logUc,
+              ),
         ),
-        ChangeNotifierProxyProvider2<EncryptMessageUseCase, DecryptMessageUseCase, EncryptorController>(
+        ChangeNotifierProxyProvider2<
+          EncryptMessageUseCase,
+          DecryptMessageUseCase,
+          EncryptorController
+        >(
           create: (context) => EncryptorController(
             encryptUseCase: context.read<EncryptMessageUseCase>(),
             decryptUseCase: context.read<DecryptMessageUseCase>(),
@@ -318,9 +289,8 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
-          create: (context) => SetupPinUseCase(
-            context.read<AuthRepositoryImpl>(),
-          ),
+          create: (context) =>
+              SetupPinUseCase(context.read<AuthRepositoryImpl>()),
         ),
         ChangeNotifierProxyProvider6<
           SetupPinUseCase,
@@ -329,7 +299,8 @@ class PasswordGeneratorApp extends StatelessWidget {
           RemovePinUseCase,
           GetAuthStateUseCase,
           LogEventUseCase,
-          AuthController>(
+          AuthController
+        >(
           create: (context) => AuthController(
             setupPinUseCase: context.read<SetupPinUseCase>(),
             verifyPinUseCase: context.read<VerifyPinUseCase>(),
@@ -338,14 +309,24 @@ class PasswordGeneratorApp extends StatelessWidget {
             getAuthStateUseCase: context.read<GetAuthStateUseCase>(),
             logEventUseCase: context.read<LogEventUseCase>(),
           ),
-          update: (_, setupUc, verifyUc, changeUc, removeUc, getStateUc, logUc, controller) => AuthController(
-            setupPinUseCase: setupUc,
-            verifyPinUseCase: verifyUc,
-            changePinUseCase: changeUc,
-            removePinUseCase: removeUc,
-            getAuthStateUseCase: getStateUc,
-            logEventUseCase: logUc,
-          ),
+          update:
+              (
+                _,
+                setupUc,
+                verifyUc,
+                changeUc,
+                removeUc,
+                getStateUc,
+                logUc,
+                controller,
+              ) => AuthController(
+                setupPinUseCase: setupUc,
+                verifyPinUseCase: verifyUc,
+                changePinUseCase: changeUc,
+                removePinUseCase: removeUc,
+                getAuthStateUseCase: getStateUc,
+                logEventUseCase: logUc,
+              ),
         ),
       ],
       child: MaterialApp(
@@ -381,7 +362,7 @@ final ColorScheme darkColorScheme = ColorScheme.fromSeed(
 
 ThemeData getTheme(bool isDarkMode) {
   final baseTheme = isDarkMode ? ThemeData.dark() : ThemeData.light();
-  
+
   return ThemeData(
     useMaterial3: true,
     colorScheme: isDarkMode ? darkColorScheme : lightColorScheme,
@@ -392,42 +373,24 @@ ThemeData getTheme(bool isDarkMode) {
         fontWeight: FontWeight.w400,
         letterSpacing: -0.25,
       ),
-      headlineLarge: const TextStyle(
-        fontSize: 32,
-        fontWeight: FontWeight.w600,
-      ),
+      headlineLarge: const TextStyle(fontSize: 32, fontWeight: FontWeight.w600),
       headlineMedium: const TextStyle(
         fontSize: 28,
         fontWeight: FontWeight.w600,
       ),
-      titleLarge: const TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-      ),
-      titleMedium: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w500,
-      ),
-      bodyLarge: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-      ),
-      bodyMedium: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-      ),
-      labelLarge: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-      ),
+      titleLarge: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+      titleMedium: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      bodyLarge: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+      bodyMedium: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+      labelLarge: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
     ),
     appBarTheme: AppBarTheme(
       centerTitle: true,
-      backgroundColor: isDarkMode 
-          ? darkColorScheme.surface 
+      backgroundColor: isDarkMode
+          ? darkColorScheme.surface
           : lightColorScheme.surface,
-      foregroundColor: isDarkMode 
-          ? darkColorScheme.onSurface 
+      foregroundColor: isDarkMode
+          ? darkColorScheme.onSurface
           : lightColorScheme.onSurface,
     ),
     // Кнопки высотой 48dp согласно ТЗ
@@ -438,16 +401,12 @@ ThemeData getTheme(bool isDarkMode) {
           horizontal: Spacing.lg,
           vertical: Spacing.md,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     ),
     cardTheme: CardThemeData(
       elevation: isDarkMode ? 0 : 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
     // Анимации переходов согласно ТЗ (Раздел 10.1)
     pageTransitionsTheme: const PageTransitionsTheme(
@@ -515,7 +474,8 @@ class _TabScaffoldState extends State<TabScaffold> {
   /// NavigationRail для планшетов и десктопов
   Widget _buildNavigationRail() {
     final theme = Theme.of(context);
-    final isDesktop = MediaQuery.of(context).size.width >= Breakpoints.desktopMin;
+    final isDesktop =
+        MediaQuery.of(context).size.width >= Breakpoints.desktopMin;
 
     return NavigationRail(
       selectedIndex: _currentTab.index,
@@ -533,13 +493,15 @@ class _TabScaffoldState extends State<TabScaffold> {
       unselectedLabelTextStyle: theme.textTheme.labelLarge!.copyWith(
         color: theme.colorScheme.onSurface.withOpacity(0.6),
       ),
-      labelType: isDesktop ? NavigationRailLabelType.all : NavigationRailLabelType.selected,
+      labelType: isDesktop
+          ? NavigationRailLabelType.all
+          : NavigationRailLabelType.selected,
       minWidth: isDesktop ? 80 : 72,
       destinations: AppTab.values.map((tab) {
         return NavigationRailDestination(
           icon: Icon(tab.icon),
           label: Text(tab.label),
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: Spacing.sm,
             vertical: Spacing.md,
           ),

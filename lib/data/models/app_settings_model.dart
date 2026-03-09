@@ -1,9 +1,5 @@
 /// Модель настройки приложения для базы данных
 class AppSettingsModel {
-  final String key;
-  final String value;
-  final bool encrypted;
-
   const AppSettingsModel({
     required this.key,
     required this.value,
@@ -18,22 +14,17 @@ class AppSettingsModel {
       encrypted: (map['encrypted'] as int?) == 1,
     );
   }
+  final String key;
+  final String value;
+  final bool encrypted;
 
   /// Преобразование в Map (SQLite)
   Map<String, dynamic> toMap() {
-    return {
-      'key': key,
-      'value': value,
-      'encrypted': encrypted ? 1 : 0,
-    };
+    return {'key': key, 'value': value, 'encrypted': encrypted ? 1 : 0};
   }
 
   /// Копия с изменениями
-  AppSettingsModel copyWith({
-    String? key,
-    String? value,
-    bool? encrypted,
-  }) {
+  AppSettingsModel copyWith({String? key, String? value, bool? encrypted}) {
     return AppSettingsModel(
       key: key ?? this.key,
       value: value ?? this.value,

@@ -4,11 +4,10 @@ import '../../repositories/auth_repository.dart';
 
 /// Use case для удаления PIN
 class RemovePinUseCase {
+  RemovePinUseCase(this.repository);
   final AuthRepository repository;
 
-  RemovePinUseCase(this.repository);
-
   Future<Either<AuthFailure, bool>> execute(String pin) async {
-    return await repository.removePin(pin);
+    return repository.removePin(pin);
   }
 }

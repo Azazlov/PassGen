@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../core/constants/breakpoints.dart';
 import 'storage_controller.dart';
-import 'storage_list_pane.dart';
 import 'storage_detail_pane.dart';
+import 'storage_list_pane.dart';
 
 /// Адаптивный макет хранилища с двухпанельным режимом
 class StorageAdaptiveLayout extends StatelessWidget {
@@ -68,7 +69,8 @@ class StorageTabletLayout extends StatelessWidget {
     // Автовыбор первой записи при загрузке
     if (controller.passwords.isNotEmpty && controller.selectedEntry == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (controller.selectedEntry == null && controller.passwords.isNotEmpty) {
+        if (controller.selectedEntry == null &&
+            controller.passwords.isNotEmpty) {
           controller.selectEntry(controller.passwords.first);
         }
       });
@@ -113,7 +115,8 @@ class StorageDesktopLayout extends StatelessWidget {
     // Автовыбор первой записи при загрузке
     if (controller.passwords.isNotEmpty && controller.selectedEntry == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (controller.selectedEntry == null && controller.passwords.isNotEmpty) {
+        if (controller.selectedEntry == null &&
+            controller.passwords.isNotEmpty) {
           controller.selectEntry(controller.passwords.first);
         }
       });
@@ -154,9 +157,8 @@ class StorageDesktopLayout extends StatelessWidget {
 
 /// Экран деталей для мобильного режима
 class StorageDetailScreen extends StatelessWidget {
-  final dynamic entry;
-
   const StorageDetailScreen({super.key, required this.entry});
+  final dynamic entry;
 
   @override
   Widget build(BuildContext context) {
@@ -205,16 +207,15 @@ class StorageDetailScreen extends StatelessWidget {
 
 /// Пустое состояние
 class StorageEmptyState extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
   const StorageEmptyState({
     super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
   });
+  final IconData icon;
+  final String title;
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {

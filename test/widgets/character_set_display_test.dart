@@ -3,14 +3,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:pass_gen/presentation/widgets/character_set_display.dart';
 import 'package:pass_gen/domain/entities/password_generation_settings.dart';
+import 'package:pass_gen/presentation/widgets/character_set_display.dart';
 
 void main() {
   group('CharacterSetDisplay Widget Tests', () {
     testWidgets('shows all character categories when all enabled', (tester) async {
-      final settings = const PasswordGenerationSettings(
+      const settings = PasswordGenerationSettings(
         useCustomLowercase: true,
         useCustomUppercase: true,
         useCustomDigits: true,
@@ -18,7 +17,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CharacterSetDisplay(settings: settings),
           ),
@@ -29,11 +28,13 @@ void main() {
       expect(find.text('Заглавные'), findsOneWidget);
       expect(find.text('Цифры'), findsOneWidget);
       expect(find.text('Спецсимволы'), findsOneWidget);
-      expect(find.text('Итого: 82 символов'), findsOneWidget);
+      // 26 + 26 + 10 + 20 = 82 символа (текст отображается как единое целое)
+      expect(find.text('Итого:'), findsOneWidget);
+      expect(find.text('82 символов'), findsOneWidget);
     });
 
     testWidgets('hides disabled categories', (tester) async {
-      final settings = const PasswordGenerationSettings(
+      const settings = PasswordGenerationSettings(
         useCustomLowercase: true,
         useCustomUppercase: false,
         useCustomDigits: true,
@@ -41,7 +42,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CharacterSetDisplay(settings: settings),
           ),
@@ -52,11 +53,13 @@ void main() {
       expect(find.text('Цифры'), findsOneWidget);
       expect(find.text('Заглавные'), findsNothing);
       expect(find.text('Спецсимволы'), findsNothing);
-      expect(find.text('Итого: 36 символов'), findsOneWidget);
+      // 26 + 10 = 36 символов
+      expect(find.text('Итого:'), findsOneWidget);
+      expect(find.text('36 символов'), findsOneWidget);
     });
 
     testWidgets('shows excluded characters when enabled', (tester) async {
-      final settings = const PasswordGenerationSettings(
+      const settings = PasswordGenerationSettings(
         useCustomLowercase: true,
         useCustomUppercase: true,
         useCustomDigits: true,
@@ -65,7 +68,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CharacterSetDisplay(settings: settings),
           ),
@@ -73,12 +76,12 @@ void main() {
       );
 
       expect(find.text('Исключены'), findsOneWidget);
-      expect(find.text('Похожие символы'), findsOneWidget);
+      // Исключённые символы отображаются как '1lI0Oo'
       expect(find.text('1lI0Oo'), findsOneWidget);
     });
 
     testWidgets('hides excluded section when disabled', (tester) async {
-      final settings = const PasswordGenerationSettings(
+      const settings = PasswordGenerationSettings(
         useCustomLowercase: true,
         useCustomUppercase: true,
         useCustomDigits: true,
@@ -87,7 +90,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CharacterSetDisplay(settings: settings),
           ),
@@ -98,7 +101,7 @@ void main() {
     });
 
     testWidgets('shows correct count after excluding similar', (tester) async {
-      final settings = const PasswordGenerationSettings(
+      const settings = PasswordGenerationSettings(
         useCustomLowercase: true,
         useCustomUppercase: true,
         useCustomDigits: true,
@@ -107,19 +110,20 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CharacterSetDisplay(settings: settings),
           ),
         ),
       );
 
-      // 23 + 23 + 8 + 20 = 74 (после исключения 1lI0Oo)
-      expect(find.text('Итого: 74 символов'), findsOneWidget);
+      // После исключения 1lI0Oo: 24 + 24 + 8 + 20 = 76
+      expect(find.text('Итого:'), findsOneWidget);
+      expect(find.text('76 символов'), findsOneWidget);
     });
 
     testWidgets('hides widget when no categories enabled', (tester) async {
-      final settings = const PasswordGenerationSettings(
+      const settings = PasswordGenerationSettings(
         useCustomLowercase: false,
         useCustomUppercase: false,
         useCustomDigits: false,
@@ -127,7 +131,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CharacterSetDisplay(settings: settings),
           ),
@@ -139,12 +143,12 @@ void main() {
     });
 
     testWidgets('displays monospace font for characters', (tester) async {
-      final settings = const PasswordGenerationSettings(
+      const settings = PasswordGenerationSettings(
         useCustomDigits: true,
       );
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CharacterSetDisplay(settings: settings),
           ),

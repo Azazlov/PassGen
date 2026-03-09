@@ -2,15 +2,6 @@ import 'dart:convert';
 
 /// Запись о сохранённом пароле
 class PasswordEntry {
-  final int? id;
-  final int? categoryId;
-  final String service;
-  final String password;
-  final String config;
-  final String? login;
-  final DateTime createdAt;
-  final DateTime? updatedAt;
-
   const PasswordEntry({
     this.id,
     this.categoryId,
@@ -39,6 +30,14 @@ class PasswordEntry {
           : null,
     );
   }
+  final int? id;
+  final int? categoryId;
+  final String service;
+  final String password;
+  final String config;
+  final String? login;
+  final DateTime createdAt;
+  final DateTime? updatedAt;
 
   /// Преобразует PasswordEntry в JSON
   Map<String, dynamic> toJson() {
@@ -98,14 +97,23 @@ class PasswordEntry {
   }
 
   /// Проверяет, существует ли уже запись с таким сервисом и паролем
-  static bool existsForServiceAndPassword(List<PasswordEntry> entries, String service, String password) {
-    return entries.any((e) => 
-      e.service.toLowerCase() == service.toLowerCase() && e.password == password
+  static bool existsForServiceAndPassword(
+    List<PasswordEntry> entries,
+    String service,
+    String password,
+  ) {
+    return entries.any(
+      (e) =>
+          e.service.toLowerCase() == service.toLowerCase() &&
+          e.password == password,
     );
   }
 
   /// Находит запись по сервису
-  static PasswordEntry? findByService(List<PasswordEntry> entries, String service) {
+  static PasswordEntry? findByService(
+    List<PasswordEntry> entries,
+    String service,
+  ) {
     try {
       return entries.firstWhere(
         (e) => e.service.toLowerCase() == service.toLowerCase(),
@@ -116,7 +124,8 @@ class PasswordEntry {
   }
 
   @override
-  String toString() => 'PasswordEntry(service: $service, createdAt: $createdAt)';
+  String toString() =>
+      'PasswordEntry(service: $service, createdAt: $createdAt)';
 
   @override
   bool operator ==(Object other) {

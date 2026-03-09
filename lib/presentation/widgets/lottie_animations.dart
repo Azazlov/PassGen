@@ -3,14 +3,9 @@ import 'package:lottie/lottie.dart';
 
 /// Виджет анимации успешного копирования
 class LottieCopySuccess extends StatelessWidget {
+  const LottieCopySuccess({super.key, this.size = 48, this.autoplay = true});
   final double size;
   final bool autoplay;
-
-  const LottieCopySuccess({
-    super.key,
-    this.size = 48,
-    this.autoplay = true,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,14 +21,9 @@ class LottieCopySuccess extends StatelessWidget {
 
 /// Виджет анимации ошибки PIN
 class LottiePinError extends StatelessWidget {
+  const LottiePinError({super.key, this.size = 64, this.autoplay = true});
   final double size;
   final bool autoplay;
-
-  const LottiePinError({
-    super.key,
-    this.size = 64,
-    this.autoplay = true,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,9 +39,7 @@ class LottiePinError extends StatelessWidget {
 
 /// Виджет анимации индикатора стойкости пароля
 class LottieStrengthPulse extends StatelessWidget {
-  final double size;
-  final bool autoplay;
-  final double strength; // 0.0 - 1.0
+  // 0.0 - 1.0
 
   const LottieStrengthPulse({
     super.key,
@@ -59,6 +47,9 @@ class LottieStrengthPulse extends StatelessWidget {
     this.autoplay = true,
     this.strength = 0.5,
   });
+  final double size;
+  final bool autoplay;
+  final double strength;
 
   @override
   Widget build(BuildContext context) {

@@ -1,11 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:pass_gen/domain/usecases/storage/export_passgen_usecase.dart';
-import 'package:pass_gen/domain/repositories/password_export_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/domain/repositories/password_export_repository.dart';
+import 'package:pass_gen/domain/usecases/storage/export_passgen_usecase.dart';
 
 import 'export_passgen_usecase_test.mocks.dart';
 
@@ -56,7 +55,7 @@ void main() {
       // Arrange
       const failure = StorageFailure(message: 'Ошибка экспорта в .passgen формат');
       when(mockRepository.exportToPassgen(testMasterPassword))
-          .thenAnswer((_) async => Left(failure));
+          .thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await useCase.execute(testMasterPassword);

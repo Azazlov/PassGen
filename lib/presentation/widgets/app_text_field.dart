@@ -3,15 +3,6 @@ import 'package:flutter/services.dart';
 
 /// Поле ввода текста с валидацией
 class AppTextField extends StatelessWidget {
-  final String label;
-  final String? hint;
-  final TextEditingController controller;
-  final bool obscureText;
-  final TextInputType keyboardType;
-  final List<TextInputFormatter>? inputFormatters;
-  final ValueChanged<String>? onSubmitted;
-  final String? Function(String?)? validator;
-
   const AppTextField({
     super.key,
     required this.label,
@@ -23,6 +14,14 @@ class AppTextField extends StatelessWidget {
     this.onSubmitted,
     this.validator,
   });
+  final String label;
+  final String? hint;
+  final TextEditingController controller;
+  final bool obscureText;
+  final TextInputType keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final ValueChanged<String>? onSubmitted;
+  final String? Function(String?)? validator;
 
   @override
   Widget build(BuildContext context) {

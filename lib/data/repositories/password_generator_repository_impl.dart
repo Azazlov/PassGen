@@ -8,9 +8,8 @@ import '../datasources/password_generator_local_datasource.dart';
 
 /// Реализация репозитория генерации паролей
 class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
-  final PasswordGeneratorLocalDataSource dataSource;
-
   const PasswordGeneratorRepositoryImpl(this.dataSource);
+  final PasswordGeneratorLocalDataSource dataSource;
 
   @override
   Future<Either<PasswordGenerationFailure, PasswordResult>> generatePassword(
@@ -33,11 +32,13 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
         return Left(PasswordGenerationFailure(message: result['error']!));
       }
 
-      return Right(PasswordResult(
-        password: result['password'] ?? '',
-        strength: double.tryParse(result['strength'] ?? '0') ?? 0.0,
-        config: result['config'] ?? '',
-      ));
+      return Right(
+        PasswordResult(
+          password: result['password'] ?? '',
+          strength: double.tryParse(result['strength'] ?? '0') ?? 0.0,
+          config: result['config'] ?? '',
+        ),
+      );
     } catch (e) {
       return Left(PasswordGenerationFailure(message: 'Ошибка генерации: $e'));
     }
@@ -54,18 +55,23 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
         return Left(PasswordGenerationFailure(message: result['error']!));
       }
 
-      return Right(PasswordResult(
-        password: result['password'] ?? '',
-        strength: double.tryParse(result['strength'] ?? '0') ?? 0.0,
-        config: config,
-      ));
+      return Right(
+        PasswordResult(
+          password: result['password'] ?? '',
+          strength: double.tryParse(result['strength'] ?? '0') ?? 0.0,
+          config: config,
+        ),
+      );
     } catch (e) {
-      return Left(PasswordGenerationFailure(message: 'Ошибка восстановления: $e'));
+      return Left(
+        PasswordGenerationFailure(message: 'Ошибка восстановления: $e'),
+      );
     }
   }
 
   @override
-  Future<Either<PasswordGenerationFailure, PasswordConfig>> createPasswordConfig({
+  Future<Either<PasswordGenerationFailure, PasswordConfig>>
+  createPasswordConfig({
     required String service,
     required String masterPassword,
     required PasswordGenerationSettings settings,
@@ -75,9 +81,11 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
       final passwordResult = await generatePassword(settings);
 
       return passwordResult.fold(
-        (failure) => Left(PasswordGenerationFailure(
-          message: 'Не удалось сгенерировать пароль: ${failure.message}',
-        )),
+        (failure) => Left(
+          PasswordGenerationFailure(
+            message: 'Не удалось сгенерировать пароль: ${failure.message}',
+          ),
+        ),
         (result) async {
           // Шифруем конфиг генерации
           final encryptedConfig = await dataSource.createEncryptedConfig(
@@ -99,7 +107,9 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
         },
       );
     } catch (e) {
-      return Left(PasswordGenerationFailure(message: 'Ошибка создания конфига: $e'));
+      return Left(
+        PasswordGenerationFailure(message: 'Ошибка создания конфига: $e'),
+      );
     }
   }
 
@@ -124,7 +134,9 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
 
       return Right(result['password'] ?? '');
     } catch (e) {
-      return Left(PasswordGenerationFailure(message: 'Ошибка дешифрования: $e'));
+      return Left(
+        PasswordGenerationFailure(message: 'Ошибка дешифрования: $e'),
+      );
     }
   }
 

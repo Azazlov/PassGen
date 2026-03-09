@@ -1,14 +1,5 @@
 /// Модель конфигурации пароля для базы данных
 class PasswordConfigModel {
-  final int? id;
-  final int? entryId;
-  final int? strength;
-  final int? minLength;
-  final int? maxLength;
-  final int? flags;
-  final bool requireUnique;
-  final List<int>? encryptedConfig;
-
   const PasswordConfigModel({
     this.id,
     this.entryId,
@@ -33,6 +24,14 @@ class PasswordConfigModel {
       encryptedConfig: map['encrypted_config'] as List<int>?,
     );
   }
+  final int? id;
+  final int? entryId;
+  final int? strength;
+  final int? minLength;
+  final int? maxLength;
+  final int? flags;
+  final bool requireUnique;
+  final List<int>? encryptedConfig;
 
   /// Преобразование в Map (SQLite)
   Map<String, dynamic> toMap() {

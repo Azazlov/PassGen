@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'get_auth_state_usecase_test.mocks.dart';
 import 'package:mockito/annotations.dart';
-
-import 'package:pass_gen/domain/usecases/auth/get_auth_state_usecase.dart';
-import 'package:pass_gen/domain/repositories/auth_repository.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/domain/entities/auth_state.dart';
+import 'package:pass_gen/domain/repositories/auth_repository.dart';
+import 'package:pass_gen/domain/usecases/auth/get_auth_state_usecase.dart';
+
+import 'get_auth_state_usecase_test.mocks.dart';
 
 @GenerateMocks([AuthRepository])
 void main() {
@@ -20,7 +20,7 @@ void main() {
   group('GetAuthStateUseCase', () {
     test('должен вернуть авторизованное состояние', () async {
       // Arrange
-      final expectedState = AuthState(
+      const expectedState = AuthState(
         isAuthenticated: true,
         isPinSetup: true,
         isLocked: false,
@@ -41,7 +41,7 @@ void main() {
 
     test('должен вернуть неавторизованное состояние', () async {
       // Arrange
-      final expectedState = AuthState(
+      const expectedState = AuthState(
         isAuthenticated: false,
         isPinSetup: true,
         isLocked: false,
@@ -82,7 +82,7 @@ void main() {
 
     test('должен вернуть состояние без PIN', () async {
       // Arrange
-      final expectedState = AuthState(
+      const expectedState = AuthState(
         isAuthenticated: false,
         isPinSetup: false,
         isLocked: false,
@@ -101,7 +101,7 @@ void main() {
     test('должен вызвать repository.getAuthState ровно 1 раз', () async {
       // Arrange
       when(mockRepository.getAuthState())
-          .thenAnswer((_) async => AuthState(isAuthenticated: false, isPinSetup: true));
+          .thenAnswer((_) async => const AuthState(isAuthenticated: false, isPinSetup: true));
 
       // Act
       await useCase.execute();

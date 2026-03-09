@@ -1,29 +1,20 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../domain/entities/auth_state.dart';
+
+import '../../../core/constants/event_types.dart';
 import '../../../domain/entities/auth_result.dart';
+import '../../../domain/entities/auth_state.dart';
+import '../../../domain/usecases/auth/change_pin_usecase.dart';
+import '../../../domain/usecases/auth/get_auth_state_usecase.dart';
+import '../../../domain/usecases/auth/remove_pin_usecase.dart';
 import '../../../domain/usecases/auth/setup_pin_usecase.dart';
 import '../../../domain/usecases/auth/verify_pin_usecase.dart';
-import '../../../domain/usecases/auth/change_pin_usecase.dart';
-import '../../../domain/usecases/auth/remove_pin_usecase.dart';
-import '../../../domain/usecases/auth/get_auth_state_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
-import '../../../core/constants/event_types.dart';
 
 /// Контроллер для экрана аутентификации
 class AuthController extends ChangeNotifier {
-  final SetupPinUseCase setupPinUseCase;
-  final VerifyPinUseCase verifyPinUseCase;
-  final ChangePinUseCase changePinUseCase;
-  final RemovePinUseCase removePinUseCase;
-  final GetAuthStateUseCase getAuthStateUseCase;
-  final LogEventUseCase logEventUseCase;
-
-  // Таймер неактивности
-  Timer? _inactivityTimer;
-  static const Duration inactivityTimeout = Duration(minutes: 5);
-
   AuthController({
     required this.setupPinUseCase,
     required this.verifyPinUseCase,
@@ -34,6 +25,16 @@ class AuthController extends ChangeNotifier {
   }) {
     _loadAuthState();
   }
+  final SetupPinUseCase setupPinUseCase;
+  final VerifyPinUseCase verifyPinUseCase;
+  final ChangePinUseCase changePinUseCase;
+  final RemovePinUseCase removePinUseCase;
+  final GetAuthStateUseCase getAuthStateUseCase;
+  final LogEventUseCase logEventUseCase;
+
+  // Таймер неактивности
+  Timer? _inactivityTimer;
+  static const Duration inactivityTimeout = Duration(minutes: 5);
 
   // Состояние
   AuthState _authState = const AuthState();
@@ -127,7 +128,7 @@ class AuthController extends ChangeNotifier {
             );
             _isSetupMode = false;
             _enteredPin = '';
-            
+
             // Логируем установку PIN
             await logEventUseCase.execute(EventTypes.pinSetup);
           }
@@ -177,9 +178,10 @@ class AuthController extends ChangeNotifier {
             logEventUseCase.execute(EventTypes.authSuccess);
           } else if (authResult == AuthResult.wrongPin) {
             // Логируем неудачную попытку
-            logEventUseCase.execute(EventTypes.authFailure, details: {
-              'attempt': _authState.remainingAttempts,
-            });
+            logEventUseCase.execute(
+              EventTypes.authFailure,
+              details: {'attempt': _authState.remainingAttempts},
+            );
           } else if (authResult == AuthResult.locked) {
             // Логируем блокировку
             logEventUseCase.execute(EventTypes.authLockout);
@@ -189,7 +191,7 @@ class AuthController extends ChangeNotifier {
           return authResult;
         },
       );
-      
+
       return authResult;
     } catch (e) {
       _error = 'Ошибка проверки PIN: $e';
@@ -280,9 +282,7 @@ class AuthController extends ChangeNotifier {
   /// Запускает таймер неактивности
   void startInactivityTimer() {
     _inactivityTimer?.cancel();
-    _inactivityTimer = Timer(inactivityTimeout, () {
-      _lockApp();
-    });
+    _inactivityTimer = Timer(inactivityTimeout, _lockApp);
   }
 
   /// Сбрасывает таймер неактивности
@@ -303,7 +303,7 @@ class AuthController extends ChangeNotifier {
     );
     _inactivityTimer?.cancel();
     notifyListeners();
-    
+
     // Логируем блокировку
     logEventUseCase.execute(
       EventTypes.authFailure,

@@ -1,7 +1,9 @@
 /// Система отступов и сетка
-/// 
+///
 /// Все отступы кратны 4dp (предпочтительно 8dp)
 /// согласно ТЗ (Раздел 2.4)
+library;
+
 import 'package:flutter/material.dart';
 
 class Spacing {
@@ -32,22 +34,16 @@ extension SpacingExtension on num {
   EdgeInsets get all => EdgeInsets.all(toDouble());
 
   /// Симметричные отступы (вертикальные и горизонтальные)
-  EdgeInsets get symmetric => EdgeInsets.symmetric(
-        vertical: toDouble(),
-        horizontal: toDouble(),
-      );
+  EdgeInsets get symmetric =>
+      EdgeInsets.symmetric(vertical: toDouble(), horizontal: toDouble());
 
   /// Только вертикальные отступы
-  EdgeInsets get vertical => EdgeInsets.only(
-        top: toDouble(),
-        bottom: toDouble(),
-      );
+  EdgeInsets get vertical =>
+      EdgeInsets.only(top: toDouble(), bottom: toDouble());
 
   /// Только горизонтальные отступы
-  EdgeInsets get horizontal => EdgeInsets.only(
-        left: toDouble(),
-        right: toDouble(),
-      );
+  EdgeInsets get horizontal =>
+      EdgeInsets.only(left: toDouble(), right: toDouble());
 }
 
 /// Утилиты для работы с отступами

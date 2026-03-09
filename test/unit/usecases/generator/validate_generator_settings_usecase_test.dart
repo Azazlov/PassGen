@@ -1,10 +1,8 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:dartz/dartz.dart';
-
+import 'package:flutter_test/flutter_test.dart';
+import 'package:pass_gen/domain/entities/password_generation_settings.dart';
 import 'package:pass_gen/domain/usecases/generator/validate_generator_settings_usecase.dart';
 import 'package:pass_gen/domain/validators/password_settings_validator.dart';
-import 'package:pass_gen/domain/entities/password_generation_settings.dart';
-import 'package:pass_gen/core/errors/failures.dart';
 
 void main() {
   late ValidateGeneratorSettingsUseCase useCase;

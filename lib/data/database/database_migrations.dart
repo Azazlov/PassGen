@@ -4,9 +4,7 @@ import 'database_schema.dart';
 /// Миграции базы данных
 class DatabaseMigrations {
   /// Карта миграций: версия → функция миграции
-  static final Map<int, MigrationFunction> _migrations = {
-    1: _migrateToV1,
-  };
+  static final Map<int, MigrationFunction> _migrations = {1: _migrateToV1};
 
   /// Получение списка миграций для применения
   static List<int> getMigrationsToApply(int oldVersion, int newVersion) {
@@ -20,10 +18,7 @@ class DatabaseMigrations {
   }
 
   /// Применение миграции
-  static Future<void> applyMigration(
-    Database db,
-    int version,
-  ) async {
+  static Future<void> applyMigration(Database db, int version) async {
     final migration = _migrations[version];
     if (migration != null) {
       await migration(db);

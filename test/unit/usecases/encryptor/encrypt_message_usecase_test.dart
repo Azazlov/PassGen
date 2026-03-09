@@ -1,11 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:pass_gen/domain/usecases/encryptor/encrypt_message_usecase.dart';
-import 'package:pass_gen/domain/repositories/encryptor_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/domain/repositories/encryptor_repository.dart';
+import 'package:pass_gen/domain/usecases/encryptor/encrypt_message_usecase.dart';
 
 import 'encrypt_message_usecase_test.mocks.dart';
 
@@ -62,7 +61,7 @@ void main() {
       const failure = EncryptionFailure(message: 'Ошибка шифрования');
 
       when(mockRepository.encrypt(testMessage, testPassword))
-          .thenAnswer((_) async => Left(failure));
+          .thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await useCase.execute(message: testMessage, password: testPassword);

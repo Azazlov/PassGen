@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 
 /// Виджет ввода PIN-кода с цифровыми ячейками
 class PinInputWidget extends StatelessWidget {
-  final int pinLength;
-  final int maxLength;
-  final bool isError;
-  final bool isLocked;
-  final VoidCallback? onDigitTap;
-
   const PinInputWidget({
     super.key,
     this.pinLength = 0,
@@ -16,6 +10,11 @@ class PinInputWidget extends StatelessWidget {
     this.isLocked = false,
     this.onDigitTap,
   });
+  final int pinLength;
+  final int maxLength;
+  final bool isError;
+  final bool isLocked;
+  final VoidCallback? onDigitTap;
 
   @override
   Widget build(BuildContext context) {
@@ -43,14 +42,16 @@ class PinInputWidget extends StatelessWidget {
                   color: isError
                       ? theme.colorScheme.error
                       : isLast && !isFilled
-                          ? theme.colorScheme.primary.withValues(alpha: 0.5)
-                          : Colors.transparent,
+                      ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                      : Colors.transparent,
                   width: 2,
                 ),
                 boxShadow: isLast && !isFilled
                     ? [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.3,
+                          ),
                           blurRadius: 8,
                           spreadRadius: 2,
                         ),
@@ -58,12 +59,7 @@ class PinInputWidget extends StatelessWidget {
                     : null,
               ),
               child: Center(
-                child: isFilled
-                    ? const Icon(
-                        Icons.circle,
-                        size: 20,
-                      )
-                    : null,
+                child: isFilled ? const Icon(Icons.circle, size: 20) : null,
               ),
             );
           }),
@@ -73,9 +69,7 @@ class PinInputWidget extends StatelessWidget {
         if (isError || isLocked) ...[
           const SizedBox(height: 16),
           Text(
-            isLocked
-                ? 'Слишком много попыток. Подождите...'
-                : 'Неверный PIN',
+            isLocked ? 'Слишком много попыток. Подождите...' : 'Неверный PIN',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.error,
               fontWeight: FontWeight.w600,
@@ -89,16 +83,15 @@ class PinInputWidget extends StatelessWidget {
 
 /// Виджет цифровой клавиатуры
 class NumericKeypad extends StatelessWidget {
-  final Function(String) onDigitTap;
-  final VoidCallback? onBackspace;
-  final bool isLoading;
-
   const NumericKeypad({
     super.key,
     required this.onDigitTap,
     this.onBackspace,
     this.isLoading = false,
   });
+  final Function(String) onDigitTap;
+  final VoidCallback? onBackspace;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +109,9 @@ class NumericKeypad extends StatelessWidget {
                   final digit = row * 3 + col + 1;
                   return _KeypadButton(
                     label: digit.toString(),
-                    onTap: isLoading ? null : () => onDigitTap(digit.toString()),
+                    onTap: isLoading
+                        ? null
+                        : () => onDigitTap(digit.toString()),
                     isLoading: isLoading,
                   );
                 }),
@@ -129,11 +124,7 @@ class NumericKeypad extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _KeypadButton(
-                  label: '',
-                  onTap: null,
-                  isLoading: isLoading,
-                ),
+                _KeypadButton(label: '', onTap: null, isLoading: isLoading),
                 _KeypadButton(
                   label: '0',
                   onTap: isLoading ? null : () => onDigitTap('0'),
@@ -155,17 +146,16 @@ class NumericKeypad extends StatelessWidget {
 }
 
 class _KeypadButton extends StatelessWidget {
-  final String label;
-  final IconData? icon;
-  final VoidCallback? onTap;
-  final bool isLoading;
-
   const _KeypadButton({
     required this.label,
     this.icon,
     this.onTap,
     this.isLoading = false,
   });
+  final String label;
+  final IconData? icon;
+  final VoidCallback? onTap;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {

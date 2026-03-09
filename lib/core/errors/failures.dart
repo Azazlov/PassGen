@@ -1,8 +1,7 @@
 /// Базовый класс для всех ошибок
 abstract class Failure {
-  final String message;
-
   const Failure({required this.message});
+  final String message;
 
   @override
   String toString() => '$runtimeType(message: $message)';
@@ -44,12 +43,11 @@ class ConfigFailure extends Failure {
 
 /// Ошибка аутентификации
 class AuthFailure extends Failure {
-  final AuthFailureType type;
-
   const AuthFailure({
     required super.message,
     this.type = AuthFailureType.general,
   });
+  final AuthFailureType type;
 
   @override
   bool operator ==(Object other) {
@@ -64,10 +62,4 @@ class AuthFailure extends Failure {
 }
 
 /// Типы ошибок аутентификации
-enum AuthFailureType {
-  general,
-  wrongPin,
-  locked,
-  notSetup,
-  validation,
-}
+enum AuthFailureType { general, wrongPin, locked, notSetup, validation }

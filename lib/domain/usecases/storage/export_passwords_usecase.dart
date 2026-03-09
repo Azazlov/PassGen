@@ -4,11 +4,10 @@ import '../../repositories/password_export_repository.dart';
 
 /// Использование: Экспорт паролей в JSON
 class ExportPasswordsUseCase {
+  const ExportPasswordsUseCase(this.repository);
   final PasswordExportRepository repository;
 
-  const ExportPasswordsUseCase(this.repository);
-
   Future<Either<StorageFailure, String>> execute() async {
-    return await repository.exportToJson();
+    return repository.exportToJson();
   }
 }

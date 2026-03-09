@@ -1,13 +1,13 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:pass_gen/domain/usecases/password/generate_password_usecase.dart';
-import 'package:pass_gen/domain/repositories/password_generator_repository.dart';
-import 'package:pass_gen/domain/entities/password_result.dart';
-import 'package:pass_gen/domain/entities/password_generation_settings.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/domain/entities/password_generation_settings.dart';
+import 'package:pass_gen/domain/entities/password_result.dart';
+import 'package:pass_gen/domain/repositories/password_generator_repository.dart';
+import 'package:pass_gen/domain/usecases/password/generate_password_usecase.dart';
+
 import 'generate_password_usecase_test.mocks.dart';
 
 @GenerateMocks([PasswordGeneratorRepository])
@@ -23,16 +23,16 @@ void main() {
   group('GeneratePasswordUseCase', () {
     test('должен успешно сгенерировать пароль', () async {
       // Arrange
-      final settings = PasswordGenerationSettings();
+      const settings = PasswordGenerationSettings();
       
-      final expectedPassword = PasswordResult(
+      const expectedPassword = PasswordResult(
         password: 'TestPass123',
         strength: 85.0,
         config: 'config_string',
       );
 
       when(mockRepository.generatePassword(settings))
-          .thenAnswer((_) async => Right(expectedPassword));
+          .thenAnswer((_) async => const Right(expectedPassword));
 
       // Act
       final result = await useCase.execute(settings);
@@ -45,10 +45,10 @@ void main() {
 
     test('должен вернуть ошибку при неудачной генерации', () async {
       // Arrange
-      final settings = PasswordGenerationSettings();
+      const settings = PasswordGenerationSettings();
       
       when(mockRepository.generatePassword(settings))
-          .thenAnswer((_) async => Left(PasswordGenerationFailure(message: 'Ошибка генерации')));
+          .thenAnswer((_) async => const Left(PasswordGenerationFailure(message: 'Ошибка генерации')));
 
       // Act
       final result = await useCase.execute(settings);
@@ -60,10 +60,10 @@ void main() {
 
     test('должен вызвать repository.generatePassword', () async {
       // Arrange
-      final settings = PasswordGenerationSettings();
+      const settings = PasswordGenerationSettings();
       
       when(mockRepository.generatePassword(settings))
-          .thenAnswer((_) async => Right(PasswordResult(password: 'pass', strength: 50, config: '')));
+          .thenAnswer((_) async => const Right(PasswordResult(password: 'pass', strength: 50, config: '')));
 
       // Act
       await useCase.execute(settings);

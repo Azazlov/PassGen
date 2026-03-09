@@ -6,12 +6,13 @@ import '../datasources/storage_local_datasource.dart';
 
 /// Реализация репозитория хранилища (только CRUD)
 class StorageRepositoryImpl implements StorageRepository {
+  const StorageRepositoryImpl(this.dataSource);
   final StorageLocalDataSource dataSource;
 
-  const StorageRepositoryImpl(this.dataSource);
-
   @override
-  Future<Either<StorageFailure, bool>> savePasswords(List<PasswordEntry> passwords) async {
+  Future<Either<StorageFailure, bool>> savePasswords(
+    List<PasswordEntry> passwords,
+  ) async {
     try {
       final result = await dataSource.savePasswords(passwords);
       return Right(result);
@@ -27,7 +28,7 @@ class StorageRepositoryImpl implements StorageRepository {
   Future<Either<StorageFailure, List<PasswordEntry>>> getPasswords() async {
     try {
       final result = await dataSource.getPasswords();
-      return Right(result ?? []);
+      return Right(result);
     } catch (e) {
       if (e is StorageFailure) {
         return Left(e);

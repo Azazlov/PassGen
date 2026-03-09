@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
-import 'auth_controller.dart';
-import '../../../domain/entities/auth_result.dart';
-import 'pin_input_widget.dart';
 import '../../../core/utils/android_security_utils.dart';
+import '../../../domain/entities/auth_result.dart';
+import 'auth_controller.dart';
+import 'pin_input_widget.dart';
 
 /// Экран аутентификации
 class AuthScreen extends StatelessWidget {
@@ -333,7 +333,9 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
                       Expanded(
                         child: Text(
                           controller.error!,
-                          style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                          style: TextStyle(
+                            color: theme.colorScheme.onErrorContainer,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -394,11 +396,7 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Заголовок
-          Icon(
-            Icons.lock_outline,
-            size: 80,
-            color: theme.colorScheme.error,
-          ),
+          Icon(Icons.lock_outline, size: 80, color: theme.colorScheme.error),
           const SizedBox(height: 24),
 
           Text(
@@ -445,13 +443,9 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
 
 /// Виджет таймера обратного отсчёта для блокировки
 class _LockoutTimer extends StatefulWidget {
+  const _LockoutTimer({required this.controller, required this.theme});
   final AuthController controller;
   final ThemeData theme;
-
-  const _LockoutTimer({
-    required this.controller,
-    required this.theme,
-  });
 
   @override
   State<_LockoutTimer> createState() => _LockoutTimerState();
@@ -490,10 +484,7 @@ class _LockoutTimerState extends State<_LockoutTimer> {
 
     return Column(
       children: [
-        Text(
-          'Разблокировка через',
-          style: widget.theme.textTheme.bodyLarge,
-        ),
+        Text('Разблокировка через', style: widget.theme.textTheme.bodyLarge),
         const SizedBox(height: 8),
         Text(
           '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',

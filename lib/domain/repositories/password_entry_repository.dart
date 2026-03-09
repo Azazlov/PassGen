@@ -1,5 +1,5 @@
-import '../entities/password_entry.dart';
 import '../entities/password_config.dart';
+import '../entities/password_entry.dart';
 
 /// Интерфейс репозитория записей паролей
 abstract class PasswordEntryRepository {

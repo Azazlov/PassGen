@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../domain/usecases/log/get_logs_usecase.dart';
+
 import '../../../domain/entities/security_log.dart';
+import '../../../domain/usecases/log/get_logs_usecase.dart';
 
 /// Контроллер для просмотра логов
 class LogsController extends ChangeNotifier {
+  LogsController({required GetLogsUseCase getLogsUseCase})
+    : _getLogsUseCase = getLogsUseCase;
   final GetLogsUseCase _getLogsUseCase;
-
-  LogsController({
-    required GetLogsUseCase getLogsUseCase,
-  }) : _getLogsUseCase = getLogsUseCase;
 
   List<SecurityLog> _logs = [];
   bool _isLoading = false;
@@ -41,7 +40,7 @@ class LogsController extends ChangeNotifier {
   /// Группировка логов по дате
   Map<String, List<SecurityLog>> getLogsByDate() {
     final Map<String, List<SecurityLog>> grouped = {};
-    
+
     for (final log in _logs) {
       final date = _formatDate(log.timestamp);
       if (!grouped.containsKey(date)) {
@@ -49,7 +48,7 @@ class LogsController extends ChangeNotifier {
       }
       grouped[date]!.add(log);
     }
-    
+
     return grouped;
   }
 
@@ -102,9 +101,12 @@ class LogsController extends ChangeNotifier {
 
   /// Получение цвета для типа события
   Color getEventColor(String actionType, ThemeData theme) {
-    if (actionType.contains('FAILURE') || actionType.contains('LOCKOUT') || actionType.contains('DELETED')) {
+    if (actionType.contains('FAILURE') ||
+        actionType.contains('LOCKOUT') ||
+        actionType.contains('DELETED')) {
       return Colors.red;
-    } else if (actionType.contains('SUCCESS') || actionType.contains('CREATED')) {
+    } else if (actionType.contains('SUCCESS') ||
+        actionType.contains('CREATED')) {
       return Colors.green;
     } else if (actionType.contains('EXPORT') || actionType.contains('IMPORT')) {
       return Colors.blue;

@@ -1,6 +1,6 @@
 # PassGen — Менеджер паролей с локальным шифрованием
 
-[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](https://github.com/azazlov/passgen/releases)
+[![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)](https://github.com/azazlov/passgen/releases)
 [![Flutter](https://img.shields.io/badge/flutter-^3.9.0-blue.svg)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/platform-windows%20%7C%20linux%20%7C%20android-lightgrey.svg)](https://github.com/azazlov/passgen)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -112,15 +112,18 @@ lib/
 │   │   ├── password_generation_settings.dart
 │   │   ├── password_result.dart
 │   │   └── security_log.dart
-│   ├── repositories/             # 7 интерфейсов
+│   ├── repositories/             # 10 интерфейсов
 │   │   ├── app_settings_repository.dart
 │   │   ├── auth_repository.dart
 │   │   ├── category_repository.dart
 │   │   ├── encryptor_repository.dart
 │   │   ├── password_entry_repository.dart
 │   │   ├── password_generator_repository.dart
-│   │   └── security_log_repository.dart
-│   └── usecases/                 # 25+ сценариев
+│   │   ├── password_export_repository.dart
+│   │   ├── password_import_repository.dart
+│   │   ├── security_log_repository.dart
+│   │   └── storage_repository.dart
+│   └── usecases/                 # 25 сценариев
 │       ├── auth/ (5)
 │       ├── category/ (4)
 │       ├── encryptor/ (2)
@@ -147,7 +150,16 @@ lib/
 │   │   ├── password_config_model.dart
 │   │   ├── password_entry_model.dart
 │   │   └── security_log_model.dart
-│   └── repositories/             # 7 реализаций
+│   └── repositories/             # 9 реализаций
+│       ├── app_settings_repository_impl.dart
+│       ├── auth_repository_impl.dart
+│       ├── category_repository_impl.dart
+│       ├── encryptor_repository_impl.dart
+│       ├── password_generator_repository_impl.dart
+│       ├── password_export_repository_impl.dart
+│       ├── password_import_repository_impl.dart
+│       ├── security_log_repository_impl.dart
+│       └── storage_repository_impl.dart
 └── presentation/                 # Presentation Layer (UI)
     ├── features/                 # 8 экранов
     │   ├── about/

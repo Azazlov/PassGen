@@ -1,12 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:pass_gen/domain/usecases/storage/get_passwords_usecase.dart';
-import 'package:pass_gen/domain/repositories/storage_repository.dart';
-import 'package:pass_gen/domain/entities/password_entry.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/domain/entities/password_entry.dart';
+import 'package:pass_gen/domain/repositories/storage_repository.dart';
+import 'package:pass_gen/domain/usecases/storage/get_passwords_usecase.dart';
 
 import 'get_passwords_usecase_test.mocks.dart';
 
@@ -70,7 +69,7 @@ void main() {
       // Arrange
       const failure = StorageFailure(message: 'Ошибка получения паролей');
       when(mockRepository.getPasswords())
-          .thenAnswer((_) async => Left(failure));
+          .thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await useCase.execute();

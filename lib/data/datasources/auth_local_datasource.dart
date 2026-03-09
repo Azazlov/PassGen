@@ -60,7 +60,11 @@ class AuthLocalDataSource {
   }
 
   /// Проверяет PIN против сохранённого хэша
-  Future<bool> _verifyPinHash(String pin, String storedHash, String storedSalt) async {
+  Future<bool> _verifyPinHash(
+    String pin,
+    String storedHash,
+    String storedSalt,
+  ) async {
     try {
       final saltBytes = base64Decode(storedSalt);
 
@@ -161,7 +165,10 @@ class AuthLocalDataSource {
       // Проверяем старый PIN
       final verifyResult = await verifyPin(oldPin);
       if (verifyResult['result'] != 'success') {
-        throw const AuthFailure(message: 'Неверный старый PIN', type: AuthFailureType.wrongPin);
+        throw const AuthFailure(
+          message: 'Неверный старый PIN',
+          type: AuthFailureType.wrongPin,
+        );
       }
 
       // Устанавливаем новый PIN
@@ -178,7 +185,10 @@ class AuthLocalDataSource {
       // Проверяем PIN
       final verifyResult = await verifyPin(pin);
       if (verifyResult['result'] != 'success') {
-        throw const AuthFailure(message: 'Неверный PIN', type: AuthFailureType.wrongPin);
+        throw const AuthFailure(
+          message: 'Неверный PIN',
+          type: AuthFailureType.wrongPin,
+        );
       }
 
       // Удаляем данные
@@ -233,7 +243,10 @@ class AuthLocalDataSource {
     final lockoutTime = DateTime.now().add(
       const Duration(seconds: lockoutDurationSeconds),
     );
-    await prefs.setInt(_lockoutTimestampKey, lockoutTime.millisecondsSinceEpoch);
+    await prefs.setInt(
+      _lockoutTimestampKey,
+      lockoutTime.millisecondsSinceEpoch,
+    );
   }
 
   /// Получает количество неудачных попыток

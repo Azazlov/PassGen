@@ -1,14 +1,5 @@
 /// Модель записи пароля для базы данных
 class PasswordEntryModel {
-  final int? id;
-  final int? categoryId;
-  final String service;
-  final String? login;
-  final List<int> encryptedPassword;
-  final List<int> nonce;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-
   const PasswordEntryModel({
     this.id,
     this.categoryId,
@@ -33,6 +24,14 @@ class PasswordEntryModel {
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at'] as int),
     );
   }
+  final int? id;
+  final int? categoryId;
+  final String service;
+  final String? login;
+  final List<int> encryptedPassword;
+  final List<int> nonce;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   /// Преобразование в Map (SQLite)
   Map<String, dynamic> toMap() {
@@ -88,8 +87,5 @@ class PasswordEntryModel {
 
   @override
   int get hashCode =>
-      id.hashCode ^
-      service.hashCode ^
-      login.hashCode ^
-      categoryId.hashCode;
+      id.hashCode ^ service.hashCode ^ login.hashCode ^ categoryId.hashCode;
 }

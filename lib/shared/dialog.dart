@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
-void showDialogWindow1(String label, String text, dynamic context){
+void showDialogWindow1(String label, String text, dynamic context) {
   showCupertinoDialog(
     context: context,
     builder: (_) => CupertinoAlertDialog(
@@ -18,7 +18,15 @@ void showDialogWindow1(String label, String text, dynamic context){
   );
 }
 
-void showDialogWindow2(label, text, context, text1, function1, text2, function2) async{
+void showDialogWindow2(
+  label,
+  text,
+  context,
+  text1,
+  function1,
+  text2,
+  function2,
+) async {
   showCupertinoDialog(
     context: context,
     builder: (_) => CupertinoAlertDialog(
@@ -44,6 +52,4 @@ void showDialogWindow2(label, text, context, text1, function1, text2, function2)
   );
 }
 
-void pass(){
-  
-}
+void pass() {}

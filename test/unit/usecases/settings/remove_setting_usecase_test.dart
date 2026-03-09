@@ -1,9 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-
-import 'package:pass_gen/domain/usecases/settings/remove_setting_usecase.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/domain/repositories/app_settings_repository.dart';
+import 'package:pass_gen/domain/usecases/settings/remove_setting_usecase.dart';
 
 import 'remove_setting_usecase_test.mocks.dart';
 

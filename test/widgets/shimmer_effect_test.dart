@@ -10,7 +10,7 @@ void main() {
   group('ShimmerEffect Widget Tests', () {
     testWidgets('renders container with correct dimensions', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: ShimmerEffect(
               width: 200,
@@ -48,7 +48,7 @@ void main() {
 
     testWidgets('animates over time', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: ShimmerEffect(
               width: 200,
@@ -75,7 +75,7 @@ void main() {
   group('ShimmerList Widget Tests', () {
     testWidgets('renders correct number of items', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: ShimmerList(
               itemCount: 5,
@@ -90,7 +90,7 @@ void main() {
 
     testWidgets('renders with default values', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: ShimmerList(
               itemCount: 3,

@@ -1,10 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-
-import 'package:pass_gen/domain/usecases/category/get_categories_usecase.dart';
-import 'package:pass_gen/domain/repositories/category_repository.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/domain/entities/category.dart';
+import 'package:pass_gen/domain/repositories/category_repository.dart';
+import 'package:pass_gen/domain/usecases/category/get_categories_usecase.dart';
 
 import 'get_categories_usecase_test.mocks.dart';
 

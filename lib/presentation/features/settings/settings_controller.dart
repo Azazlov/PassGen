@@ -1,21 +1,15 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/constants/event_types.dart';
-import '../../../domain/usecases/settings/get_setting_usecase.dart';
-import '../../../domain/usecases/settings/set_setting_usecase.dart';
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
+import '../../../domain/usecases/settings/get_setting_usecase.dart';
+import '../../../domain/usecases/settings/set_setting_usecase.dart';
 
 /// Контроллер экрана настроек
 class SettingsController extends ChangeNotifier {
-  final GetSettingUseCase _getSettingUseCase;
-  final SetSettingUseCase _setSettingUseCase;
-  final ChangePinUseCase _changePinUseCase;
-  final RemovePinUseCase _removePinUseCase;
-  final GetLogsUseCase _getLogsUseCase;
-  final LogEventUseCase _logEventUseCase;
-
   SettingsController({
     required GetSettingUseCase getSettingUseCase,
     required SetSettingUseCase setSettingUseCase,
@@ -23,12 +17,18 @@ class SettingsController extends ChangeNotifier {
     required RemovePinUseCase removePinUseCase,
     required GetLogsUseCase getLogsUseCase,
     required LogEventUseCase logEventUseCase,
-  })  : _getSettingUseCase = getSettingUseCase,
-        _setSettingUseCase = setSettingUseCase,
-        _changePinUseCase = changePinUseCase,
-        _removePinUseCase = removePinUseCase,
-        _getLogsUseCase = getLogsUseCase,
-        _logEventUseCase = logEventUseCase;
+  }) : _getSettingUseCase = getSettingUseCase,
+       _setSettingUseCase = setSettingUseCase,
+       _changePinUseCase = changePinUseCase,
+       _removePinUseCase = removePinUseCase,
+       _getLogsUseCase = getLogsUseCase,
+       _logEventUseCase = logEventUseCase;
+  final GetSettingUseCase _getSettingUseCase;
+  final SetSettingUseCase _setSettingUseCase;
+  final ChangePinUseCase _changePinUseCase;
+  final RemovePinUseCase _removePinUseCase;
+  final GetLogsUseCase _getLogsUseCase;
+  final LogEventUseCase _logEventUseCase;
 
   bool _isLoading = false;
   String? _error;
@@ -48,20 +48,20 @@ class SettingsController extends ChangeNotifier {
   }
 
   /// Сохранение настройки
-  Future<void> setSetting(String key, String value, {bool encrypted = false}) async {
+  Future<void> setSetting(
+    String key,
+    String value, {
+    bool encrypted = false,
+  }) async {
     try {
       _isLoading = true;
       notifyListeners();
       await _setSettingUseCase.execute(key, value, encrypted: encrypted);
-      
+
       // Логирование изменения настроек (SETTINGS_CHG)
       _logEventUseCase.execute(
         EventTypes.settingsChanged,
-        details: {
-          'key': key,
-          'value': value,
-          'encrypted': encrypted,
-        },
+        details: {'key': key, 'value': value, 'encrypted': encrypted},
       );
     } catch (e) {
       _error = e.toString();
@@ -77,7 +77,7 @@ class SettingsController extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
       final result = await _changePinUseCase.execute(oldPin, newPin);
-      
+
       // Логирование смены PIN
       result.fold(
         (_) => null,
@@ -86,11 +86,8 @@ class SettingsController extends ChangeNotifier {
           details: {'success': true},
         ),
       );
-      
-      return result.fold(
-        (failure) => false,
-        (_) => true,
-      );
+
+      return result.fold((failure) => false, (_) => true);
     } catch (e) {
       _error = e.toString();
       return false;
@@ -106,7 +103,7 @@ class SettingsController extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
       final result = await _removePinUseCase.execute(pin);
-      
+
       // Логирование удаления PIN
       result.fold(
         (_) => null,
@@ -115,11 +112,8 @@ class SettingsController extends ChangeNotifier {
           details: {'success': true},
         ),
       );
-      
-      return result.fold(
-        (failure) => false,
-        (_) => true,
-      );
+
+      return result.fold((failure) => false, (_) => true);
     } catch (e) {
       _error = e.toString();
       return false;
@@ -142,10 +136,5 @@ class SettingsController extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'categories_controller.dart';
+
 import '../../../domain/entities/category.dart';
-import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/category/create_category_usecase.dart';
-import '../../../domain/usecases/category/update_category_usecase.dart';
 import '../../../domain/usecases/category/delete_category_usecase.dart';
+import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/usecases/category/update_category_usecase.dart';
 import '../../widgets/app_text_field.dart';
+import 'categories_controller.dart';
 
 /// Экран управления категориями
 class CategoriesScreen extends StatelessWidget {
@@ -48,8 +49,8 @@ class _CategoriesScreenContent extends StatelessWidget {
       body: controller.isLoading
           ? const Center(child: CircularProgressIndicator())
           : controller.isEmpty
-              ? _buildEmptyState(theme)
-              : _buildCategoriesList(controller, theme),
+          ? _buildEmptyState(theme)
+          : _buildCategoriesList(controller, theme),
     );
   }
 
@@ -78,7 +79,10 @@ class _CategoriesScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoriesList(CategoriesController controller, ThemeData theme) {
+  Widget _buildCategoriesList(
+    CategoriesController controller,
+    ThemeData theme,
+  ) {
     final systemCategories = controller.getSystemCategories();
     final userCategories = controller.getUserCategories();
 
@@ -89,12 +93,23 @@ class _CategoriesScreenContent extends StatelessWidget {
         children: [
           if (systemCategories.isNotEmpty) ...[
             _buildSectionTitle('Системные', theme),
-            ...systemCategories.map((cat) => _buildCategoryTile(cat, controller, theme, isSystem: true, context: context)),
+            ...systemCategories.map(
+              (cat) => _buildCategoryTile(
+                cat,
+                controller,
+                theme,
+                isSystem: true,
+                context: context,
+              ),
+            ),
             const SizedBox(height: 16),
           ],
           if (userCategories.isNotEmpty) ...[
             _buildSectionTitle('Пользовательские', theme),
-            ...userCategories.map((cat) => _buildCategoryTile(cat, controller, theme, context: context)),
+            ...userCategories.map(
+              (cat) =>
+                  _buildCategoryTile(cat, controller, theme, context: context),
+            ),
           ],
         ],
       ),
@@ -114,12 +129,21 @@ class _CategoriesScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryTile(Category category, CategoriesController controller, ThemeData theme, {bool isSystem = false, required BuildContext context}) {
+  Widget _buildCategoryTile(
+    Category category,
+    CategoriesController controller,
+    ThemeData theme, {
+    bool isSystem = false,
+    required BuildContext context,
+  }) {
     return Card(
       key: ValueKey('category_${category.id}'),
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: Text(category.icon ?? '📁', style: const TextStyle(fontSize: 24)),
+        leading: Text(
+          category.icon ?? '📁',
+          style: const TextStyle(fontSize: 24),
+        ),
         title: Text(category.name),
         subtitle: Text(isSystem ? 'Системная' : 'Пользовательская'),
         trailing: isSystem
@@ -130,12 +154,14 @@ class _CategoriesScreenContent extends StatelessWidget {
                   IconButton(
                     key: ValueKey('edit_${category.id}'),
                     icon: const Icon(Icons.edit, size: 20),
-                    onPressed: () => _showEditCategoryDialog(context, controller, category),
+                    onPressed: () =>
+                        _showEditCategoryDialog(context, controller, category),
                   ),
                   IconButton(
                     key: ValueKey('delete_${category.id}'),
                     icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                    onPressed: () => _confirmDelete(context, controller, category),
+                    onPressed: () =>
+                        _confirmDelete(context, controller, category),
                   ),
                 ],
               ),
@@ -143,7 +169,10 @@ class _CategoriesScreenContent extends StatelessWidget {
     );
   }
 
-  void _showAddCategoryDialog(BuildContext context, CategoriesController controller) async {
+  void _showAddCategoryDialog(
+    BuildContext context,
+    CategoriesController controller,
+  ) async {
     final nameController = TextEditingController();
     String selectedIcon = '📁';
 
@@ -163,28 +192,55 @@ class _CategoriesScreenContent extends StatelessWidget {
                 hint: 'Введите название категории',
               ),
               const SizedBox(height: 16),
-              const Text('Иконка:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Иконка:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: ['📁', '📂', '🗂️', '📑', '🏷️', '📌', '⭐', '🔖', '💼', '🎮', '🛒', '🏦', '📧', '👥', '🔐', '🌐']
-                    .map((icon) => GestureDetector(
-                          onTap: () => setDialogState(() => selectedIcon = icon),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: selectedIcon == icon
-                                    ? Theme.of(ctx).colorScheme.primary
-                                    : Colors.grey.shade300,
+                children:
+                    [
+                          '📁',
+                          '📂',
+                          '🗂️',
+                          '📑',
+                          '🏷️',
+                          '📌',
+                          '⭐',
+                          '🔖',
+                          '💼',
+                          '🎮',
+                          '🛒',
+                          '🏦',
+                          '📧',
+                          '👥',
+                          '🔐',
+                          '🌐',
+                        ]
+                        .map(
+                          (icon) => GestureDetector(
+                            onTap: () =>
+                                setDialogState(() => selectedIcon = icon),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: selectedIcon == icon
+                                      ? Theme.of(ctx).colorScheme.primary
+                                      : Colors.grey.shade300,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                              borderRadius: BorderRadius.circular(8),
+                              child: Text(
+                                icon,
+                                style: const TextStyle(fontSize: 24),
+                              ),
                             ),
-                            child: Text(icon, style: const TextStyle(fontSize: 24)),
                           ),
-                        ))
-                    .toList(),
+                        )
+                        .toList(),
               ),
             ],
           ),
@@ -228,7 +284,11 @@ class _CategoriesScreenContent extends StatelessWidget {
     nameController.dispose();
   }
 
-  void _showEditCategoryDialog(BuildContext context, CategoriesController controller, Category category) async {
+  void _showEditCategoryDialog(
+    BuildContext context,
+    CategoriesController controller,
+    Category category,
+  ) async {
     final nameController = TextEditingController(text: category.name);
     String selectedIcon = category.icon ?? '📁';
 
@@ -248,28 +308,55 @@ class _CategoriesScreenContent extends StatelessWidget {
                 hint: 'Введите название категории',
               ),
               const SizedBox(height: 16),
-              const Text('Иконка:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Иконка:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: ['📁', '📂', '🗂️', '📑', '🏷️', '📌', '⭐', '🔖', '💼', '🎮', '🛒', '🏦', '📧', '👥', '🔐', '🌐']
-                    .map((icon) => GestureDetector(
-                          onTap: () => setDialogState(() => selectedIcon = icon),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: selectedIcon == icon
-                                    ? Theme.of(ctx).colorScheme.primary
-                                    : Colors.grey.shade300,
+                children:
+                    [
+                          '📁',
+                          '📂',
+                          '🗂️',
+                          '📑',
+                          '🏷️',
+                          '📌',
+                          '⭐',
+                          '🔖',
+                          '💼',
+                          '🎮',
+                          '🛒',
+                          '🏦',
+                          '📧',
+                          '👥',
+                          '🔐',
+                          '🌐',
+                        ]
+                        .map(
+                          (icon) => GestureDetector(
+                            onTap: () =>
+                                setDialogState(() => selectedIcon = icon),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: selectedIcon == icon
+                                      ? Theme.of(ctx).colorScheme.primary
+                                      : Colors.grey.shade300,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                              borderRadius: BorderRadius.circular(8),
+                              child: Text(
+                                icon,
+                                style: const TextStyle(fontSize: 24),
+                              ),
                             ),
-                            child: Text(icon, style: const TextStyle(fontSize: 24)),
                           ),
-                        ))
-                    .toList(),
+                        )
+                        .toList(),
               ),
             ],
           ),
@@ -314,14 +401,20 @@ class _CategoriesScreenContent extends StatelessWidget {
     nameController.dispose();
   }
 
-  void _confirmDelete(BuildContext context, CategoriesController controller, Category category) async {
+  void _confirmDelete(
+    BuildContext context,
+    CategoriesController controller,
+    Category category,
+  ) async {
     if (!context.mounted) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Удаление категории'),
-        content: Text('Вы уверены, что хотите удалить категорию "${category.name}"?'),
+        content: Text(
+          'Вы уверены, что хотите удалить категорию "${category.name}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -337,16 +430,19 @@ class _CategoriesScreenContent extends StatelessWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      final success = await controller.deleteCategory(category.id!, category.isSystem);
+      final success = await controller.deleteCategory(
+        category.id!,
+        category.isSystem,
+      );
       if (context.mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Категория удалена')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Категория удалена')));
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(controller.error ?? 'Ошибка')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(controller.error ?? 'Ошибка')));
         }
       }
     }

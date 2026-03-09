@@ -6,9 +6,8 @@ import '../datasources/encryptor_local_datasource.dart';
 
 /// Реализация репозитория шифрования/дешифрования
 class EncryptorRepositoryImpl implements EncryptorRepository {
-  final EncryptorLocalDataSource dataSource;
-
   const EncryptorRepositoryImpl(this.dataSource);
+  final EncryptorLocalDataSource dataSource;
 
   @override
   Future<Either<EncryptionFailure, String>> encrypt(

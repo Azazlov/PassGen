@@ -4,15 +4,14 @@ import '../../repositories/password_import_repository.dart';
 
 /// Использование: Импорт паролей из формата .passgen
 class ImportPassgenUseCase {
-  final PasswordImportRepository repository;
-
   const ImportPassgenUseCase(this.repository);
+  final PasswordImportRepository repository;
 
   Future<Either<StorageFailure, bool>> execute({
     required String data,
     required String masterPassword,
   }) async {
-    return await repository.importFromPassgen(
+    return repository.importFromPassgen(
       data: data,
       masterPassword: masterPassword,
     );

@@ -2,78 +2,66 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Переключатель
-Widget buildSwitch({  
-  required String label, 
-  required bool value, 
+Widget buildSwitch({
+  required String label,
+  required bool value,
   required void Function(bool) isUsed,
-  required IconData icon
-  }) {
+  required IconData icon,
+}) {
   return ListTile(
     leading: Icon(icon),
     title: Text(label),
     subtitle: Text('В пароле будут $label'),
-    trailing: 
-      Switch(
-        value: value,
-        onChanged: isUsed,
-      ),
+    trailing: Switch(value: value, onChanged: isUsed),
     dense: true,
     onTap: () => isUsed(!value),
     selected: value,
   );
 }
 
-Widget buildSwitchWithUnique({  
-  required String label, 
-  required bool value, 
+Widget buildSwitchWithUnique({
+  required String label,
+  required bool value,
   required void Function(bool) isUsed,
   required bool? Function(bool?) isUnique,
-  required IconData icon
-  }) {
+  required IconData icon,
+}) {
   return ListTile(
     leading: Icon(icon),
     title: Text(label),
     subtitle: Text('Включить или отключить $label'),
-    trailing: 
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Уникальные'),
-          Checkbox(
-            value: value,
-            onChanged: isUnique,
-          ),
-          Switch(
-            value: value,
-            onChanged: isUsed,
-          ),
-        ],
-      ));
-  }
+    trailing: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text('Уникальные'),
+        Checkbox(value: value, onChanged: isUnique),
+        Switch(value: value, onChanged: isUsed),
+      ],
+    ),
+  );
+}
 
 // Поле ввода
 Widget buildInput({
-  required String label, 
-  required String placeholder, 
+  required String label,
+  required String placeholder,
   required TextEditingController textController,
-  bool hidden = false, 
-  required TextInputType symbols, 
-  required Function submFunction
-  }) {
+  bool hidden = false,
+  required TextInputType symbols,
+  required Function submFunction,
+}) {
   return Column(
     children: [
       const SizedBox(height: 18),
       // Text(label),
       TextFormField(
         keyboardType: symbols,
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'.*')),
-        ],
+        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'.*'))],
         controller: textController,
         decoration: InputDecoration(
           labelText: label,
           hintText: placeholder,
-          border: OutlineInputBorder(),
+          border: const OutlineInputBorder(),
         ),
       ),
     ],
@@ -81,17 +69,12 @@ Widget buildInput({
 }
 
 // Кнопка
-Widget buildButton({  
-  required String label, 
-  required VoidCallback function
-  }) {
+Widget buildButton({required String label, required VoidCallback function}) {
   return ElevatedButton(
     onPressed: function,
     style: ElevatedButton.styleFrom(
-      padding: EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      padding: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
     child: Text(label, textAlign: TextAlign.center),
   );
@@ -117,10 +100,10 @@ Widget buildBigText(String text) {
 
 // Текст с копированием
 Widget buildCopyOnTap({
-  required String label, 
-  required String text1, 
-  required Function function
-  }) {
+  required String label,
+  required String text1,
+  required Function function,
+}) {
   return Column(
     children: [
       const SizedBox(height: 48),
@@ -133,7 +116,7 @@ Widget buildCopyOnTap({
         ),
       ),
       const SizedBox(height: 16),
-      text1 != '' && text1 != "Нет конфигов"
+      text1 != '' && text1 != 'Нет конфигов'
           ? GestureDetector(
               onTap: () {
                 Clipboard.setData(ClipboardData(text: text1));
@@ -183,6 +166,5 @@ Widget buildCopyOnTap({
 }
 
 EdgeInsets setPadding() {
-  return EdgeInsets.only(top: 88, right: 30, left: 30, bottom: 88);
+  return const EdgeInsets.only(top: 88, right: 30, left: 30, bottom: 88);
 }
-

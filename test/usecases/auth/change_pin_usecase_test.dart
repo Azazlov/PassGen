@@ -1,11 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:pass_gen/domain/usecases/auth/change_pin_usecase.dart';
-import 'package:pass_gen/domain/repositories/auth_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/domain/repositories/auth_repository.dart';
+import 'package:pass_gen/domain/usecases/auth/change_pin_usecase.dart';
+
 import 'change_pin_usecase_test.mocks.dart';
 
 @GenerateMocks([AuthRepository])
@@ -52,7 +52,7 @@ void main() {
     test('должен вернуть ошибку при пустом старом PIN', () async {
       // Arrange
       when(mockRepository.changePin('', newPin))
-          .thenAnswer((_) async => Left<AuthFailure, bool>(AuthFailure(message: 'Старый PIN не может быть пустым')));
+          .thenAnswer((_) async => const Left<AuthFailure, bool>(AuthFailure(message: 'Старый PIN не может быть пустым')));
 
       // Act
       final result = await useCase.execute('', newPin);
@@ -65,7 +65,7 @@ void main() {
     test('должен вернуть ошибку при пустом новом PIN', () async {
       // Arrange
       when(mockRepository.changePin(oldPin, ''))
-          .thenAnswer((_) async => Left<AuthFailure, bool>(AuthFailure(message: 'Новый PIN не может быть пустым')));
+          .thenAnswer((_) async => const Left<AuthFailure, bool>(AuthFailure(message: 'Новый PIN не может быть пустым')));
 
       // Act
       final result = await useCase.execute(oldPin, '');

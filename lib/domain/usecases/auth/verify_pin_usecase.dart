@@ -5,11 +5,10 @@ import '../../repositories/auth_repository.dart';
 
 /// Use case для проверки PIN
 class VerifyPinUseCase {
+  VerifyPinUseCase(this.repository);
   final AuthRepository repository;
 
-  VerifyPinUseCase(this.repository);
-
   Future<Either<AuthFailure, AuthResult>> execute(String pin) async {
-    return await repository.verifyPin(pin);
+    return repository.verifyPin(pin);
   }
 }

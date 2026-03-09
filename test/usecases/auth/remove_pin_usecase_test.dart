@@ -1,11 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:pass_gen/domain/usecases/auth/remove_pin_usecase.dart';
-import 'package:pass_gen/domain/repositories/auth_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/domain/repositories/auth_repository.dart';
+import 'package:pass_gen/domain/usecases/auth/remove_pin_usecase.dart';
+
 import 'remove_pin_usecase_test.mocks.dart';
 
 @GenerateMocks([AuthRepository])
@@ -51,7 +51,7 @@ void main() {
     test('должен вернуть ошибку при пустом PIN', () async {
       // Arrange
       when(mockRepository.removePin(''))
-          .thenAnswer((_) async => Left<AuthFailure, bool>(AuthFailure(message: 'PIN не может быть пустым')));
+          .thenAnswer((_) async => const Left<AuthFailure, bool>(AuthFailure(message: 'PIN не может быть пустым')));
 
       // Act
       final result = await useCase.execute('');

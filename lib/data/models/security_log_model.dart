@@ -1,10 +1,5 @@
 /// Модель лога безопасности для базы данных
 class SecurityLogModel {
-  final int? id;
-  final String actionType;
-  final DateTime timestamp;
-  final String? details;
-
   const SecurityLogModel({
     this.id,
     required this.actionType,
@@ -21,6 +16,10 @@ class SecurityLogModel {
       details: map['details'] as String?,
     );
   }
+  final int? id;
+  final String actionType;
+  final DateTime timestamp;
+  final String? details;
 
   /// Преобразование в Map (SQLite)
   Map<String, dynamic> toMap() {

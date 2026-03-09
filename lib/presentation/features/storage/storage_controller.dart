@@ -1,26 +1,19 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
-import '../../../core/errors/failures.dart';
+
 import '../../../core/constants/event_types.dart';
+import '../../../core/errors/failures.dart';
 import '../../../domain/entities/password_entry.dart';
-import '../../../domain/usecases/storage/get_passwords_usecase.dart';
-import '../../../domain/usecases/storage/delete_password_usecase.dart';
-import '../../../domain/usecases/storage/export_passwords_usecase.dart';
-import '../../../domain/usecases/storage/import_passwords_usecase.dart';
-import '../../../domain/usecases/storage/export_passgen_usecase.dart';
-import '../../../domain/usecases/storage/import_passgen_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
+import '../../../domain/usecases/storage/delete_password_usecase.dart';
+import '../../../domain/usecases/storage/export_passgen_usecase.dart';
+import '../../../domain/usecases/storage/export_passwords_usecase.dart';
+import '../../../domain/usecases/storage/get_passwords_usecase.dart';
+import '../../../domain/usecases/storage/import_passgen_usecase.dart';
+import '../../../domain/usecases/storage/import_passwords_usecase.dart';
 
 /// Контроллер для экрана хранилища
 class StorageController extends ChangeNotifier {
-  final GetPasswordsUseCase getPasswordsUseCase;
-  final DeletePasswordUseCase deletePasswordUseCase;
-  final ExportPasswordsUseCase exportPasswordsUseCase;
-  final ImportPasswordsUseCase importPasswordsUseCase;
-  final ExportPassgenUseCase exportPassgenUseCase;
-  final ImportPassgenUseCase importPassgenUseCase;
-  final LogEventUseCase logEventUseCase;
-
   StorageController({
     required this.getPasswordsUseCase,
     required this.deletePasswordUseCase,
@@ -30,6 +23,13 @@ class StorageController extends ChangeNotifier {
     required this.importPassgenUseCase,
     required this.logEventUseCase,
   });
+  final GetPasswordsUseCase getPasswordsUseCase;
+  final DeletePasswordUseCase deletePasswordUseCase;
+  final ExportPasswordsUseCase exportPasswordsUseCase;
+  final ImportPasswordsUseCase importPasswordsUseCase;
+  final ExportPassgenUseCase exportPassgenUseCase;
+  final ImportPassgenUseCase importPassgenUseCase;
+  final LogEventUseCase logEventUseCase;
 
   // Состояние
   List<PasswordEntry> _allPasswords = [];
@@ -56,9 +56,11 @@ class StorageController extends ChangeNotifier {
   bool get isEmpty => _passwords.isEmpty;
   bool get hasNoPasswords => _allPasswords.isEmpty;
   bool get isFilterEmpty => _passwords.isEmpty;
-  bool get hasActiveFilter => _selectedCategoryId != null || _searchQuery.isNotEmpty;
+  bool get hasActiveFilter =>
+      _selectedCategoryId != null || _searchQuery.isNotEmpty;
   int get passwordsCount => _passwords.length;
-  PasswordEntry? get currentPassword => _currentIndex < _passwords.length ? _passwords[_currentIndex] : null;
+  PasswordEntry? get currentPassword =>
+      _currentIndex < _passwords.length ? _passwords[_currentIndex] : null;
 
   /// Выбор записи
   void selectEntry(PasswordEntry? entry) {
@@ -97,20 +99,25 @@ class StorageController extends ChangeNotifier {
         }
       }
       // Поиск по сервису
-      if (_searchQuery.isNotEmpty && !entry.service.toLowerCase().contains(_searchQuery)) {
+      if (_searchQuery.isNotEmpty &&
+          !entry.service.toLowerCase().contains(_searchQuery)) {
         return false;
       }
       return true;
     }).toList();
     _currentIndex = 0;
-    
+
     // Отладка
-    debugPrint('Filter applied: categoryId=$_selectedCategoryId, query="$_searchQuery"');
-    debugPrint('  All passwords: ${_allPasswords.length}, Filtered: ${_passwords.length}');
+    debugPrint(
+      'Filter applied: categoryId=$_selectedCategoryId, query="$_searchQuery"',
+    );
+    debugPrint(
+      '  All passwords: ${_allPasswords.length}, Filtered: ${_passwords.length}',
+    );
     if (_allPasswords.isNotEmpty) {
       debugPrint('  Sample categoryId: ${_allPasswords.first.categoryId}');
     }
-    
+
     notifyListeners();
   }
 
@@ -196,7 +203,7 @@ class StorageController extends ChangeNotifier {
           final entry = _passwords.length > _currentIndex
               ? _passwords[_currentIndex]
               : null;
-          
+
           logEventUseCase.execute(
             EventTypes.pwdDeleted,
             details: {
@@ -208,8 +215,9 @@ class StorageController extends ChangeNotifier {
           _passwords.removeAt(_currentIndex);
           // Также удаляем из всех паролей
           if (entry != null) {
-            _allPasswords.removeWhere((e) =>
-              e.service == entry.service && e.password == entry.password);
+            _allPasswords.removeWhere(
+              (e) => e.service == entry.service && e.password == entry.password,
+            );
           }
           if (_currentIndex >= _passwords.length) {
             _currentIndex = _passwords.isEmpty ? 0 : _passwords.length - 1;
@@ -234,15 +242,12 @@ class StorageController extends ChangeNotifier {
     final result = await exportPasswordsUseCase.execute();
 
     // Логируем экспорт
-    result.fold(
-      (failure) => null,
-      (data) {
-        logEventUseCase.execute(
-          EventTypes.dataExport,
-          details: {'count': _passwords.length},
-        );
-      },
-    );
+    result.fold((failure) => null, (data) {
+      logEventUseCase.execute(
+        EventTypes.dataExport,
+        details: {'count': _passwords.length},
+      );
+    });
 
     return result;
   }
@@ -267,7 +272,7 @@ class StorageController extends ChangeNotifier {
             EventTypes.dataImport,
             details: {'success': true, 'format': 'json'},
           );
-          
+
           await loadPasswords();
           return true;
         },
@@ -282,20 +287,19 @@ class StorageController extends ChangeNotifier {
   }
 
   /// Экспорт паролей в формат .passgen
-  Future<Either<StorageFailure, String>> exportPassgen(String masterPassword) async {
+  Future<Either<StorageFailure, String>> exportPassgen(
+    String masterPassword,
+  ) async {
     final result = await exportPassgenUseCase.execute(masterPassword);
-    
+
     // Логируем экспорт
-    result.fold(
-      (failure) => null,
-      (data) {
-        logEventUseCase.execute(
-          EventTypes.dataExport,
-          details: {'count': _passwords.length, 'format': 'passgen'},
-        );
-      },
-    );
-    
+    result.fold((failure) => null, (data) {
+      logEventUseCase.execute(
+        EventTypes.dataExport,
+        details: {'count': _passwords.length, 'format': 'passgen'},
+      );
+    });
+
     return result;
   }
 
@@ -322,7 +326,7 @@ class StorageController extends ChangeNotifier {
             EventTypes.dataImport,
             details: {'success': true, 'format': 'passgen'},
           );
-          
+
           await loadPasswords();
           return true;
         },

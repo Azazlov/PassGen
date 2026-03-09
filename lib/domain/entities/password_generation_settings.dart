@@ -1,21 +1,6 @@
 /// Настройки генерации пароля
 class PasswordGenerationSettings {
-  final int strength;
-  final List<int> lengthRange;
-  final int flags;
-  final bool requireUppercase;
-  final bool requireLowercase;
-  final bool requireDigits;
-  final bool requireSymbols;
-  final bool allUnique;
-  final bool excludeSimilar; // Исключать похожие символы (1, l, I, O, 0)
-  final String? customCharacters; // Пользовательские символы
-  
-  // Флаги для пользовательских наборов символов
-  final bool useCustomLowercase; // Использовать строчные
-  final bool useCustomUppercase; // Использовать заглавные
-  final bool useCustomDigits;    // Использовать цифры
-  final bool useCustomSymbols;   // Использовать спецсимволы
+  // Использовать спецсимволы
 
   const PasswordGenerationSettings({
     this.strength = 2,
@@ -33,6 +18,22 @@ class PasswordGenerationSettings {
     this.useCustomDigits = true,
     this.useCustomSymbols = true,
   });
+  final int strength;
+  final List<int> lengthRange;
+  final int flags;
+  final bool requireUppercase;
+  final bool requireLowercase;
+  final bool requireDigits;
+  final bool requireSymbols;
+  final bool allUnique;
+  final bool excludeSimilar; // Исключать похожие символы (1, l, I, O, 0)
+  final String? customCharacters; // Пользовательские символы
+
+  // Флаги для пользовательских наборов символов
+  final bool useCustomLowercase; // Использовать строчные
+  final bool useCustomUppercase; // Использовать заглавные
+  final bool useCustomDigits; // Использовать цифры
+  final bool useCustomSymbols;
 
   PasswordGenerationSettings copyWith({
     int? strength,
@@ -69,5 +70,6 @@ class PasswordGenerationSettings {
   }
 
   @override
-  String toString() => 'PasswordGenerationSettings(strength: $strength, length: $lengthRange, excludeSimilar: $excludeSimilar)';
+  String toString() =>
+      'PasswordGenerationSettings(strength: $strength, length: $lengthRange, excludeSimilar: $excludeSimilar)';
 }

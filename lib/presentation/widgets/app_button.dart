@@ -8,12 +8,6 @@ import '../../../core/constants/spacing.dart';
 /// - Мобильный: 48dp
 /// - Планшет/Десктоп: 40dp
 class AppButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-  final IconData? icon;
-  final bool isLoading;
-  final ButtonStyle? style;
-
   const AppButton({
     super.key,
     required this.label,
@@ -22,13 +16,18 @@ class AppButton extends StatelessWidget {
     this.isLoading = false,
     this.style,
   });
+  final String label;
+  final VoidCallback onPressed;
+  final IconData? icon;
+  final bool isLoading;
+  final ButtonStyle? style;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final width = MediaQuery.of(context).size.width;
     final isDesktop = width >= Breakpoints.desktopMin;
-    
+
     // Адаптивная высота: 48dp для мобильных, 40dp для десктопа
     final buttonHeight = isDesktop ? 40.0 : 48.0;
 
@@ -37,7 +36,8 @@ class AppButton extends StatelessWidget {
       label: isLoading ? 'Загрузка' : label,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
-        style: style ??
+        style:
+            style ??
             ElevatedButton.styleFrom(
               minimumSize: Size.fromHeight(buttonHeight),
               padding: EdgeInsets.symmetric(

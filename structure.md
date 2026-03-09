@@ -1,4 +1,4 @@
-# 📋 Описание модулей проекта PassGen v0.4.0
+# 📋 Описание модулей проекта PassGen v0.5.0
 
 ## 🏗️ Общая архитектура (Clean Architecture)
 
@@ -28,9 +28,9 @@
 
 ### Зависимости (Providers)
 - **Data Sources:** 4 (Encryptor, Storage, Auth, PasswordGenerator)
-- **Repositories:** 7 (все реализации)
-- **Use Cases:** 25+ (все сценарии)
-- **Controllers:** 8 (Generator, Encryptor, Storage, Auth, Settings, Categories, Logs)
+- **Repositories:** 10 (все реализации)
+- **Use Cases:** 25 (все сценарии)
+- **Controllers:** 7 (Generator, Encryptor, Storage, Auth, Settings, Categories, Logs)
 
 ### Для диаграмм
 *   **Развёртывание:** Главный контейнер всех Providers
@@ -90,7 +90,7 @@
 | `PasswordResult` | `password`, `strength`, `config`, `error` | `hasError()` | Результат генерации |
 | `SecurityLog` | `id`, `actionType`, `timestamp`, `details` | `fromJson()`, `toJson()`, `copyWith()` | Запись лога безопасности |
 
-### 3.2 Repository Interfaces (`repositories/`) — 7 интерфейсов
+### 3.2 Repository Interfaces (`repositories/`) — 10 интерфейсов
 | Интерфейс | Методы | Описание |
 | :--- | :--- | :--- |
 | `AppSettingsRepository` | `getValue()`, `setValue()`, `remove()`, `getAll()`, `clear()` | Контракт для настроек |
@@ -99,7 +99,10 @@
 | `EncryptorRepository` | `encrypt()`, `decrypt()` | Контракт для шифрования |
 | `PasswordEntryRepository` | `getAll()`, `getById()`, `getByCategory()`, `searchByService()`, `create()`, `update()`, `delete()` | Контракт для записей |
 | `PasswordGeneratorRepository` | `generatePassword()`, `restorePassword()`, `createPasswordConfig()`, `decryptPassword()`, `savePassword()` | Контракт для генерации |
+| `PasswordExportRepository` | `exportJson()` | Контракт для экспорта JSON |
+| `PasswordImportRepository` | `importJson()` | Контракт для импорта JSON |
 | `SecurityLogRepository` | `logEvent()`, `getLogs()`, `getLogsByType()`, `clearOldLogs()`, `count()` | Контракт для логов |
+| `StorageRepository` | `getAll()`, `getByCategory()`, `searchByService()`, `create()`, `update()`, `delete()` | Контракт для хранилища |
 
 ### 3.3 Use Cases (`usecases/`) — 25+ сценариев
 
@@ -199,7 +202,7 @@
 | :--- | :--- |
 | `PassgenFormat` | Фирменный формат .passgen (экспорт/импорт, ChaCha20-Poly1305) |
 
-### 4.5 Repositories (`repositories/`) — 7 реализаций
+### 4.5 Repositories (`repositories/`) — 9 реализаций
 | Класс | Реализует | Методы |
 | :--- | :--- | :--- |
 | `AppSettingsRepositoryImpl` | `AppSettingsRepository` | CRUD для настроек в SQLite |
@@ -207,6 +210,8 @@
 | `CategoryRepositoryImpl` | `CategoryRepository` | CRUD для категорий в SQLite |
 | `EncryptorRepositoryImpl` | `EncryptorRepository` | Делегирует в EncryptorLocalDataSource |
 | `PasswordGeneratorRepositoryImpl` | `PasswordGeneratorRepository` | Делегирует в PasswordGeneratorLocalDataSource |
+| `PasswordExportRepositoryImpl` | `PasswordExportRepository` | Экспорт JSON |
+| `PasswordImportRepositoryImpl` | `PasswordImportRepository` | Импорт JSON |
 | `SecurityLogRepositoryImpl` | `SecurityLogRepository` | Логирование в SQLite, автоочистка |
 | `StorageRepositoryImpl` | `StorageRepository` | CRUD для паролей, экспорт/импорт JSON и .passgen |
 

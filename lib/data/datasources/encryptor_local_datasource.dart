@@ -9,9 +9,15 @@ class EncryptorLocalDataSource {
   late final Chacha20 _algorithm = Chacha20.poly1305Aead();
 
   /// Генерирует случайные байты
-  List<int> generateRandomBytes({int length = 32, List<int> range = const [0, 255]}) {
+  List<int> generateRandomBytes({
+    int length = 32,
+    List<int> range = const [0, 255],
+  }) {
     final random = Random.secure();
-    return List.generate(length, (_) => random.nextInt(range[1] - range[0]) + range[0]);
+    return List.generate(
+      length,
+      (_) => random.nextInt(range[1] - range[0]) + range[0],
+    );
   }
 
   /// Генерирует случайное число
@@ -33,7 +39,7 @@ class EncryptorLocalDataSource {
 
     nonce ??= generateRandomBytes(length: 32);
 
-    return await pbkdf2.deriveKeyFromPassword(
+    return pbkdf2.deriveKeyFromPassword(
       password: CryptoUtils.encodeBytesBase64(password),
       nonce: nonce,
     );
@@ -67,10 +73,18 @@ class EncryptorLocalDataSource {
     required List<int> password,
   }) async {
     try {
-      final nonce = CryptoUtils.decodeBytesBase64(encryptedData['nonce'] as String);
-      final nonceBox = CryptoUtils.decodeBytesBase64(encryptedData['nonceBox'] as String);
-      final cipherText = CryptoUtils.decodeBytesBase64(encryptedData['cipherText'] as String);
-      final macBytes = CryptoUtils.decodeBytesBase64(encryptedData['mac'] as String);
+      final nonce = CryptoUtils.decodeBytesBase64(
+        encryptedData['nonce'] as String,
+      );
+      final nonceBox = CryptoUtils.decodeBytesBase64(
+        encryptedData['nonceBox'] as String,
+      );
+      final cipherText = CryptoUtils.decodeBytesBase64(
+        encryptedData['cipherText'] as String,
+      );
+      final macBytes = CryptoUtils.decodeBytesBase64(
+        encryptedData['mac'] as String,
+      );
 
       final secretBox = SecretBox(
         cipherText,
@@ -95,7 +109,9 @@ class EncryptorLocalDataSource {
 
     final nonce = CryptoUtils.decodeBytesBase64(data['nonce'] as String);
     final nonceBox = CryptoUtils.decodeBytesBase64(data['nonceBox'] as String);
-    final cipherText = CryptoUtils.decodeBytesBase64(data['cipherText'] as String);
+    final cipherText = CryptoUtils.decodeBytesBase64(
+      data['cipherText'] as String,
+    );
     final mac = CryptoUtils.decodeBytesBase64(data['mac'] as String);
 
     return CryptoUtils.encodeBytesBase64(nonce + nonceBox + cipherText + mac);

@@ -1,11 +1,11 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:pass_gen/domain/usecases/password/save_password_usecase.dart';
-import 'package:pass_gen/domain/repositories/password_generator_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/domain/repositories/password_generator_repository.dart';
+import 'package:pass_gen/domain/usecases/password/save_password_usecase.dart';
+
 import 'save_password_usecase_test.mocks.dart';
 
 @GenerateMocks([PasswordGeneratorRepository])
@@ -114,7 +114,7 @@ void main() {
         service: testService,
         password: testPassword,
         config: testConfig,
-      )).thenAnswer((_) async => Left(PasswordGenerationFailure(message: 'Ошибка сохранения')));
+      )).thenAnswer((_) async => const Left(PasswordGenerationFailure(message: 'Ошибка сохранения')));
 
       // Act
       final result = await useCase.execute(

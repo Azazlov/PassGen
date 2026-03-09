@@ -5,14 +5,13 @@ import 'database_schema.dart';
 
 /// Синглтон для управления базой данных SQLite
 class DatabaseHelper {
-  static final DatabaseHelper _instance = DatabaseHelper._internal();
-  static Database? _database;
-
   factory DatabaseHelper() {
     return _instance;
   }
 
   DatabaseHelper._internal();
+  static final DatabaseHelper _instance = DatabaseHelper._internal();
+  static Database? _database;
 
   /// Инициализация фабрики баз данных (должна быть вызвана перед первым использованием)
   static void initFactory() {
@@ -39,7 +38,7 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     final path = await _dbPath;
 
-    return await databaseFactory.openDatabase(
+    return databaseFactory.openDatabase(
       path,
       options: OpenDatabaseOptions(
         version: DatabaseSchema.version,
@@ -86,7 +85,7 @@ class DatabaseHelper {
   /// Вставка записи
   Future<int> insert(String table, Map<String, dynamic> data) async {
     final db = await database;
-    return await db.insert(table, data);
+    return db.insert(table, data);
   }
 
   /// Вставка записи с заменой при конфликте
@@ -96,7 +95,7 @@ class DatabaseHelper {
     String? conflictColumn,
   }) async {
     final db = await database;
-    return await db.insert(
+    return db.insert(
       table,
       data,
       conflictAlgorithm: conflictColumn != null
@@ -110,7 +109,7 @@ class DatabaseHelper {
   /// Получение всех записей из таблицы
   Future<List<Map<String, dynamic>>> queryAll(String table) async {
     final db = await database;
-    return await db.query(table);
+    return db.query(table);
   }
 
   /// Получение записи по ID
@@ -134,7 +133,7 @@ class DatabaseHelper {
     int? offset,
   }) async {
     final db = await database;
-    return await db.query(
+    return db.query(
       table,
       where: where,
       whereArgs: whereArgs,
@@ -150,7 +149,12 @@ class DatabaseHelper {
     String? where,
     List<dynamic>? whereArgs,
   }) async {
-    final results = await query(table, where: where, whereArgs: whereArgs, limit: 1);
+    final results = await query(
+      table,
+      where: where,
+      whereArgs: whereArgs,
+      limit: 1,
+    );
     return results.isNotEmpty ? results.first : null;
   }
 
@@ -163,12 +167,7 @@ class DatabaseHelper {
     required int id,
   }) async {
     final db = await database;
-    return await db.update(
-      table,
-      data,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return db.update(table, data, where: 'id = ?', whereArgs: [id]);
   }
 
   /// Обновление записей с условиями
@@ -179,12 +178,7 @@ class DatabaseHelper {
     List<dynamic>? whereArgs,
   }) async {
     final db = await database;
-    return await db.update(
-      table,
-      data,
-      where: where,
-      whereArgs: whereArgs,
-    );
+    return db.update(table, data, where: where, whereArgs: whereArgs);
   }
 
   // ==================== DELETE ====================
@@ -192,11 +186,7 @@ class DatabaseHelper {
   /// Удаление записи по ID
   Future<int> deleteById(String table, int id) async {
     final db = await database;
-    return await db.delete(
-      table,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return db.delete(table, where: 'id = ?', whereArgs: [id]);
   }
 
   /// Удаление записей с условиями
@@ -206,17 +196,13 @@ class DatabaseHelper {
     List<dynamic>? whereArgs,
   }) async {
     final db = await database;
-    return await db.delete(
-      table,
-      where: where,
-      whereArgs: whereArgs,
-    );
+    return db.delete(table, where: where, whereArgs: whereArgs);
   }
 
   /// Удаление всех записей из таблицы
   Future<int> deleteAll(String table) async {
     final db = await database;
-    return await db.delete(table);
+    return db.delete(table);
   }
 
   // ==================== RAW OPERATIONS ====================
@@ -227,7 +213,7 @@ class DatabaseHelper {
     List<dynamic>? arguments,
   ]) async {
     final db = await database;
-    return await db.rawQuery(sql, arguments);
+    return db.rawQuery(sql, arguments);
   }
 
   /// Выполнение raw SQL команды
@@ -241,8 +227,8 @@ class DatabaseHelper {
   /// Выполнение транзакции
   Future<T?> transaction<T>(Future<T?> Function(Transaction txn) action) async {
     final db = await database;
-    return await db.transaction((txn) async {
-      return await action(txn);
+    return db.transaction((txn) async {
+      return action(txn);
     });
   }
 
@@ -250,7 +236,7 @@ class DatabaseHelper {
   Future<List<dynamic>> batchExecute(List<BatchOperation> operations) async {
     final db = await database;
     final batch = db.batch();
-    
+
     for (final op in operations) {
       switch (op.type) {
         case BatchOperationType.insert:
@@ -265,16 +251,12 @@ class DatabaseHelper {
           );
           break;
         case BatchOperationType.delete:
-          batch.delete(
-            op.table!,
-            where: op.where,
-            whereArgs: op.whereArgs,
-          );
+          batch.delete(op.table!, where: op.where, whereArgs: op.whereArgs);
           break;
       }
     }
-    
-    return await batch.commit();
+
+    return batch.commit();
   }
 
   // ==================== UTILS ====================
@@ -296,7 +278,7 @@ class DatabaseHelper {
   /// Проверка существования базы данных
   Future<bool> databaseExists() async {
     final path = await _dbPath;
-    return await databaseFactory.databaseExists(path);
+    return databaseFactory.databaseExists(path);
   }
 }
 
@@ -305,28 +287,20 @@ enum BatchOperationType { insert, update, delete }
 
 /// Операция для пакетного выполнения
 class BatchOperation {
+  BatchOperation.insert(this.data, {this.table})
+    : type = BatchOperationType.insert,
+      where = null,
+      whereArgs = null;
+
+  BatchOperation.update(this.data, {this.table, this.where, this.whereArgs})
+    : type = BatchOperationType.update;
+
+  BatchOperation.delete({this.table, this.where, this.whereArgs})
+    : type = BatchOperationType.delete,
+      data = null;
   final BatchOperationType type;
   final String? table;
   final Map<String, dynamic>? data;
   final String? where;
   final List<dynamic>? whereArgs;
-
-  BatchOperation.insert(this.data, {this.table})
-      : type = BatchOperationType.insert,
-        where = null,
-        whereArgs = null;
-
-  BatchOperation.update(
-    this.data, {
-    this.table,
-    this.where,
-    this.whereArgs,
-  }) : type = BatchOperationType.update;
-
-  BatchOperation.delete({
-    this.table,
-    this.where,
-    this.whereArgs,
-  })  : type = BatchOperationType.delete,
-        data = null;
 }

@@ -1,9 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-
-import 'package:pass_gen/domain/usecases/category/delete_category_usecase.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/domain/repositories/category_repository.dart';
+import 'package:pass_gen/domain/usecases/category/delete_category_usecase.dart';
 
 import 'delete_category_usecase_test.mocks.dart';
 

@@ -3,11 +3,10 @@ import '../../repositories/auth_repository.dart';
 
 /// Use case для получения состояния аутентификации
 class GetAuthStateUseCase {
+  GetAuthStateUseCase(this.repository);
   final AuthRepository repository;
 
-  GetAuthStateUseCase(this.repository);
-
   Future<AuthState> execute() async {
-    return await repository.getAuthState();
+    return repository.getAuthState();
   }
 }

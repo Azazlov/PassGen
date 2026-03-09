@@ -1,35 +1,41 @@
 import 'dart:convert';
+
 import 'package:uuid/uuid.dart';
+
 import '../../../../core/utils/crypto_utils.dart';
 import '../../../../core/utils/password_utils.dart';
+import '../../domain/entities/password_entry.dart';
 import 'encryptor_local_datasource.dart';
 import 'storage_local_datasource.dart';
-import '../../domain/entities/password_entry.dart';
 
 /// Локальный источник данных для генерации паролей
 class PasswordGeneratorLocalDataSource {
+  const PasswordGeneratorLocalDataSource(this._encryptor, this._storage);
   final EncryptorLocalDataSource _encryptor;
   final StorageLocalDataSource _storage;
-
-  const PasswordGeneratorLocalDataSource(this._encryptor, this._storage);
 
   /// Алфавиты символов
   static const String digits = '0123456789';
   static const String lowercase = 'abcdefghijklmnopqrstuvwxyz';
   static const String uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   static const String symbols = '!@#%^&*_+-=[]{};:,.?';
-  
+
   /// Похожие символы для исключения
   static const String similarCharacters = '1lI0Oo';
 
   /// Получает алфавит по флагу
   String getAlphabetByFlag(int flag) {
     switch (flag) {
-      case 1: return digits;
-      case 4: return lowercase;
-      case 16: return uppercase;
-      case 64: return symbols;
-      default: return '';
+      case 1:
+        return digits;
+      case 4:
+        return lowercase;
+      case 16:
+        return uppercase;
+      case 64:
+        return symbols;
+      default:
+        return '';
     }
   }
 
@@ -143,10 +149,18 @@ class PasswordGeneratorLocalDataSource {
             // Проверяем соответствующие use* флаги
             bool shouldInclude = false;
             switch (f) {
-              case 1: shouldInclude = useDigits; break;
-              case 4: shouldInclude = useLowercase; break;
-              case 16: shouldInclude = useUppercase; break;
-              case 64: shouldInclude = useSymbols; break;
+              case 1:
+                shouldInclude = useDigits;
+                break;
+              case 4:
+                shouldInclude = useLowercase;
+                break;
+              case 16:
+                shouldInclude = useUppercase;
+                break;
+              case 64:
+                shouldInclude = useSymbols;
+                break;
             }
 
             if (shouldInclude) {
@@ -156,18 +170,19 @@ class PasswordGeneratorLocalDataSource {
               if ((flags & (f << 1)) != 0 && passwordChars.length < length) {
                 var charIndex = getSafeRand(randCursor) % chars.length;
                 var char = chars[charIndex];
-                
+
                 // Если allUnique = true, проверяем уникальность
                 if (allUnique) {
                   // Пытаемся найти уникальный символ
                   var attempts = 0;
-                  while (passwordChars.contains(char) && attempts < chars.length) {
+                  while (passwordChars.contains(char) &&
+                      attempts < chars.length) {
                     charIndex = (charIndex + 1) % chars.length;
                     char = chars[charIndex];
                     attempts++;
                   }
                 }
-                
+
                 if (!passwordChars.contains(char)) {
                   passwordChars.add(char);
                 }
@@ -194,16 +209,17 @@ class PasswordGeneratorLocalDataSource {
     while (passwordChars.length < length) {
       var charIndex = getSafeRand(randCursor) % allAllowedChars.length;
       var char = allAllowedChars[charIndex];
-      
+
       if (allUnique) {
         // Если allUnique = true, пытаемся найти уникальный символ
         var attempts = 0;
-        while (passwordChars.contains(char) && attempts < allAllowedChars.length) {
+        while (passwordChars.contains(char) &&
+            attempts < allAllowedChars.length) {
           charIndex = (charIndex + 1) % allAllowedChars.length;
           char = allAllowedChars[charIndex];
           attempts++;
         }
-        
+
         // Если не нашли уникальный символ, добавляем только если не содержится
         if (!passwordChars.contains(char)) {
           passwordChars.add(char);
@@ -256,7 +272,7 @@ class PasswordGeneratorLocalDataSource {
     final messageBytes = utf8.encode(passwordConfig);
     final passwordBytes = utf8.encode(masterPassword);
 
-    return await _encryptor.encryptToMini(
+    return _encryptor.encryptToMini(
       message: messageBytes,
       password: passwordBytes,
     );
@@ -326,16 +342,9 @@ class PasswordGeneratorLocalDataSource {
 
       await _storage.savePasswords(passwords);
 
-      return {
-        'success': true,
-        'error': null,
-        'updated': existingIndex != -1,
-      };
+      return {'success': true, 'error': null, 'updated': existingIndex != -1};
     } catch (e) {
-      return {
-        'success': false,
-        'error': e.toString(),
-      };
+      return {'success': false, 'error': e.toString()};
     }
   }
 }

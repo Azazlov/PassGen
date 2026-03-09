@@ -1,7 +1,2 @@
 /// Результат проверки PIN
-enum AuthResult {
-  success,
-  wrongPin,
-  locked,
-  notSetup,
-}
+enum AuthResult { success, wrongPin, locked, notSetup }

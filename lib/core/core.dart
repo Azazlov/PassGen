@@ -1,4 +1,6 @@
 /// Core exports
+library;
+
 export 'constants/app_constants.dart';
 export 'constants/event_types.dart';
 export 'errors/failures.dart';

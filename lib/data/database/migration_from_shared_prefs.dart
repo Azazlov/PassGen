@@ -1,25 +1,26 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:flutter/foundation.dart';
-import '../database/database_helper.dart';
-import '../models/password_entry_model.dart';
-import '../models/password_config_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../domain/entities/password_entry.dart';
+import '../database/database_helper.dart';
+import '../models/password_config_model.dart';
+import '../models/password_entry_model.dart';
 
 /// Миграция данных из SharedPreferences в SQLite
 class MigrationFromSharedPreferences {
+  MigrationFromSharedPreferences({
+    DatabaseHelper? dbHelper,
+    required SharedPreferences prefs,
+  }) : _dbHelper = dbHelper ?? DatabaseHelper(),
+       _prefs = prefs;
   final DatabaseHelper _dbHelper;
   final SharedPreferences _prefs;
 
   static const String _migrationKey = 'sqlite_migration_completed';
   static const String _passwordsKey = 'saved_passwords';
   static const String _configsKey = 'password_configs';
-
-  MigrationFromSharedPreferences({
-    DatabaseHelper? dbHelper,
-    required SharedPreferences prefs,
-  })  : _dbHelper = dbHelper ?? DatabaseHelper(),
-        _prefs = prefs;
 
   /// Проверка, выполнена ли миграция
   Future<bool> isMigrationCompleted() async {
@@ -93,7 +94,10 @@ class MigrationFromSharedPreferences {
         );
 
         // Вставляем в БД
-        final id = await _dbHelper.insert('password_entries', entryModel.toMap());
+        final id = await _dbHelper.insert(
+          'password_entries',
+          entryModel.toMap(),
+        );
 
         // Если есть конфиг, сохраняем его
         if (entry.config.isNotEmpty) {
@@ -148,17 +152,16 @@ class MigrationFromSharedPreferences {
 
 /// Результат миграции
 class MigrationResult {
-  final bool success;
-  final String message;
-  final int migratedPasswords;
-  final int migratedConfigs;
-
   const MigrationResult({
     required this.success,
     required this.message,
     required this.migratedPasswords,
     required this.migratedConfigs,
   });
+  final bool success;
+  final String message;
+  final int migratedPasswords;
+  final int migratedConfigs;
 
   @override
   String toString() {

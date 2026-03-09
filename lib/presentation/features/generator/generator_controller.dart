@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/event_types.dart';
 import '../../../domain/entities/password_generation_settings.dart';
 import '../../../domain/entities/password_result.dart';
-import '../../../domain/usecases/password/generate_password_usecase.dart';
-import '../../../domain/usecases/password/save_password_usecase.dart';
 import '../../../domain/usecases/generator/validate_generator_settings_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
+import '../../../domain/usecases/password/generate_password_usecase.dart';
+import '../../../domain/usecases/password/save_password_usecase.dart';
 
 /// Контроллер для экрана генератора паролей
 class GeneratorController extends ChangeNotifier {
-  final GeneratePasswordUseCase generatePasswordUseCase;
-  final SavePasswordUseCase savePasswordUseCase;
-  final ValidateGeneratorSettingsUseCase validateSettingsUseCase;
-  final LogEventUseCase logEventUseCase;
-
   GeneratorController({
     required this.generatePasswordUseCase,
     required this.savePasswordUseCase,
@@ -23,6 +19,10 @@ class GeneratorController extends ChangeNotifier {
   }) {
     _updateSettingsByStrength(_strength);
   }
+  final GeneratePasswordUseCase generatePasswordUseCase;
+  final SavePasswordUseCase savePasswordUseCase;
+  final ValidateGeneratorSettingsUseCase validateSettingsUseCase;
+  final LogEventUseCase logEventUseCase;
 
   // Состояние
   PasswordGenerationSettings _settings = const PasswordGenerationSettings();
@@ -64,12 +64,18 @@ class GeneratorController extends ChangeNotifier {
 
   Color get strengthColor {
     switch (_strength) {
-      case 0: return Colors.red;
-      case 1: return Colors.orange;
-      case 2: return const Color.fromARGB(255, 215, 223, 52);
-      case 3: return Colors.green;
-      case 4: return Colors.blue;
-      default: return Colors.grey;
+      case 0:
+        return Colors.red;
+      case 1:
+        return Colors.orange;
+      case 2:
+        return const Color.fromARGB(255, 215, 223, 52);
+      case 3:
+        return Colors.green;
+      case 4:
+        return Colors.blue;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -131,8 +137,12 @@ class GeneratorController extends ChangeNotifier {
 
   /// Обновляет настройки на основе уровня сложности
   void _updateSettingsByStrength(int strength) {
-    final flags = PasswordFlags.strengthFlags[strength] ?? PasswordFlags.strengthFlags[2]!;
-    final lengthRange = PasswordFlags.strengthLengthRanges[strength] ?? PasswordFlags.strengthLengthRanges[2]!;
+    final flags =
+        PasswordFlags.strengthFlags[strength] ??
+        PasswordFlags.strengthFlags[2]!;
+    final lengthRange =
+        PasswordFlags.strengthLengthRanges[strength] ??
+        PasswordFlags.strengthLengthRanges[2]!;
 
     _settings = PasswordGenerationSettings(
       strength: strength,
@@ -155,7 +165,12 @@ class GeneratorController extends ChangeNotifier {
   void toggleRequireUppercase(bool value) {
     _settings = _settings.copyWith(
       requireUppercase: value,
-      flags: _updateFlags(_settings.flags, PasswordFlags.uppercase, PasswordFlags.uppercaseRequired, value),
+      flags: _updateFlags(
+        _settings.flags,
+        PasswordFlags.uppercase,
+        PasswordFlags.uppercaseRequired,
+        value,
+      ),
     );
     notifyListeners();
   }
@@ -163,7 +178,12 @@ class GeneratorController extends ChangeNotifier {
   void toggleRequireLowercase(bool value) {
     _settings = _settings.copyWith(
       requireLowercase: value,
-      flags: _updateFlags(_settings.flags, PasswordFlags.lowercase, PasswordFlags.lowercaseRequired, value),
+      flags: _updateFlags(
+        _settings.flags,
+        PasswordFlags.lowercase,
+        PasswordFlags.lowercaseRequired,
+        value,
+      ),
     );
     notifyListeners();
   }
@@ -171,7 +191,12 @@ class GeneratorController extends ChangeNotifier {
   void toggleRequireDigits(bool value) {
     _settings = _settings.copyWith(
       requireDigits: value,
-      flags: _updateFlags(_settings.flags, PasswordFlags.digits, PasswordFlags.digitsRequired, value),
+      flags: _updateFlags(
+        _settings.flags,
+        PasswordFlags.digits,
+        PasswordFlags.digitsRequired,
+        value,
+      ),
     );
     notifyListeners();
   }
@@ -179,13 +204,23 @@ class GeneratorController extends ChangeNotifier {
   void toggleRequireSymbols(bool value) {
     _settings = _settings.copyWith(
       requireSymbols: value,
-      flags: _updateFlags(_settings.flags, PasswordFlags.symbols, PasswordFlags.symbolsRequired, value),
+      flags: _updateFlags(
+        _settings.flags,
+        PasswordFlags.symbols,
+        PasswordFlags.symbolsRequired,
+        value,
+      ),
     );
     notifyListeners();
   }
 
   /// Обновляет флаги
-  int _updateFlags(int flags, int categoryFlag, int requiredFlag, bool isEnabled) {
+  int _updateFlags(
+    int flags,
+    int categoryFlag,
+    int requiredFlag,
+    bool isEnabled,
+  ) {
     if (isEnabled) {
       return flags | categoryFlag | requiredFlag;
     } else {
@@ -201,9 +236,7 @@ class GeneratorController extends ChangeNotifier {
       return;
     }
 
-    _settings = _settings.copyWith(
-      lengthRange: [min, max],
-    );
+    _settings = _settings.copyWith(lengthRange: [min, max]);
     notifyListeners();
   }
 
@@ -217,8 +250,10 @@ class GeneratorController extends ChangeNotifier {
 
     try {
       // Парсим длину из контроллеров
-      final min = int.tryParse(minLengthController.text) ?? _settings.lengthRange.first;
-      final max = int.tryParse(maxLengthController.text) ?? _settings.lengthRange.last;
+      final min =
+          int.tryParse(minLengthController.text) ?? _settings.lengthRange.first;
+      final max =
+          int.tryParse(maxLengthController.text) ?? _settings.lengthRange.last;
 
       _settings = _settings.copyWith(lengthRange: [min, max]);
 
@@ -233,7 +268,9 @@ class GeneratorController extends ChangeNotifier {
           return;
         },
         (validatedSettings) async {
-          final result = await generatePasswordUseCase.execute(validatedSettings);
+          final result = await generatePasswordUseCase.execute(
+            validatedSettings,
+          );
 
           result.fold(
             (failure) {
@@ -291,9 +328,7 @@ class GeneratorController extends ChangeNotifier {
           );
 
           // data может быть Map из dataSource или bool из repository
-          if (data is Map<String, dynamic>) {
-            return data;
-          }
+          return data;
           return {'success': true, 'updated': false};
         },
       );

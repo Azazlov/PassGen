@@ -3,11 +3,10 @@ import '../../repositories/category_repository.dart';
 
 /// Использование: Обновление категории
 class UpdateCategoryUseCase {
+  const UpdateCategoryUseCase(this.repository);
   final CategoryRepository repository;
 
-  const UpdateCategoryUseCase(this.repository);
-
   Future<Category> execute(Category category) async {
-    return await repository.update(category);
+    return repository.update(category);
   }
 }

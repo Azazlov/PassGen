@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../presentation/widgets/app_button.dart';
-import '../../../presentation/widgets/app_switch.dart';
-import '../../../presentation/widgets/app_text_field.dart';
-import '../../../presentation/widgets/copyable_password.dart';
-import '../../../presentation/widgets/character_set_display.dart';
-import '../../../presentation/widgets/app_dialogs.dart';
-import '../../../presentation/widgets/lottie_animations.dart';
-import 'generator_controller.dart';
-import '../storage/storage_controller.dart';
+
+import '../../../domain/entities/category.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
-import '../../../domain/usecases/password/generate_password_usecase.dart';
-import '../../../domain/usecases/password/save_password_usecase.dart';
 import '../../../domain/usecases/generator/validate_generator_settings_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
-import '../../../domain/entities/category.dart';
+import '../../../domain/usecases/password/generate_password_usecase.dart';
+import '../../../domain/usecases/password/save_password_usecase.dart';
+import '../../../presentation/widgets/app_button.dart';
+import '../../../presentation/widgets/app_dialogs.dart';
+import '../../../presentation/widgets/app_switch.dart';
+import '../../../presentation/widgets/app_text_field.dart';
+import '../../../presentation/widgets/character_set_display.dart';
+import '../../../presentation/widgets/copyable_password.dart';
+import '../../../presentation/widgets/lottie_animations.dart';
+import '../storage/storage_controller.dart';
+import 'generator_controller.dart';
 
 /// Экран генератора паролей
 class GeneratorScreen extends StatelessWidget {
@@ -26,7 +27,8 @@ class GeneratorScreen extends StatelessWidget {
       create: (_) => GeneratorController(
         generatePasswordUseCase: context.read<GeneratePasswordUseCase>(),
         savePasswordUseCase: context.read<SavePasswordUseCase>(),
-        validateSettingsUseCase: context.read<ValidateGeneratorSettingsUseCase>(),
+        validateSettingsUseCase: context
+            .read<ValidateGeneratorSettingsUseCase>(),
         logEventUseCase: context.read<LogEventUseCase>(),
       ),
       child: const _GeneratorScreenContent(),
@@ -38,7 +40,8 @@ class _GeneratorScreenContent extends StatefulWidget {
   const _GeneratorScreenContent();
 
   @override
-  State<_GeneratorScreenContent> createState() => _GeneratorScreenContentState();
+  State<_GeneratorScreenContent> createState() =>
+      _GeneratorScreenContentState();
 }
 
 class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
@@ -87,11 +90,7 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
         } else {
           final error = controller.error;
           if (error != null && context.mounted) {
-            showAppDialog(
-              context: context,
-              title: 'Ошибка',
-              content: error,
-            );
+            showAppDialog(context: context, title: 'Ошибка', content: error);
           }
         }
       },
@@ -119,8 +118,12 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                 'Генератор паролей',
                 textAlign: TextAlign.center,
                 style: isSmallScreen
-                    ? theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)
-                    : theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    ? theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      )
+                    : theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
               ),
 
               SizedBox(height: isSmallScreen ? 16 : 32),
@@ -156,10 +159,7 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
               const SizedBox(height: 24),
 
               // Пресеты сложности (FilterChip согласно ТЗ)
-              Text(
-                'Сложность пароля',
-                style: theme.textTheme.titleMedium,
-              ),
+              Text('Сложность пароля', style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -219,7 +219,8 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                   Expanded(
                     child: LinearProgressIndicator(
                       value: controller.strength / 4,
-                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation<Color>(
                         controller.strengthColor,
                       ),
@@ -352,9 +353,7 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                   ),
                   child: Text(
                     controller.error!,
-                    style: TextStyle(
-                      color: theme.colorScheme.onErrorContainer,
-                    ),
+                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
                   ),
                 ),
 
@@ -366,25 +365,25 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
     );
   }
 
-  Widget _buildCategorySelector(GeneratorController controller, ThemeData theme) {
+  Widget _buildCategorySelector(
+    GeneratorController controller,
+    ThemeData theme,
+  ) {
     return FutureBuilder(
       future: context.read<GetCategoriesUseCase>().execute(),
       builder: (context, snapshot) {
         final categories = snapshot.data ?? [];
         final selectedCategory = controller.selectedCategoryId != null
             ? categories.cast<Category?>().firstWhere(
-                  (c) => c?.id == controller.selectedCategoryId,
-                  orElse: () => null,
-                )
+                (c) => c?.id == controller.selectedCategoryId,
+                orElse: () => null,
+              )
             : null;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Категория',
-              style: theme.textTheme.titleMedium,
-            ),
+            Text('Категория', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             InkWell(
               onTap: () async {
@@ -398,11 +397,16 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                         shrinkWrap: true,
                         itemCount: categories.length,
                         itemBuilder: (ctx, index) {
-                          final category = categories[index] as Category;
+                          final category = categories[index];
                           return ListTile(
-                            leading: Text(category.icon ?? '📁', style: const TextStyle(fontSize: 20)),
+                            leading: Text(
+                              category.icon ?? '📁',
+                              style: const TextStyle(fontSize: 20),
+                            ),
                             title: Text(category.name),
-                            subtitle: category.isSystem ? const Text('Системная') : null,
+                            subtitle: category.isSystem
+                                ? const Text('Системная')
+                                : null,
                             onTap: () => Navigator.of(ctx).pop(category),
                           );
                         },

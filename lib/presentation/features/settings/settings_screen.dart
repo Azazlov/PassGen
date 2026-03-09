@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'settings_controller.dart';
-import '../../../domain/usecases/settings/get_setting_usecase.dart';
-import '../../../domain/usecases/settings/set_setting_usecase.dart';
-import '../../../domain/usecases/category/get_categories_usecase.dart';
+
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
+import '../../../domain/usecases/settings/get_setting_usecase.dart';
+import '../../../domain/usecases/settings/set_setting_usecase.dart';
 import '../../widgets/app_text_field.dart';
 import '../categories/categories_screen.dart';
 import '../logs/logs_screen.dart';
+import 'settings_controller.dart';
 
 /// Экран настроек приложения
 class SettingsScreen extends StatelessWidget {
@@ -61,9 +61,7 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     final controller = context.watch<SettingsController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Настройки'),
-      ),
+      appBar: AppBar(title: const Text('Настройки')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -147,7 +145,10 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
       margin: const EdgeInsets.only(bottom: 4),
       child: ListTile(
         leading: Icon(icon, color: theme.colorScheme.primary),
-        title: Text(title, style: textColor != null ? TextStyle(color: textColor) : null),
+        title: Text(
+          title,
+          style: textColor != null ? TextStyle(color: textColor) : null,
+        ),
         subtitle: subtitle != null ? Text(subtitle) : null,
         trailing: onTap != null ? const Icon(Icons.chevron_right) : null,
         onTap: onTap,
@@ -155,7 +156,10 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     );
   }
 
-  void _showChangePinDialog(BuildContext context, SettingsController controller) async {
+  void _showChangePinDialog(
+    BuildContext context,
+    SettingsController controller,
+  ) async {
     final oldPinController = TextEditingController();
     final newPinController = TextEditingController();
 
@@ -168,7 +172,7 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-                      AppTextField(
+            AppTextField(
               controller: oldPinController,
               label: 'Старый PIN',
               hint: 'Введите старый PIN',
@@ -192,7 +196,8 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (oldPinController.text.length < 4 || newPinController.text.length < 4) {
+              if (oldPinController.text.length < 4 ||
+                  newPinController.text.length < 4) {
                 _showErrorDialog(ctx, 'PIN должен содержать минимум 4 цифры');
                 return;
               }
@@ -219,7 +224,10 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     newPinController.dispose();
   }
 
-  void _showRemovePinDialog(BuildContext context, SettingsController controller) async {
+  void _showRemovePinDialog(
+    BuildContext context,
+    SettingsController controller,
+  ) async {
     final pinController = TextEditingController();
 
     if (!context.mounted) return;
@@ -273,20 +281,28 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     pinController.dispose();
   }
 
-  void _showLogsDialog(BuildContext context, SettingsController controller) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const LogsScreen()),
-    );
+  void _showLogsDialog(
+    BuildContext context,
+    SettingsController controller,
+  ) async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const LogsScreen()));
   }
 
-  void _confirmClearLogs(BuildContext context, SettingsController controller) async {
+  void _confirmClearLogs(
+    BuildContext context,
+    SettingsController controller,
+  ) async {
     if (!context.mounted) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Очистка логов'),
-        content: const Text('Вы уверены, что хотите очистить все логи безопасности?'),
+        content: const Text(
+          'Вы уверены, что хотите очистить все логи безопасности?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),

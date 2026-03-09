@@ -2,12 +2,6 @@ import 'package:flutter/material.dart';
 
 /// Переключатель (Switch) с иконкой и описанием
 class AppSwitch extends StatelessWidget {
-  final String label;
-  final String? subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  final IconData icon;
-
   const AppSwitch({
     super.key,
     required this.label,
@@ -16,6 +10,11 @@ class AppSwitch extends StatelessWidget {
     required this.onChanged,
     required this.icon,
   });
+  final String label;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +24,7 @@ class AppSwitch extends StatelessWidget {
       leading: Icon(icon, color: theme.colorScheme.primary),
       title: Text(label),
       subtitle: subtitle != null ? Text(subtitle!) : null,
-      trailing: Switch(
-        value: value,
-        onChanged: onChanged,
-      ),
+      trailing: Switch(value: value, onChanged: onChanged),
       dense: true,
       onTap: () => onChanged(!value),
       selected: value,

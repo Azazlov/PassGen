@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'storage_controller.dart';
+
 import '../../../domain/entities/category.dart';
 import '../../../domain/entities/password_entry.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
+import 'storage_controller.dart';
 
 /// Панель списка паролей
 class StorageListPane extends StatelessWidget {
-  final Function(dynamic)? onEntrySelected;
-
   const StorageListPane({super.key, this.onEntrySelected});
+  final Function(dynamic)? onEntrySelected;
 
   @override
   Widget build(BuildContext context) {
@@ -42,17 +42,22 @@ class StorageListPane extends StatelessWidget {
             builder: (context, snapshot) {
               final categories = snapshot.data ?? [];
               return DropdownButtonFormField<int?>(
-                value: controller.selectedCategoryId,
+                initialValue: controller.selectedCategoryId,
                 decoration: const InputDecoration(
                   labelText: 'Категория',
                   border: OutlineInputBorder(),
                 ),
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('Все категории')),
-                  ...categories.map((cat) => DropdownMenuItem(
-                    value: cat.id,
-                    child: Text('${cat.icon} ${cat.name}'),
-                  )),
+                  const DropdownMenuItem(
+                    value: null,
+                    child: Text('Все категории'),
+                  ),
+                  ...categories.map(
+                    (cat) => DropdownMenuItem(
+                      value: cat.id,
+                      child: Text('${cat.icon} ${cat.name}'),
+                    ),
+                  ),
                 ],
                 onChanged: controller.setCategoryFilter,
               );
@@ -84,7 +89,9 @@ class StorageListPane extends StatelessWidget {
                           : Colors.transparent,
                       child: ListTile(
                         leading: FutureBuilder<List<Category>>(
-                          future: context.read<GetCategoriesUseCase>().execute(),
+                          future: context
+                              .read<GetCategoriesUseCase>()
+                              .execute(),
                           builder: (context, snapshot) {
                             final categories = snapshot.data ?? [];
                             final category = entry.categoryId != null
@@ -125,7 +132,9 @@ class StorageListPane extends StatelessWidget {
                                 icon: const Icon(Icons.copy),
                                 onPressed: () {
                                   // Копирование
-                                  Clipboard.setData(ClipboardData(text: entry.password));
+                                  Clipboard.setData(
+                                    ClipboardData(text: entry.password),
+                                  );
                                 },
                                 tooltip: 'Копировать пароль',
                               ),
@@ -156,7 +165,9 @@ class StorageListPane extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Удалить пароль?'),
-        content: Text('Вы точно хотите удалить пароль для сервиса "${entry.service}"?'),
+        content: Text(
+          'Вы точно хотите удалить пароль для сервиса "${entry.service}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -215,14 +226,13 @@ class StorageEmptyListState extends StatelessWidget {
 
 /// Пустое состояние при фильтрации
 class StorageFilterEmptyState extends StatelessWidget {
-  final bool hasActiveFilter;
-  final String searchQuery;
-
   const StorageFilterEmptyState({
     super.key,
     required this.hasActiveFilter,
     required this.searchQuery,
   });
+  final bool hasActiveFilter;
+  final String searchQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -241,9 +251,7 @@ class StorageFilterEmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              hasActiveFilter
-                  ? 'Нет записей по фильтру'
-                  : 'Ничего не найдено',
+              hasActiveFilter ? 'Нет записей по фильтру' : 'Ничего не найдено',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),

@@ -3,16 +3,15 @@ import 'package:flutter/material.dart';
 /// Виджет эффекта shimmer (скелетон) для загрузки
 /// Согласно ТЗ (Раздел 10.2)
 class ShimmerEffect extends StatefulWidget {
-  final double width;
-  final double height;
-  final BorderRadius? borderRadius;
-
   const ShimmerEffect({
     super.key,
     required this.width,
     required this.height,
     this.borderRadius,
   });
+  final double width;
+  final double height;
+  final BorderRadius? borderRadius;
 
   @override
   State<ShimmerEffect> createState() => _ShimmerEffectState();
@@ -62,7 +61,9 @@ class _ShimmerEffectState extends State<ShimmerEffect>
                     : theme.colorScheme.surfaceContainerHighest,
                 isDark
                     ? theme.colorScheme.surfaceContainerHighest.withOpacity(0.3)
-                    : theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                    : theme.colorScheme.surfaceContainerHighest.withOpacity(
+                        0.3,
+                      ),
                 isDark
                     ? theme.colorScheme.surfaceContainerHighest
                     : theme.colorScheme.surfaceContainerHighest,
@@ -77,14 +78,13 @@ class _ShimmerEffectState extends State<ShimmerEffect>
 
 /// Виджет списка с shimmer-эффектом для загрузки
 class ShimmerList extends StatelessWidget {
-  final int itemCount;
-  final double itemHeight;
-
   const ShimmerList({
     super.key,
     required this.itemCount,
     required this.itemHeight,
   });
+  final int itemCount;
+  final double itemHeight;
 
   @override
   Widget build(BuildContext context) {

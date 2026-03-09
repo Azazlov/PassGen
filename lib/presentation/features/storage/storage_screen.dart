@@ -8,21 +8,21 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/constants/event_types.dart';
+import '../../../domain/entities/category.dart';
+import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/usecases/log/log_event_usecase.dart';
+import '../../../domain/usecases/storage/delete_password_usecase.dart';
+import '../../../domain/usecases/storage/export_passgen_usecase.dart';
+import '../../../domain/usecases/storage/export_passwords_usecase.dart';
+import '../../../domain/usecases/storage/get_passwords_usecase.dart';
+import '../../../domain/usecases/storage/import_passgen_usecase.dart';
+import '../../../domain/usecases/storage/import_passwords_usecase.dart';
 import '../../../presentation/widgets/app_button.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import '../../../presentation/widgets/shimmer_effect.dart';
-import 'storage_controller.dart';
 import 'storage_adaptive_layout.dart';
-import '../../../core/constants/event_types.dart';
-import '../../../domain/usecases/category/get_categories_usecase.dart';
-import '../../../domain/usecases/storage/get_passwords_usecase.dart';
-import '../../../domain/usecases/storage/delete_password_usecase.dart';
-import '../../../domain/usecases/storage/export_passwords_usecase.dart';
-import '../../../domain/usecases/storage/import_passwords_usecase.dart';
-import '../../../domain/usecases/storage/export_passgen_usecase.dart';
-import '../../../domain/usecases/storage/import_passgen_usecase.dart';
-import '../../../domain/usecases/log/log_event_usecase.dart';
-import '../../../domain/entities/category.dart';
+import 'storage_controller.dart';
 
 /// Экран хранилища паролей
 class StorageScreen extends StatelessWidget {
@@ -78,26 +78,41 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
           PopupMenuButton<String>(
             onSelected: (value) => _handleMenuAction(value, controller),
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'import_json', child: Text('Импорт JSON')),
-              const PopupMenuItem(value: 'export_json', child: Text('Экспорт JSON')),
-              const PopupMenuItem(value: 'import_passgen', child: Text('Импорт .passgen')),
-              const PopupMenuItem(value: 'export_passgen', child: Text('Экспорт .passgen')),
+              const PopupMenuItem(
+                value: 'import_json',
+                child: Text('Импорт JSON'),
+              ),
+              const PopupMenuItem(
+                value: 'export_json',
+                child: Text('Экспорт JSON'),
+              ),
+              const PopupMenuItem(
+                value: 'import_passgen',
+                child: Text('Импорт .passgen'),
+              ),
+              const PopupMenuItem(
+                value: 'export_passgen',
+                child: Text('Экспорт .passgen'),
+              ),
               const PopupMenuDivider(),
-              const PopupMenuItem(value: 'delete', child: Text('Удалить всё', style: TextStyle(color: Colors.red))),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Text('Удалить всё', style: TextStyle(color: Colors.red)),
+              ),
             ],
           ),
         ],
       ),
       body: SafeArea(
         child: controller.isLoading
-            ? ShimmerList(itemCount: 5, itemHeight: 120)
+            ? const ShimmerList(itemCount: 5, itemHeight: 120)
             : controller.hasNoPasswords
-                ? const StorageEmptyState(
-                    icon: Icons.archive,
-                    title: 'Нет сохранённых паролей',
-                    subtitle: 'Создайте первый пароль прямо сейчас',
-                  )
-                : const StorageAdaptiveLayout(),
+            ? const StorageEmptyState(
+                icon: Icons.archive,
+                title: 'Нет сохранённых паролей',
+                subtitle: 'Создайте первый пароль прямо сейчас',
+              )
+            : const StorageAdaptiveLayout(),
       ),
     );
   }
@@ -219,8 +234,10 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                     IconButton(
                       icon: const Icon(Icons.copy),
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: password.password));
-                        
+                        Clipboard.setData(
+                          ClipboardData(text: password.password),
+                        );
+
                         // Логирование просмотра пароля (PWD_ACCESSED)
                         context.read<LogEventUseCase>().execute(
                           EventTypes.pwdAccessed,
@@ -230,7 +247,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                             'category_id': password.categoryId,
                           },
                         );
-                        
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Пароль скопирован')),
                         );
@@ -250,7 +267,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
           label: 'Скопировать пароль',
           onPressed: () {
             Clipboard.setData(ClipboardData(text: password.password));
-            
+
             // Логирование просмотра пароля (PWD_ACCESSED)
             context.read<LogEventUseCase>().execute(
               EventTypes.pwdAccessed,
@@ -260,7 +277,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                 'category_id': password.categoryId,
               },
             );
-            
+
             showAppDialog(
               context: context,
               title: 'Скопировано',
@@ -306,7 +323,8 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
       children: [
         IconButton(
           icon: const Icon(Icons.chevron_left),
-          onPressed: controller.passwordsCount > 1 && controller.currentIndex > 0
+          onPressed:
+              controller.passwordsCount > 1 && controller.currentIndex > 0
               ? controller.prevPassword
               : null,
           style: IconButton.styleFrom(
@@ -331,7 +349,9 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
         const SizedBox(width: 16),
         IconButton(
           icon: const Icon(Icons.chevron_right),
-          onPressed: controller.passwordsCount > 1 && controller.currentIndex < controller.passwordsCount - 1
+          onPressed:
+              controller.passwordsCount > 1 &&
+                  controller.currentIndex < controller.passwordsCount - 1
               ? controller.nextPassword
               : null,
           style: IconButton.styleFrom(
@@ -373,7 +393,10 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
   }
 
   /// Состояние когда фильтры не вернули результатов
-  Widget _buildFilteredEmptyState(ThemeData theme, StorageController controller) {
+  Widget _buildFilteredEmptyState(
+    ThemeData theme,
+    StorageController controller,
+  ) {
     final hasCategoryFilter = controller.selectedCategoryId != null;
     final hasSearchQuery = controller.searchQuery.isNotEmpty;
 
@@ -393,15 +416,15 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             hasCategoryFilter && hasSearchQuery
                 ? 'Ничего не найдено'
                 : hasCategoryFilter
-                    ? 'В этой категории нет паролей'
-                    : 'Поиск не дал результатов',
+                ? 'В этой категории нет паролей'
+                : 'Поиск не дал результатов',
             style: theme.textTheme.titleLarge?.copyWith(
               color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          
+
           // Кнопка сброса фильтров
           ElevatedButton.icon(
             onPressed: () {
@@ -413,14 +436,14 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Разделитель
           const Divider(),
-          
+
           const SizedBox(height: 16),
-          
+
           // Заголовок текущего фильтра
           if (hasCategoryFilter)
             Text(
@@ -429,7 +452,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
-          
+
           // Текущий выбранный фильтр
           if (hasCategoryFilter)
             FutureBuilder<List<Category>>(
@@ -439,16 +462,21 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                   return const SizedBox.shrink();
                 }
                 final categories = snapshot.data ?? [];
-                final selectedCategory = categories.cast<Category?>().firstWhere(
-                  (c) => c?.id == controller.selectedCategoryId,
-                  orElse: () => null,
-                );
+                final selectedCategory = categories
+                    .cast<Category?>()
+                    .firstWhere(
+                      (c) => c?.id == controller.selectedCategoryId,
+                      orElse: () => null,
+                    );
                 if (selectedCategory == null) {
                   return const SizedBox.shrink();
                 }
                 return Container(
                   margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(8),
@@ -471,9 +499,9 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                 );
               },
             ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Подсказка
           Text(
             'Или выберите другую категорию:',
@@ -482,9 +510,9 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             ),
             textAlign: TextAlign.center,
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Фильтр категорий (всегда виден!)
           _buildCategoryFilter(controller, theme),
         ],
@@ -505,7 +533,8 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
     showConfirmationDialog(
       context: context,
       title: 'Удалить пароль?',
-      content: 'Вы точно хотите удалить пароль для сервиса "${controller.currentPassword?.service}"?',
+      content:
+          'Вы точно хотите удалить пароль для сервиса "${controller.currentPassword?.service}"?',
       confirmLabel: 'Удалить',
       cancelLabel: 'Отмена',
       onConfirm: controller.deleteCurrentPassword,
@@ -552,11 +581,11 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
 
       final file = result.files.first;
       final jsonString = utf8.decode(file.bytes as List<int>);
-      
+
       final success = await controller.importPasswords(jsonString);
-      
+
       if (!context.mounted) return;
-      
+
       if (success) {
         showAppDialog(
           context: context,
@@ -592,9 +621,9 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
 
     try {
       final result = await controller.exportPasswords();
-      
+
       if (!context.mounted) return;
-      
+
       result.fold(
         (failure) {
           showAppDialog(
@@ -645,9 +674,9 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
 
     // Запрашиваем мастер-пароль
     final masterPasswordController = TextEditingController();
-    
+
     if (!context.mounted) return;
-    
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -685,7 +714,9 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
     if (confirmed != true) return;
 
     try {
-      final result = await controller.exportPassgen(masterPasswordController.text);
+      final result = await controller.exportPassgen(
+        masterPasswordController.text,
+      );
 
       if (!context.mounted) return;
 
@@ -704,7 +735,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             await file.writeAsString(base64Data);
 
             await Share.shareXFiles([XFile(file.path)]);
-            
+
             if (context.mounted) {
               showAppDialog(
                 context: context,
@@ -756,9 +787,9 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
 
       // Запрашиваем мастер-пароль
       final masterPasswordController = TextEditingController();
-      
+
       if (!context.mounted) return;
-      
+
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -795,7 +826,10 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
 
       if (confirmed != true) return;
 
-      final success = await controller.importPassgen(base64Data, masterPasswordController.text);
+      final success = await controller.importPassgen(
+        base64Data,
+        masterPasswordController.text,
+      );
 
       if (!context.mounted) return;
 
@@ -830,7 +864,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
         if (!snapshot.hasData) {
           return const SizedBox.shrink();
         }
-        
+
         final categories = snapshot.data ?? [];
 
         return Wrap(
@@ -857,7 +891,10 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                   // Если выбрана другая - устанавливаем новую
                   controller.setCategoryFilter(isSelected ? null : category.id);
                 },
-                avatar: Text(category.icon ?? '📁', style: const TextStyle(fontSize: 16)),
+                avatar: Text(
+                  category.icon ?? '📁',
+                  style: const TextStyle(fontSize: 16),
+                ),
               );
             }),
           ],

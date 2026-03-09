@@ -4,14 +4,13 @@ import '../../repositories/encryptor_repository.dart';
 
 /// Использование: Дешифрование сообщения
 class DecryptMessageUseCase {
-  final EncryptorRepository repository;
-
   const DecryptMessageUseCase(this.repository);
+  final EncryptorRepository repository;
 
   Future<Either<EncryptionFailure, String>> execute({
     required String encryptedData,
     required String password,
   }) async {
-    return await repository.decrypt(encryptedData, password);
+    return repository.decrypt(encryptedData, password);
   }
 }

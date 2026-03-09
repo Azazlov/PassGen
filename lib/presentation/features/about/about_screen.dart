@@ -12,10 +12,7 @@ class AboutScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('О приложении'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('О приложении'), centerTitle: true),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -73,10 +70,26 @@ class AboutScreen extends StatelessWidget {
               // Особенности
               _buildSectionTitle(context, 'Особенности'),
               const SizedBox(height: 12),
-              _buildFeatureItem(context, Icons.password, 'Гибкая настройка длины (4–32 символа)'),
-              _buildFeatureItem(context, Icons.segment, 'Группировка символов для удобного копирования'),
-              _buildFeatureItem(context, Icons.brightness_auto, 'Автоматическое переключение темы'),
-              _buildFeatureItem(context, Icons.shield, 'Генерация без передачи данных в сеть'),
+              _buildFeatureItem(
+                context,
+                Icons.password,
+                'Гибкая настройка длины (4–32 символа)',
+              ),
+              _buildFeatureItem(
+                context,
+                Icons.segment,
+                'Группировка символов для удобного копирования',
+              ),
+              _buildFeatureItem(
+                context,
+                Icons.brightness_auto,
+                'Автоматическое переключение темы',
+              ),
+              _buildFeatureItem(
+                context,
+                Icons.shield,
+                'Генерация без передачи данных в сеть',
+              ),
               const SizedBox(height: 28),
 
               // Разработчик
@@ -172,7 +185,12 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLinkItem(BuildContext context, IconData icon, String title, String url) {
+  Widget _buildLinkItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String url,
+  ) {
     final theme = Theme.of(context);
     return InkWell(
       borderRadius: BorderRadius.circular(8),
@@ -182,7 +200,7 @@ class AboutScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          color: theme.colorScheme.surfaceVariant,
+          color: theme.colorScheme.surfaceContainerHighest,
         ),
         child: Row(
           children: [
@@ -214,7 +232,7 @@ class AboutScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: theme.colorScheme.surfaceVariant,
+        color: theme.colorScheme.surfaceContainerHighest,
       ),
       child: Text(
         text,

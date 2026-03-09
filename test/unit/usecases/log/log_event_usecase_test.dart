@@ -1,9 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-
-import 'package:pass_gen/domain/usecases/log/log_event_usecase.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/domain/repositories/security_log_repository.dart';
+import 'package:pass_gen/domain/usecases/log/log_event_usecase.dart';
 
 import 'log_event_usecase_test.mocks.dart';
 

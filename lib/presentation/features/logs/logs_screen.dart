@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'logs_controller.dart';
-import '../../../domain/usecases/log/get_logs_usecase.dart';
+
 import '../../../domain/entities/security_log.dart';
+import '../../../domain/usecases/log/get_logs_usecase.dart';
+import 'logs_controller.dart';
 
 /// Экран просмотра логов безопасности
 class LogsScreen extends StatelessWidget {
@@ -11,9 +12,9 @@ class LogsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => LogsController(
-        getLogsUseCase: context.read<GetLogsUseCase>(),
-      )..loadLogs(limit: 100),
+      create: (context) =>
+          LogsController(getLogsUseCase: context.read<GetLogsUseCase>())
+            ..loadLogs(limit: 100),
       child: const _LogsScreenContent(),
     );
   }
@@ -46,8 +47,8 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
       body: controller.isLoading
           ? const Center(child: CircularProgressIndicator())
           : controller.isEmpty
-              ? _buildEmptyState(theme)
-              : _buildLogsList(controller, theme),
+          ? _buildEmptyState(theme)
+          : _buildLogsList(controller, theme),
     );
   }
 
@@ -89,7 +90,12 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
     );
   }
 
-  Widget _buildDateSection(String date, List<SecurityLog> logs, LogsController controller, ThemeData theme) {
+  Widget _buildDateSection(
+    String date,
+    List<SecurityLog> logs,
+    LogsController controller,
+    ThemeData theme,
+  ) {
     return Column(
       key: ValueKey('date_$date'),
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +116,11 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
     );
   }
 
-  Widget _buildLogTile(SecurityLog log, LogsController controller, ThemeData theme) {
+  Widget _buildLogTile(
+    SecurityLog log,
+    LogsController controller,
+    ThemeData theme,
+  ) {
     final icon = controller.getEventIcon(log.actionType);
     final color = controller.getEventColor(log.actionType, theme);
     final time = controller.formatTime(log.timestamp);
@@ -148,7 +158,10 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
     return actionType
         .replaceAll('_', ' ')
         .split(' ')
-        .map((word) => word.isEmpty ? '' : word[0] + word.substring(1).toLowerCase())
+        .map(
+          (word) =>
+              word.isEmpty ? '' : word[0] + word.substring(1).toLowerCase(),
+        )
         .join(' ');
   }
 

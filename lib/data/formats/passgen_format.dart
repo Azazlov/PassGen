@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 
 /// Фирменный формат файла PassGen (.passgen)
-/// 
+///
 /// Структура файла:
 /// - HEADER: "PASSGEN_V1" (10 байт)
 /// - VERSION: версия формата (1 байт)
@@ -14,14 +14,13 @@ import 'package:cryptography/cryptography.dart';
 /// - DATA: зашифрованные JSON данные
 /// - MAC: authentication tag (16 байт)
 class PassgenFormat {
+  PassgenFormat();
   static const String magicHeader = 'PASSGEN_V1';
   static const int formatVersion = 1;
   static const int flagsNone = 0;
 
-  PassgenFormat();
-
   /// Экспорт данных в формат .passgen
-  /// 
+  ///
   /// [data] - данные для экспорта (список паролей)
   /// [masterPassword] - мастер-пароль для шифрования
   /// Возвращает Base64 строку с данными в формате .passgen
@@ -62,7 +61,9 @@ class PassgenFormat {
       final versionBytes = [formatVersion]; // 1 байт
       final flagsBytes = [flagsNone]; // 1 байт
       final nonceBytes = nonce; // 32 байта
-      final dataLengthBytes = _intToBytes(secretBox.cipherText.length); // 4 байта
+      final dataLengthBytes = _intToBytes(
+        secretBox.cipherText.length,
+      ); // 4 байта
       final cipherTextBytes = secretBox.cipherText;
       final macBytes = secretBox.mac.bytes; // 16 байт
 
@@ -85,7 +86,7 @@ class PassgenFormat {
   }
 
   /// Импорт данных из формата .passgen
-  /// 
+  ///
   /// [base64Data] - Base64 строка с данными в формате .passgen
   /// [masterPassword] - мастер-пароль для дешифрования
   /// Возвращает список распарсенных данных
@@ -149,11 +150,7 @@ class PassgenFormat {
 
       // Дешифруем данные
       final algorithm = Chacha20.poly1305Aead();
-      final secretBox = SecretBox(
-        cipherText,
-        nonce: nonce,
-        mac: Mac(macBytes),
-      );
+      final secretBox = SecretBox(cipherText, nonce: nonce, mac: Mac(macBytes));
 
       final decryptedBytes = await algorithm.decrypt(
         secretBox,
@@ -183,18 +180,14 @@ class PassgenFormat {
 
   /// Преобразует 4 байта в int (little-endian)
   int _bytesToInt(List<int> bytes) {
-    return bytes[0] |
-        (bytes[1] << 8) |
-        (bytes[2] << 16) |
-        (bytes[3] << 24);
+    return bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
   }
 }
 
 /// Ошибка формата PassGen
 class PassgenFormatException implements Exception {
-  final String message;
-
   PassgenFormatException(this.message);
+  final String message;
 
   @override
   String toString() => 'PassgenFormatException: $message';

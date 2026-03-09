@@ -1,10 +1,5 @@
 /// Запись лога безопасности
 class SecurityLog {
-  final int? id;
-  final String actionType;
-  final DateTime timestamp;
-  final String? details;
-
   const SecurityLog({
     this.id,
     required this.actionType,
@@ -23,6 +18,10 @@ class SecurityLog {
       details: json['details'] as String?,
     );
   }
+  final int? id;
+  final String actionType;
+  final DateTime timestamp;
+  final String? details;
 
   /// Преобразует SecurityLog в JSON
   Map<String, dynamic> toJson() {

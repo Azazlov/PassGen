@@ -1,8 +1,9 @@
+import 'package:dartz/dartz.dart';
+
+import '../../core/errors/failures.dart';
 import '../entities/password_config.dart';
 import '../entities/password_generation_settings.dart';
 import '../entities/password_result.dart';
-import 'package:dartz/dartz.dart';
-import '../../core/errors/failures.dart';
 
 /// Интерфейс репозитория для генерации паролей
 abstract class PasswordGeneratorRepository {
@@ -17,7 +18,8 @@ abstract class PasswordGeneratorRepository {
   );
 
   /// Создаёт конфигурацию генерации
-  Future<Either<PasswordGenerationFailure, PasswordConfig>> createPasswordConfig({
+  Future<Either<PasswordGenerationFailure, PasswordConfig>>
+  createPasswordConfig({
     required String service,
     required String masterPassword,
     required PasswordGenerationSettings settings,

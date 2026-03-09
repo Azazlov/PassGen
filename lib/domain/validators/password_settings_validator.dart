@@ -42,43 +42,51 @@ class PasswordSettingsValidator {
     final max = lengthRange.last;
 
     if (min < 1 || max > 64) {
-      return Left(PasswordGenerationFailure(
-        message: 'Длина пароля должна быть от 1 до 64 символов',
-      ));
+      return const Left(
+        PasswordGenerationFailure(
+          message: 'Длина пароля должна быть от 1 до 64 символов',
+        ),
+      );
     }
 
     if (min > max) {
-      return Left(PasswordGenerationFailure(
-        message: 'Минимальная длина не может быть больше максимальной',
-      ));
+      return const Left(
+        PasswordGenerationFailure(
+          message: 'Минимальная длина не может быть больше максимальной',
+        ),
+      );
     }
 
     return Right(settings);
   }
 
   /// Валидирует флаги
-  Either<PasswordGenerationFailure, PasswordGenerationSettings> _validateFlags(PasswordGenerationSettings settings) {
+  Either<PasswordGenerationFailure, PasswordGenerationSettings> _validateFlags(
+    PasswordGenerationSettings settings,
+  ) {
     final flags = settings.flags;
 
     // Проверка что хотя бы одна категория выбрана
-    final hasCategories = (flags & 1) != 0 ||  // digits
-                         (flags & 4) != 0 ||  // lowercase
-                         (flags & 16) != 0 || // uppercase
-                         (flags & 64) != 0;   // symbols
+    final hasCategories =
+        (flags & 1) != 0 || // digits
+        (flags & 4) != 0 || // lowercase
+        (flags & 16) != 0 || // uppercase
+        (flags & 64) != 0; // symbols
 
     if (!hasCategories && settings.customCharacters == null) {
-      return Left(PasswordGenerationFailure(
-        message: 'Выберите хотя бы одну категорию символов',
-      ));
+      return const Left(
+        PasswordGenerationFailure(
+          message: 'Выберите хотя бы одну категорию символов',
+        ),
+      );
     }
 
     return Right(settings);
   }
 
   /// Валидирует настройки уникальности
-  Either<PasswordGenerationFailure, PasswordGenerationSettings> _validateUniqueSettings(
-    PasswordGenerationSettings settings,
-  ) {
+  Either<PasswordGenerationFailure, PasswordGenerationSettings>
+  _validateUniqueSettings(PasswordGenerationSettings settings) {
     // Подсчёт доступных символов
     int availableChars = 0;
 
@@ -95,10 +103,13 @@ class PasswordSettingsValidator {
     final maxLength = settings.lengthRange.last;
 
     if (settings.allUnique && maxLength > availableChars) {
-      return Left(PasswordGenerationFailure(
-        message: 'Невозможно сгенерировать пароль с уникальными символами: '
-            'требуется $maxLength, доступно $availableChars',
-      ));
+      return Left(
+        PasswordGenerationFailure(
+          message:
+              'Невозможно сгенерировать пароль с уникальными символами: '
+              'требуется $maxLength, доступно $availableChars',
+        ),
+      );
     }
 
     return Right(settings);

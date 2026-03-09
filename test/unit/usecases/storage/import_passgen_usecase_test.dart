@@ -1,11 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:pass_gen/domain/usecases/storage/import_passgen_usecase.dart';
-import 'package:pass_gen/domain/repositories/password_import_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/domain/repositories/password_import_repository.dart';
+import 'package:pass_gen/domain/usecases/storage/import_passgen_usecase.dart';
 
 import 'import_passgen_usecase_test.mocks.dart';
 
@@ -73,7 +72,7 @@ void main() {
       when(mockRepository.importFromPassgen(
         data: testData,
         masterPassword: testMasterPassword,
-      )).thenAnswer((_) async => Left(failure));
+      )).thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await useCase.execute(
@@ -118,7 +117,7 @@ void main() {
       when(mockRepository.importFromPassgen(
         data: testData,
         masterPassword: wrongPassword,
-      )).thenAnswer((_) async => Left(failure));
+      )).thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await useCase.execute(
@@ -138,7 +137,7 @@ void main() {
       when(mockRepository.importFromPassgen(
         data: invalidData,
         masterPassword: testMasterPassword,
-      )).thenAnswer((_) async => Left(failure));
+      )).thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await useCase.execute(

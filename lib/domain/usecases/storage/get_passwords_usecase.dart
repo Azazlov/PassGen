@@ -5,11 +5,10 @@ import '../../repositories/storage_repository.dart';
 
 /// Использование: Получение списка паролей
 class GetPasswordsUseCase {
+  const GetPasswordsUseCase(this.repository);
   final StorageRepository repository;
 
-  const GetPasswordsUseCase(this.repository);
-
   Future<Either<StorageFailure, List<PasswordEntry>>> execute() async {
-    return await repository.getPasswords();
+    return repository.getPasswords();
   }
 }

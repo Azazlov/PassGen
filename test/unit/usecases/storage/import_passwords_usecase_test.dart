@@ -1,11 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:pass_gen/domain/usecases/storage/import_passwords_usecase.dart';
-import 'package:pass_gen/domain/repositories/password_import_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/domain/repositories/password_import_repository.dart';
+import 'package:pass_gen/domain/usecases/storage/import_passwords_usecase.dart';
 
 import 'import_passwords_usecase_test.mocks.dart';
 
@@ -54,7 +53,7 @@ void main() {
       // Arrange
       const failure = StorageFailure(message: 'Ошибка импорта паролей');
       when(mockRepository.importFromJson(testJson))
-          .thenAnswer((_) async => Left(failure));
+          .thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await useCase.execute(testJson);
@@ -98,7 +97,7 @@ void main() {
       const invalidJson = '{invalid}';
       const failure = StorageFailure(message: 'Некорректный формат JSON');
       when(mockRepository.importFromJson(invalidJson))
-          .thenAnswer((_) async => Left(failure));
+          .thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await useCase.execute(invalidJson);

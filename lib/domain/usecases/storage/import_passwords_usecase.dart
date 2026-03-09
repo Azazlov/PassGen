@@ -4,11 +4,10 @@ import '../../repositories/password_import_repository.dart';
 
 /// Использование: Импорт паролей из JSON
 class ImportPasswordsUseCase {
+  const ImportPasswordsUseCase(this.repository);
   final PasswordImportRepository repository;
 
-  const ImportPasswordsUseCase(this.repository);
-
   Future<Either<StorageFailure, bool>> execute(String jsonString) async {
-    return await repository.importFromJson(jsonString);
+    return repository.importFromJson(jsonString);
   }
 }

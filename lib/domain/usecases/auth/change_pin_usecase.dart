@@ -4,11 +4,13 @@ import '../../repositories/auth_repository.dart';
 
 /// Use case для смены PIN
 class ChangePinUseCase {
+  ChangePinUseCase(this.repository);
   final AuthRepository repository;
 
-  ChangePinUseCase(this.repository);
-
-  Future<Either<AuthFailure, bool>> execute(String oldPin, String newPin) async {
-    return await repository.changePin(oldPin, newPin);
+  Future<Either<AuthFailure, bool>> execute(
+    String oldPin,
+    String newPin,
+  ) async {
+    return repository.changePin(oldPin, newPin);
   }
 }

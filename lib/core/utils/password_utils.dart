@@ -57,7 +57,8 @@ class PasswordUtils {
     if (password.contains(RegExp(r'[a-z]'))) score += 0.05;
     if (password.contains(RegExp(r'[A-Z]'))) score += 0.05;
     if (password.contains(RegExp(r'[0-9]'))) score += 0.05;
-    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>_\-+=[]\;`~]'))) score += 0.1;
+    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>_\-+=[]\;`~]')))
+      score += 0.1;
 
     // Уникальность символов
     final uniqueRatio = password.split('').toSet().length / password.length;

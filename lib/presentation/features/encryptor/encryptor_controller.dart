@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../../domain/usecases/encryptor/encrypt_message_usecase.dart';
+
 import '../../../domain/usecases/encryptor/decrypt_message_usecase.dart';
+import '../../../domain/usecases/encryptor/encrypt_message_usecase.dart';
 
 /// Контроллер для экрана шифратора/дешифратора
 class EncryptorController extends ChangeNotifier {
-  final EncryptMessageUseCase encryptUseCase;
-  final DecryptMessageUseCase decryptUseCase;
-
   EncryptorController({
     required this.encryptUseCase,
     required this.decryptUseCase,
   });
+  final EncryptMessageUseCase encryptUseCase;
+  final DecryptMessageUseCase decryptUseCase;
 
   // Текстовые контроллеры
   final TextEditingController messageController = TextEditingController();
@@ -28,7 +28,8 @@ class EncryptorController extends ChangeNotifier {
   String? get error => _error;
   bool get isEncryptMode => _isEncryptMode;
 
-  String get resultLabel => _isEncryptMode ? 'Скопировать шифр' : 'Скопировать сообщение';
+  String get resultLabel =>
+      _isEncryptMode ? 'Скопировать шифр' : 'Скопировать сообщение';
 
   /// Переключает режим (шифрование/дешифрование)
   void toggleMode() {

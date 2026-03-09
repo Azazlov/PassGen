@@ -5,7 +5,9 @@ import '../entities/password_entry.dart';
 /// Интерфейс репозитория для хранилища паролей (только CRUD)
 abstract class StorageRepository {
   /// Сохраняет список паролей
-  Future<Either<StorageFailure, bool>> savePasswords(List<PasswordEntry> passwords);
+  Future<Either<StorageFailure, bool>> savePasswords(
+    List<PasswordEntry> passwords,
+  );
 
   /// Получает список паролей
   Future<Either<StorageFailure, List<PasswordEntry>>> getPasswords();

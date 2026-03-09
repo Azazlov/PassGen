@@ -2,16 +2,15 @@
 // Согласно ТЗ (Раздел 12.3)
 
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
-
+import 'package:flutter_test/flutter_test.dart';
 import 'package:pass_gen/presentation/widgets/copyable_password.dart';
 
 void main() {
   group('CopyablePassword Widget Tests', () {
     testWidgets('displays label and password', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CopyablePassword(
               label: 'Пароль',
@@ -28,7 +27,7 @@ void main() {
 
     testWidgets('shows empty state when text is empty', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CopyablePassword(
               label: 'Пароль',
@@ -44,7 +43,7 @@ void main() {
 
     testWidgets('copies password to clipboard on tap', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CopyablePassword(
               label: 'Пароль',
@@ -65,7 +64,7 @@ void main() {
 
     testWidgets('shows copy icon', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CopyablePassword(
               label: 'Пароль',
@@ -80,7 +79,7 @@ void main() {
 
     testWidgets('has semantics for accessibility', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CopyablePassword(
               label: 'Пароль',

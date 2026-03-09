@@ -1,22 +1,18 @@
-import '../database/database_helper.dart';
-import '../models/category_model.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
+import '../database/database_helper.dart';
+import '../models/category_model.dart';
 
 /// Реализация репозитория категорий для SQLite
 class CategoryRepositoryImpl implements CategoryRepository {
-  final DatabaseHelper _dbHelper;
-
   CategoryRepositoryImpl({DatabaseHelper? dbHelper})
-      : _dbHelper = dbHelper ?? DatabaseHelper();
+    : _dbHelper = dbHelper ?? DatabaseHelper();
+  final DatabaseHelper _dbHelper;
 
   @override
   Future<List<Category>> getAll() async {
     final maps = await _dbHelper.queryAll('categories');
-    return maps
-        .map((map) => CategoryModel.fromMap(map))
-        .map((model) => _toEntity(model))
-        .toList();
+    return maps.map(CategoryModel.fromMap).map(_toEntity).toList();
   }
 
   @override
@@ -56,10 +52,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       where: 'is_system = ?',
       whereArgs: [1],
     );
-    return maps
-        .map((map) => CategoryModel.fromMap(map))
-        .map((model) => _toEntity(model))
-        .toList();
+    return maps.map(CategoryModel.fromMap).map(_toEntity).toList();
   }
 
   @override
@@ -69,10 +62,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       where: 'is_system = ?',
       whereArgs: [0],
     );
-    return maps
-        .map((map) => CategoryModel.fromMap(map))
-        .map((model) => _toEntity(model))
-        .toList();
+    return maps.map(CategoryModel.fromMap).map(_toEntity).toList();
   }
 
   /// Преобразование модели в entity

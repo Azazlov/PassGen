@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
+
 import '../../../domain/entities/category.dart';
-import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/category/create_category_usecase.dart';
-import '../../../domain/usecases/category/update_category_usecase.dart';
 import '../../../domain/usecases/category/delete_category_usecase.dart';
+import '../../../domain/usecases/category/get_categories_usecase.dart';
+import '../../../domain/usecases/category/update_category_usecase.dart';
 
 /// Контроллер для управления категориями
 class CategoriesController extends ChangeNotifier {
-  final GetCategoriesUseCase _getCategoriesUseCase;
-  final CreateCategoryUseCase _createCategoryUseCase;
-  final UpdateCategoryUseCase _updateCategoryUseCase;
-  final DeleteCategoryUseCase _deleteCategoryUseCase;
-
   CategoriesController({
     required GetCategoriesUseCase getCategoriesUseCase,
     required CreateCategoryUseCase createCategoryUseCase,
     required UpdateCategoryUseCase updateCategoryUseCase,
     required DeleteCategoryUseCase deleteCategoryUseCase,
-  })  : _getCategoriesUseCase = getCategoriesUseCase,
-        _createCategoryUseCase = createCategoryUseCase,
-        _updateCategoryUseCase = updateCategoryUseCase,
-        _deleteCategoryUseCase = deleteCategoryUseCase;
+  }) : _getCategoriesUseCase = getCategoriesUseCase,
+       _createCategoryUseCase = createCategoryUseCase,
+       _updateCategoryUseCase = updateCategoryUseCase,
+       _deleteCategoryUseCase = deleteCategoryUseCase;
+  final GetCategoriesUseCase _getCategoriesUseCase;
+  final CreateCategoryUseCase _createCategoryUseCase;
+  final UpdateCategoryUseCase _updateCategoryUseCase;
+  final DeleteCategoryUseCase _deleteCategoryUseCase;
 
   List<Category> _categories = [];
   bool _isLoading = false;

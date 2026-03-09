@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
+import '../../../domain/entities/category.dart';
 import '../../../domain/entities/password_entry.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
-import '../../../domain/entities/category.dart';
 import 'storage_controller.dart';
 
 /// Панель деталей пароля
 class StorageDetailPane extends StatelessWidget {
-  final PasswordEntry entry;
-
   const StorageDetailPane({super.key, required this.entry});
+  final PasswordEntry entry;
 
   @override
   Widget build(BuildContext context) {
@@ -147,10 +147,7 @@ class StorageDetailPane extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Категория',
-              style: theme.textTheme.titleSmall,
-            ),
+            Text('Категория', style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
             Text(
               entry.categoryId?.toString() ?? 'Без категории',
@@ -175,10 +172,7 @@ class StorageDetailPane extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Создан',
-                        style: theme.textTheme.titleSmall,
-                      ),
+                      Text('Создан', style: theme.textTheme.titleSmall),
                       const SizedBox(height: 4),
                       Text(
                         _formatDate(entry.createdAt),
@@ -198,10 +192,7 @@ class StorageDetailPane extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Обновлено',
-                          style: theme.textTheme.titleSmall,
-                        ),
+                        Text('Обновлено', style: theme.textTheme.titleSmall),
                         const SizedBox(height: 4),
                         Text(
                           _formatRelativeDate(entry.updatedAt!),
@@ -343,16 +334,15 @@ class StorageDetailPane extends StatelessWidget {
 
 /// Пустое состояние панели деталей
 class StorageEmptyDetailState extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
   const StorageEmptyDetailState({
     super.key,
     this.icon = Icons.touch_app,
     this.title = 'Выберите пароль',
     this.subtitle = 'или создайте новый',
   });
+  final IconData icon;
+  final String title;
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {

@@ -1,11 +1,5 @@
 /// Модель категории для базы данных
 class CategoryModel {
-  final int? id;
-  final String name;
-  final String? icon;
-  final bool isSystem;
-  final DateTime createdAt;
-
   const CategoryModel({
     this.id,
     required this.name,
@@ -24,6 +18,11 @@ class CategoryModel {
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
     );
   }
+  final int? id;
+  final String name;
+  final String? icon;
+  final bool isSystem;
+  final DateTime createdAt;
 
   /// Преобразование в Map (SQLite)
   Map<String, dynamic> toMap() {
@@ -69,5 +68,6 @@ class CategoryModel {
   }
 
   @override
-  int get hashCode => id.hashCode ^ name.hashCode ^ icon.hashCode ^ isSystem.hashCode;
+  int get hashCode =>
+      id.hashCode ^ name.hashCode ^ icon.hashCode ^ isSystem.hashCode;
 }

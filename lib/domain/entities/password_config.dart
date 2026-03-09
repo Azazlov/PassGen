@@ -1,13 +1,5 @@
 /// Конфигурация генерации пароля
 class PasswordConfig {
-  final int version;
-  final String service;
-  final DateTime? lastUsageDate;
-  final String uuid;
-  final String category;
-  final int expireDays;
-  final String encryptedConfig;
-
   const PasswordConfig({
     this.version = 0,
     this.service = 'None',
@@ -17,6 +9,13 @@ class PasswordConfig {
     this.expireDays = 30,
     required this.encryptedConfig,
   });
+  final int version;
+  final String service;
+  final DateTime? lastUsageDate;
+  final String uuid;
+  final String category;
+  final int expireDays;
+  final String encryptedConfig;
 
   /// Проверяет, просрочен ли пароль
   bool get isExpired {

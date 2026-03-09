@@ -7,11 +7,6 @@ import 'package:lottie/lottie.dart';
 /// Копирует текст в буфер обмена с очисткой через 60 секунд
 /// Показывает Lottie анимацию при успешном копировании
 class CopyablePassword extends StatefulWidget {
-  final String label;
-  final String text;
-  final VoidCallback? onTap;
-  final bool isEmpty;
-
   const CopyablePassword({
     super.key,
     required this.label,
@@ -19,6 +14,10 @@ class CopyablePassword extends StatefulWidget {
     this.onTap,
     this.isEmpty = false,
   });
+  final String label;
+  final String text;
+  final VoidCallback? onTap;
+  final bool isEmpty;
 
   @override
   State<CopyablePassword> createState() => _CopyablePasswordState();
@@ -65,10 +64,7 @@ class _CopyablePasswordState extends State<CopyablePassword> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.colorScheme.outline,
-                width: 2,
-              ),
+              border: Border.all(color: theme.colorScheme.outline, width: 2),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -146,7 +142,7 @@ class _CopyablePasswordState extends State<CopyablePassword> {
 
     // Очищаем буфер через 60 секунд (согласно ТЗ)
     Future.delayed(const Duration(seconds: 60), () {
-      Clipboard.setData(ClipboardData(text: ''));
+      Clipboard.setData(const ClipboardData(text: ''));
 
       // Показываем уведомление об очистке, если виджет ещё в дереве
       if (context.mounted) {

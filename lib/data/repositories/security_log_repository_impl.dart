@@ -1,18 +1,21 @@
 import 'dart:convert';
-import '../database/database_helper.dart';
-import '../models/security_log_model.dart';
+
 import '../../domain/entities/security_log.dart';
 import '../../domain/repositories/security_log_repository.dart';
+import '../database/database_helper.dart';
+import '../models/security_log_model.dart';
 
 /// Реализация репозитория логов безопасности для SQLite
 class SecurityLogRepositoryImpl implements SecurityLogRepository {
+  SecurityLogRepositoryImpl({DatabaseHelper? dbHelper})
+    : _dbHelper = dbHelper ?? DatabaseHelper();
   final DatabaseHelper _dbHelper;
 
-  SecurityLogRepositoryImpl({DatabaseHelper? dbHelper})
-      : _dbHelper = dbHelper ?? DatabaseHelper();
-
   @override
-  Future<void> logEvent(String actionType, {Map<String, dynamic>? details}) async {
+  Future<void> logEvent(
+    String actionType, {
+    Map<String, dynamic>? details,
+  }) async {
     final log = SecurityLogModel(
       actionType: actionType,
       timestamp: DateTime.now(),
@@ -34,14 +37,14 @@ class SecurityLogRepositoryImpl implements SecurityLogRepository {
       orderBy: 'timestamp DESC',
       limit: limit,
     );
-    return maps
-        .map((map) => SecurityLogModel.fromMap(map))
-        .map((model) => _toEntity(model))
-        .toList();
+    return maps.map(SecurityLogModel.fromMap).map(_toEntity).toList();
   }
 
   @override
-  Future<List<SecurityLog>> getLogsByType(String actionType, {int limit = 100}) async {
+  Future<List<SecurityLog>> getLogsByType(
+    String actionType, {
+    int limit = 100,
+  }) async {
     final maps = await _dbHelper.query(
       'security_logs',
       where: 'action_type = ?',
@@ -49,29 +52,31 @@ class SecurityLogRepositoryImpl implements SecurityLogRepository {
       orderBy: 'timestamp DESC',
       limit: limit,
     );
-    return maps
-        .map((map) => SecurityLogModel.fromMap(map))
-        .map((model) => _toEntity(model))
-        .toList();
+    return maps.map(SecurityLogModel.fromMap).map(_toEntity).toList();
   }
 
   @override
   Future<void> clearOldLogs({int keepLast = 1000}) async {
     final db = await _dbHelper.database;
     // Удаляем все логи кроме последних keepLast
-    await db.rawDelete('''
+    await db.rawDelete(
+      '''
       DELETE FROM security_logs
       WHERE id NOT IN (
         SELECT id FROM security_logs
         ORDER BY timestamp DESC
         LIMIT ?
       )
-    ''', [keepLast]);
+    ''',
+      [keepLast],
+    );
   }
 
   @override
   Future<int> count() async {
-    final result = await _dbHelper.rawQuery('SELECT COUNT(*) as count FROM security_logs');
+    final result = await _dbHelper.rawQuery(
+      'SELECT COUNT(*) as count FROM security_logs',
+    );
     return result.first['count'] as int? ?? 0;
   }
 
@@ -87,16 +92,6 @@ class SecurityLogRepositoryImpl implements SecurityLogRepository {
       actionType: model.actionType,
       timestamp: model.timestamp,
       details: model.details,
-    );
-  }
-
-  /// Преобразование entity в модель
-  SecurityLogModel _toModel(SecurityLog entity) {
-    return SecurityLogModel(
-      id: entity.id,
-      actionType: entity.actionType,
-      timestamp: entity.timestamp,
-      details: entity.details != null ? jsonEncode(entity.details!) : null,
     );
   }
 }

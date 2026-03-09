@@ -59,7 +59,7 @@ class StorageLocalDataSource {
 
   /// Очищает всё хранилище
   Future<bool> clearStorage(String key) async {
-    return await removeConfigs(key);
+    return removeConfigs(key);
   }
 
   /// Сохраняет список паролей
@@ -123,7 +123,7 @@ class StorageLocalDataSource {
     try {
       final newPasswords = PasswordEntry.decodeList(jsonString);
       final currentPasswords = await getPasswords();
-      
+
       // Объединяем пароли, избегая дубликатов по сервису
       final mergedPasswords = List<PasswordEntry>.from(currentPasswords);
       for (final newPassword in newPasswords) {
@@ -138,7 +138,7 @@ class StorageLocalDataSource {
           mergedPasswords.add(newPassword);
         }
       }
-      
+
       return await savePasswords(mergedPasswords);
     } catch (e) {
       throw StorageFailure(message: 'Ошибка импорта паролей: $e');

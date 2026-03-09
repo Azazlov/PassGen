@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:pass_gen/data/database/database_helper.dart';
 
 // Симуляция твоих данных из других модулей
 class MockData {
-  static const String config = "NTEy.NTE1.Ynl0ZXM="; // Пример твоего генератора
-  static const String encryptedSecret = "base64_encrypted_blob_here";
+  static const String config = 'NTEy.NTE1.Ynl0ZXM='; // Пример твоего генератора
+  static const String encryptedSecret = 'base64_encrypted_blob_here';
 }
 
 class StorageTest {
@@ -27,7 +25,7 @@ class StorageTest {
         await db.execute('CREATE TABLE app_settings (id INTEGER PRIMARY KEY, key TEXT, value TEXT)');
         await db.execute('CREATE TABLE password_history (id INTEGER PRIMARY KEY, password_id INTEGER, old_value TEXT)');
         
-        print("✅ База данных инициализирована: 7 таблиц создано.");
+        print('✅ База данных инициализирована: 7 таблиц создано.');
       },
     );
   }
@@ -35,10 +33,10 @@ class StorageTest {
   // 2. Логика записи (Пример: сохранение нового пароля)
   Future<void> savePassword(String title, String categoryName) async {
     // Сначала создаем категорию
-    int catId = await db.insert('categories', {'name': categoryName});
+    final int catId = await db.insert('categories', {'name': categoryName});
     
     // Создаем основную запись
-    int pId = await db.insert('passwords', {
+    final int pId = await db.insert('passwords', {
       'category_id': catId,
       'title': title
     });
@@ -67,10 +65,10 @@ class StorageTest {
 
   // 3. Логика чтения (Сборка данных обратно)
   Future<void> readAndPrint() async {
-    print("\n--- 📝 ОТЧЕТ ПО БАЗЕ ДАННЫХ ---");
+    print('\n--- 📝 ОТЧЕТ ПО БАЗЕ ДАННЫХ ---');
     
     // Делаем JOIN, чтобы показать связь таблиц (красиво для диплома)
-    List<Map<String, dynamic>> result = await db.rawQuery('''
+    final List<Map<String, dynamic>> result = await db.rawQuery('''
       SELECT p.title, c.name as category, g.config, e.cipher_text
       FROM passwords p
       JOIN categories c ON p.category_id = c.id
@@ -85,8 +83,8 @@ class StorageTest {
     }
 
     // Проверяем логи
-    List<Map<String, dynamic>> logs = await db.query('security_events');
-    print("--- 🛡️ ЛОГИ БЕЗОПАСНОСТИ: ${logs.length} записей ---");
+    final List<Map<String, dynamic>> logs = await db.query('security_events');
+    print('--- 🛡️ ЛОГИ БЕЗОПАСНОСТИ: ${logs.length} записей ---');
   }
 }
 
@@ -98,8 +96,8 @@ void main() async {
   final storage = StorageTest();
   await storage.init();
   
-  await storage.savePassword("VK.com", "Social");
-  await storage.savePassword("Work Email", "Job");
+  await storage.savePassword('VK.com', 'Social');
+  await storage.savePassword('Work Email', 'Job');
   
   await storage.readAndPrint();
 }

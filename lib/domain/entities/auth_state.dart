@@ -1,11 +1,5 @@
 /// Состояние аутентификации
 class AuthState {
-  final bool isAuthenticated;
-  final bool isPinSetup;
-  final bool isLocked;
-  final int? remainingAttempts;
-  final DateTime? lockoutUntil;
-
   const AuthState({
     this.isAuthenticated = false,
     this.isPinSetup = false,
@@ -13,6 +7,11 @@ class AuthState {
     this.remainingAttempts,
     this.lockoutUntil,
   });
+  final bool isAuthenticated;
+  final bool isPinSetup;
+  final bool isLocked;
+  final int? remainingAttempts;
+  final DateTime? lockoutUntil;
 
   AuthState copyWith({
     bool? isAuthenticated,
@@ -38,5 +37,6 @@ class AuthState {
   }
 
   @override
-  String toString() => 'AuthState(auth: $isAuthenticated, setup: $isPinSetup, locked: $isLocked)';
+  String toString() =>
+      'AuthState(auth: $isAuthenticated, setup: $isPinSetup, locked: $isLocked)';
 }

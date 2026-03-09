@@ -4,9 +4,8 @@ import '../../repositories/password_generator_repository.dart';
 
 /// Использование: Сохранение пароля в хранилище
 class SavePasswordUseCase {
-  final PasswordGeneratorRepository repository;
-
   const SavePasswordUseCase(this.repository);
+  final PasswordGeneratorRepository repository;
 
   Future<Either<PasswordGenerationFailure, Map<String, dynamic>>> execute({
     required String service,
@@ -15,7 +14,7 @@ class SavePasswordUseCase {
     int? categoryId,
     String? login,
   }) async {
-    return await repository.savePassword(
+    return repository.savePassword(
       service: service,
       password: password,
       config: config,

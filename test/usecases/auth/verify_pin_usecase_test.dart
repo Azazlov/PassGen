@@ -1,13 +1,12 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'verify_pin_usecase_test.mocks.dart';
-import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-
-import 'package:pass_gen/domain/usecases/auth/verify_pin_usecase.dart';
-import 'package:pass_gen/domain/repositories/auth_repository.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:pass_gen/domain/entities/auth_result.dart';
-import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/domain/repositories/auth_repository.dart';
+import 'package:pass_gen/domain/usecases/auth/verify_pin_usecase.dart';
+
+import 'verify_pin_usecase_test.mocks.dart';
 
 @GenerateMocks([AuthRepository])
 void main() {
