@@ -12,10 +12,9 @@ import '../../data/repositories/app_settings_repository_impl.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/repositories/category_repository_impl.dart';
 import '../../data/repositories/encryptor_repository_impl.dart';
-import '../../data/repositories/password_export_repository_impl.dart';
 // Repositories
+import '../../data/repositories/password_data_repository_impl.dart';
 import '../../data/repositories/password_generator_repository_impl.dart';
-import '../../data/repositories/password_import_repository_impl.dart';
 import '../../data/repositories/security_log_repository_impl.dart';
 import '../../data/repositories/storage_repository_impl.dart';
 import '../../domain/usecases/auth/change_pin_usecase.dart';
@@ -113,13 +112,7 @@ class PasswordGeneratorApp extends StatelessWidget {
               StorageRepositoryImpl(context.read<StorageLocalDataSource>()),
         ),
         Provider(
-          create: (context) => PasswordExportRepositoryImpl(
-            context.read<StorageLocalDataSource>(),
-            context.read<PassgenFormat>(),
-          ),
-        ),
-        Provider(
-          create: (context) => PasswordImportRepositoryImpl(
+          create: (context) => PasswordDataRepositoryImpl(
             context.read<StorageLocalDataSource>(),
             context.read<PassgenFormat>(),
           ),
@@ -168,22 +161,22 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
         Provider(
           create: (context) => ExportPasswordsUseCase(
-            context.read<PasswordExportRepositoryImpl>(),
+            context.read<PasswordDataRepositoryImpl>(),
           ),
         ),
         Provider(
           create: (context) => ImportPasswordsUseCase(
-            context.read<PasswordImportRepositoryImpl>(),
+            context.read<PasswordDataRepositoryImpl>(),
           ),
         ),
         Provider(
           create: (context) => ExportPassgenUseCase(
-            context.read<PasswordExportRepositoryImpl>(),
+            context.read<PasswordDataRepositoryImpl>(),
           ),
         ),
         Provider(
           create: (context) => ImportPassgenUseCase(
-            context.read<PasswordImportRepositoryImpl>(),
+            context.read<PasswordDataRepositoryImpl>(),
           ),
         ),
         Provider(

@@ -11,6 +11,17 @@ import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
 
+/// Конфигурация уровня сложности пароля
+class StrengthConfig {
+  final String label;
+  final int colorIndex;
+  
+  const StrengthConfig({
+    required this.label,
+    required this.colorIndex,
+  });
+}
+
 /// Контроллер для экрана генератора паролей
 class GeneratorController extends ChangeNotifier {
   GeneratorController({
@@ -63,24 +74,12 @@ class GeneratorController extends ChangeNotifier {
   int _strength = AppConstants.defaultPasswordStrength;
 
   String get strengthLabel {
-    return PasswordFlags.strengthLabels[_strength] ?? 'Неизвестная сложность';
+    return strengthConfigs[_strength]?.label ?? 'Неизвестная сложность';
   }
 
   Color get strengthColor {
-    switch (_strength) {
-      case 0:
-        return Colors.red;
-      case 1:
-        return Colors.orange;
-      case 2:
-        return const Color.fromARGB(255, 215, 223, 52);
-      case 3:
-        return Colors.green;
-      case 4:
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
+    final colorIndex = strengthConfigs[_strength]?.colorIndex ?? 0;
+    return strengthColors[colorIndex] ?? Colors.grey;
   }
 
   // Переключатели обязательности символов
@@ -94,6 +93,24 @@ class GeneratorController extends ChangeNotifier {
   bool get useCustomUppercase => _settings.useCustomUppercase;
   bool get useCustomDigits => _settings.useCustomDigits;
   bool get useCustomSymbols => _settings.useCustomSymbols;
+
+  /// Конфигурация уровней сложности пароля
+  static const Map<int, StrengthConfig> strengthConfigs = {
+    0: StrengthConfig(label: 'Очень слабый', colorIndex: 0),
+    1: StrengthConfig(label: 'Слабый', colorIndex: 1),
+    2: StrengthConfig(label: 'Средний', colorIndex: 2),
+    3: StrengthConfig(label: 'Надёжный', colorIndex: 3),
+    4: StrengthConfig(label: 'Очень надёжный', colorIndex: 4),
+  };
+
+  /// Конфигурация уровня сложности
+  static const List<Color> strengthColors = [
+    Colors.red,       // 0: Очень слабый
+    Colors.orange,    // 1: Слабый
+    Color.fromARGB(255, 215, 223, 52),  // 2: Средний
+    Colors.green,     // 3: Надёжный
+    Colors.blue,      // 4: Очень надёжный
+  ];
 
   /// Обновляет уровень сложности
   void updateStrength(int value) {

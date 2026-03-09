@@ -1,11 +1,11 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
-import '../../repositories/password_import_repository.dart';
+import '../../repositories/password_data_repository.dart';
 
 /// Использование: Импорт паролей из формата .passgen
 class ImportPassgenUseCase {
   const ImportPassgenUseCase(this.repository);
-  final PasswordImportRepository repository;
+  final PasswordDataRepository repository;
 
   Future<Either<StorageFailure, bool>> execute({
     required String data,

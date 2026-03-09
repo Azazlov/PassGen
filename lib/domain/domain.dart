@@ -13,7 +13,7 @@ export 'repositories/app_settings_repository.dart';
 export 'repositories/auth_repository.dart';
 export 'repositories/category_repository.dart';
 export 'repositories/encryptor_repository.dart';
-export 'repositories/password_entry_repository.dart';
+export 'repositories/password_data_repository.dart';
 export 'repositories/password_generator_repository.dart';
 export 'repositories/security_log_repository.dart';
 export 'repositories/storage_repository.dart';
