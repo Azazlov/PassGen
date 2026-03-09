@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/entities/category.dart';
+import '../../../domain/repositories/password_generator_repository.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/generator/validate_generator_settings_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
@@ -30,6 +31,7 @@ class GeneratorScreen extends StatelessWidget {
         validateSettingsUseCase: context
             .read<ValidateGeneratorSettingsUseCase>(),
         logEventUseCase: context.read<LogEventUseCase>(),
+        repository: context.read<PasswordGeneratorRepository>(),
       ),
       child: const _GeneratorScreenContent(),
     );

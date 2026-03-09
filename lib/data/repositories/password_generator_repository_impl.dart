@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../domain/entities/character_set.dart';
 import '../../../../domain/entities/password_config.dart';
 import '../../../../domain/entities/password_generation_settings.dart';
 import '../../../../domain/entities/password_result.dart';
@@ -166,5 +167,95 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
     } catch (e) {
       return Left(PasswordGenerationFailure(message: 'Ошибка сохранения: $e'));
     }
+  }
+
+  @override
+  Future<List<CharacterSet>> getCharacterSets({
+    required PasswordGenerationSettings settings,
+  }) async {
+    final categories = <CharacterSet>[];
+
+    // Строчные
+    if (settings.useCustomLowercase || settings.requireLowercase) {
+      var chars = PasswordGeneratorLocalDataSource.lowercase;
+      if (settings.excludeSimilar) {
+        chars = _excludeSimilar(chars);
+      }
+      if (chars.isNotEmpty) {
+        categories.add(
+          CharacterSet(
+            label: 'Строчные',
+            subtitle: 'a-z',
+            characters: chars,
+            count: chars.length,
+            isEnabled: true,
+          ),
+        );
+      }
+    }
+
+    // Заглавные
+    if (settings.useCustomUppercase || settings.requireUppercase) {
+      var chars = PasswordGeneratorLocalDataSource.uppercase;
+      if (settings.excludeSimilar) {
+        chars = _excludeSimilar(chars);
+      }
+      if (chars.isNotEmpty) {
+        categories.add(
+          CharacterSet(
+            label: 'Заглавные',
+            subtitle: 'A-Z',
+            characters: chars,
+            count: chars.length,
+            isEnabled: true,
+          ),
+        );
+      }
+    }
+
+    // Цифры
+    if (settings.useCustomDigits || settings.requireDigits) {
+      var chars = PasswordGeneratorLocalDataSource.digits;
+      if (settings.excludeSimilar) {
+        chars = _excludeSimilar(chars);
+      }
+      if (chars.isNotEmpty) {
+        categories.add(
+          CharacterSet(
+            label: 'Цифры',
+            subtitle: '0-9',
+            characters: chars,
+            count: chars.length,
+            isEnabled: true,
+          ),
+        );
+      }
+    }
+
+    // Спецсимволы
+    if (settings.useCustomSymbols || settings.requireSymbols) {
+      var chars = PasswordGeneratorLocalDataSource.symbols;
+      if (settings.excludeSimilar) {
+        chars = _excludeSimilar(chars);
+      }
+      if (chars.isNotEmpty) {
+        categories.add(
+          CharacterSet(
+            label: 'Спецсимволы',
+            subtitle: '!@#...',
+            characters: chars,
+            count: chars.length,
+            isEnabled: true,
+          ),
+        );
+      }
+    }
+
+    return categories;
+  }
+
+  String _excludeSimilar(String chars) {
+    final similar = {'l', '1', 'I', 'O', '0'};
+    return chars.split('').where((c) => !similar.contains(c)).join();
   }
 }

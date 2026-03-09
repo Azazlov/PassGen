@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
-import '../../data/datasources/password_generator_local_datasource.dart';
+import '../../domain/entities/character_set.dart';
 import '../../domain/entities/password_generation_settings.dart';
 
 /// Виджет для отображения используемых символов генерации
 class CharacterSetDisplay extends StatelessWidget {
-  const CharacterSetDisplay({super.key, required this.settings});
+  const CharacterSetDisplay({
+    super.key,
+    required this.settings,
+    this.characterSets,
+  });
+
   final PasswordGenerationSettings settings;
+  final List<CharacterSet>? characterSets;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final categories = _getCharacterCategories();
+    final categories = characterSets ?? _getCharacterCategoriesFromSettings();
     final total = categories
         .where((c) => c.isEnabled)
         .fold<int>(0, (sum, c) => sum + c.count);
@@ -68,18 +74,18 @@ class CharacterSetDisplay extends StatelessWidget {
     );
   }
 
-  List<_CharacterCategory> _getCharacterCategories() {
-    final categories = <_CharacterCategory>[];
+  List<CharacterSet> _getCharacterCategoriesFromSettings() {
+    final categories = <CharacterSet>[];
 
     // Строчные
     if (settings.useCustomLowercase || settings.requireLowercase) {
-      var chars = PasswordGeneratorLocalDataSource.lowercase;
+      var chars = _lowercase;
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
       }
       if (chars.isNotEmpty) {
         categories.add(
-          _CharacterCategory(
+          CharacterSet(
             label: 'Строчные',
             subtitle: 'a-z',
             characters: chars,
@@ -92,13 +98,13 @@ class CharacterSetDisplay extends StatelessWidget {
 
     // Заглавные
     if (settings.useCustomUppercase || settings.requireUppercase) {
-      var chars = PasswordGeneratorLocalDataSource.uppercase;
+      var chars = _uppercase;
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
       }
       if (chars.isNotEmpty) {
         categories.add(
-          _CharacterCategory(
+          CharacterSet(
             label: 'Заглавные',
             subtitle: 'A-Z',
             characters: chars,
@@ -111,13 +117,13 @@ class CharacterSetDisplay extends StatelessWidget {
 
     // Цифры
     if (settings.useCustomDigits || settings.requireDigits) {
-      var chars = PasswordGeneratorLocalDataSource.digits;
+      var chars = _digits;
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
       }
       if (chars.isNotEmpty) {
         categories.add(
-          _CharacterCategory(
+          CharacterSet(
             label: 'Цифры',
             subtitle: '0-9',
             characters: chars,
@@ -130,13 +136,13 @@ class CharacterSetDisplay extends StatelessWidget {
 
     // Спецсимволы
     if (settings.useCustomSymbols || settings.requireSymbols) {
-      var chars = PasswordGeneratorLocalDataSource.symbols;
+      var chars = _symbols;
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
       }
       if (chars.isNotEmpty) {
         categories.add(
-          _CharacterCategory(
+          CharacterSet(
             label: 'Спецсимволы',
             subtitle: '!@#...',
             characters: chars,
@@ -147,53 +153,24 @@ class CharacterSetDisplay extends StatelessWidget {
       }
     }
 
-    // Исключённые (показываем только если опция включена)
-    if (settings.excludeSimilar) {
-      categories.add(
-        const _CharacterCategory(
-          label: 'Исключены',
-          subtitle: 'Похожие символы',
-          characters: PasswordGeneratorLocalDataSource.similarCharacters,
-          count: PasswordGeneratorLocalDataSource.similarCharacters.length,
-          isEnabled: false,
-          isExcluded: true,
-        ),
-      );
-    }
-
     return categories;
   }
 
   String _excludeSimilar(String chars) {
-    for (final char in PasswordGeneratorLocalDataSource.similarCharacters.split(
-      '',
-    )) {
-      chars = chars.replaceAll(char, '');
-    }
-    return chars;
+    final similar = {'l', '1', 'I', 'O', '0'};
+    return chars.split('').where((c) => !similar.contains(c)).join();
   }
-}
 
-class _CharacterCategory {
-  const _CharacterCategory({
-    required this.label,
-    required this.subtitle,
-    required this.characters,
-    required this.count,
-    this.isEnabled = true,
-    this.isExcluded = false,
-  });
-  final String label;
-  final String subtitle;
-  final String characters;
-  final int count;
-  final bool isEnabled;
-  final bool isExcluded;
+  // Константы символов (локальные, без зависимости от Data)
+  static const String _lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  static const String _uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  static const String _digits = '0123456789';
+  static const String _symbols = '!@#\$%^&*()_+-=[]{}|;:,.<>?';
 }
 
 class _CharacterCategoryWidget extends StatelessWidget {
   const _CharacterCategoryWidget({required this.category});
-  final _CharacterCategory category;
+  final CharacterSet category;
 
   @override
   Widget build(BuildContext context) {
@@ -212,25 +189,19 @@ class _CharacterCategoryWidget extends StatelessWidget {
                 category.label,
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: category.isExcluded
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.onSurface,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: category.isExcluded
-                      ? theme.colorScheme.errorContainer
-                      : theme.colorScheme.primaryContainer,
+                  color: theme.colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '${category.count}',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: category.isExcluded
-                        ? theme.colorScheme.onErrorContainer
-                        : theme.colorScheme.onPrimaryContainer,
+                    color: theme.colorScheme.onPrimaryContainer,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -243,23 +214,17 @@ class _CharacterCategoryWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: category.isExcluded
-                  ? theme.colorScheme.errorContainer.withOpacity(0.1)
-                  : theme.colorScheme.surfaceContainerHighest,
+              color: theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: category.isExcluded
-                    ? theme.colorScheme.error.withOpacity(0.3)
-                    : theme.colorScheme.outline.withOpacity(0.3),
+                color: theme.colorScheme.outline.withOpacity(0.3),
               ),
             ),
             child: Text(
               category.characters,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontFamily: 'monospace',
-                color: category.isExcluded
-                    ? theme.colorScheme.error
-                    : theme.colorScheme.onSurface,
+                color: theme.colorScheme.onSurface,
               ),
               maxLines: 2,
               overflow: TextOverflow.visible,

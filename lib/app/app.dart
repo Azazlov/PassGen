@@ -240,11 +240,12 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
 
         // Controllers
-        ChangeNotifierProxyProvider4<
+        ChangeNotifierProxyProvider5<
           GeneratePasswordUseCase,
           SavePasswordUseCase,
           ValidateGeneratorSettingsUseCase,
           LogEventUseCase,
+          PasswordGeneratorRepositoryImpl,
           GeneratorController
         >(
           create: (context) => GeneratorController(
@@ -253,13 +254,15 @@ class PasswordGeneratorApp extends StatelessWidget {
             validateSettingsUseCase: context
                 .read<ValidateGeneratorSettingsUseCase>(),
             logEventUseCase: context.read<LogEventUseCase>(),
+            repository: context.read<PasswordGeneratorRepositoryImpl>(),
           ),
-          update: (_, genUc, saveUc, valUc, logUc, controller) =>
+          update: (_, genUc, saveUc, valUc, logUc, repo, controller) =>
               GeneratorController(
                 generatePasswordUseCase: genUc,
                 savePasswordUseCase: saveUc,
                 validateSettingsUseCase: valUc,
                 logEventUseCase: logUc,
+                repository: repo,
               ),
         ),
         ChangeNotifierProxyProvider2<

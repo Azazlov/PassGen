@@ -13,6 +13,7 @@
 migrate_working_dir/
 *.bkp
 *~
+._.DS_Store
 
 # IntelliJ related
 *.iml

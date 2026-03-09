@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/event_types.dart';
+import '../../../domain/entities/character_set.dart';
 import '../../../domain/entities/password_generation_settings.dart';
 import '../../../domain/entities/password_result.dart';
+import '../../../domain/repositories/password_generator_repository.dart';
 import '../../../domain/usecases/generator/validate_generator_settings_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
@@ -16,6 +18,7 @@ class GeneratorController extends ChangeNotifier {
     required this.savePasswordUseCase,
     required this.validateSettingsUseCase,
     required this.logEventUseCase,
+    required this.repository,
   }) {
     _updateSettingsByStrength(_strength);
   }
@@ -23,6 +26,7 @@ class GeneratorController extends ChangeNotifier {
   final SavePasswordUseCase savePasswordUseCase;
   final ValidateGeneratorSettingsUseCase validateSettingsUseCase;
   final LogEventUseCase logEventUseCase;
+  final PasswordGeneratorRepository repository;
 
   // Состояние
   PasswordGenerationSettings _settings = const PasswordGenerationSettings();
@@ -347,5 +351,10 @@ class GeneratorController extends ChangeNotifier {
     minLengthController.dispose();
     maxLengthController.dispose();
     super.dispose();
+  }
+
+  /// Получает наборы символов из репозитория
+  Future<List<CharacterSet>> getCharacterSets() async {
+    return await repository.getCharacterSets(settings: _settings);
   }
 }

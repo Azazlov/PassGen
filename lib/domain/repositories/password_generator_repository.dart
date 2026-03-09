@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 
 import '../../core/errors/failures.dart';
+import '../entities/character_set.dart';
 import '../entities/password_config.dart';
 import '../entities/password_generation_settings.dart';
 import '../entities/password_result.dart';
@@ -39,5 +40,10 @@ abstract class PasswordGeneratorRepository {
     required String config,
     int? categoryId,
     String? login,
+  });
+
+  /// Получает доступные наборы символов
+  Future<List<CharacterSet>> getCharacterSets({
+    required PasswordGenerationSettings settings,
   });
 }
