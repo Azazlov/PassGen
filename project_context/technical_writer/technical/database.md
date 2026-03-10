@@ -1,7 +1,7 @@
 # PassGen — Схема базы данных
 
-**Версия:** 0.4.0  
-**Последнее обновление:** Март 2026
+**Версия:** 0.5.0
+**Последнее обновление:** 10 марта 2026
 
 ---
 
@@ -164,6 +164,10 @@ CREATE INDEX idx_password_configs_entry ON password_configs(entry_id);
 - Бит 2: цифры (0-9)
 - Бит 3: спецсимволы (!@#$%^&*)
 
+**Дополнительные опции (v0.5.0):**
+- `require_unique`: требование уникальных символов (без повторов)
+- `exclude_similar`: исключение похожих символов (l, 1, I, O, 0)
+
 ---
 
 ### security_logs
@@ -192,10 +196,12 @@ CREATE INDEX idx_security_logs_type ON security_logs(action_type);
 | `PWD_CREATED` | Создание пароля |
 | `PWD_DELETED` | Удаление пароля |
 | `PWD_UPDATED` | Обновление пароля |
+| `PWD_ACCESSED` | Просмотр пароля (v0.5.0) |
 | `EXPORT` | Экспорт данных |
 | `IMPORT` | Импорт данных |
 | `PIN_CHANGED` | Смена PIN-кода |
 | `PIN_REMOVED` | Удаление PIN-кода |
+| `SETTINGS_CHG` | Изменение настроек (v0.5.0) |
 
 ---
 
