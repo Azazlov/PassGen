@@ -15,6 +15,7 @@
 |---|---|---|---|
 | 1 | Логирование PWD_ACCESSED (просмотр пароля) | 🔴 | ✅ РЕАЛИЗОВАНО |
 | 2 | Логирование SETTINGS_CHG (изменение настроек) | 🔴 | ✅ РЕАЛИЗОВАНО |
+| 3 | Исправление ProviderNotFoundException | 🔴 | ✅ ИСПРАВЛЕНО |
 
 ---
 
@@ -211,20 +212,59 @@ class LogEventUseCase {
 
 ---
 
-## 6. ВЫВОДЫ
+## 6. ДОПОЛНИТЕЛЬНОЕ ИСПРАВЛЕНИЕ
 
-### 6.1 Результаты
-✅ **Обе критические задачи полностью реализованы:**
-1. **PWD_ACCESSED** — логирование при копировании пароля
-2. **SETTINGS_CHG** — логирование при изменении настроек
+### 6.1 Ошибка ProviderNotFoundException
 
-### 6.2 Соответствие ТЗ
+**Проблема:**
+```
+ProviderNotFoundException: PasswordGeneratorRepository
+```
+
+**Причина:**
+В `app.dart` зарегистрирован `PasswordGeneratorRepositoryImpl` (конкретная реализация),
+но в `GeneratorScreen` используется `PasswordGeneratorRepository` (абстрактный интерфейс).
+
+**Решение:**
+Изменена регистрация в `lib/app/app.dart` (строка 100):
+
+**Было:**
+```dart
+Provider(
+  create: (context) => PasswordGeneratorRepositoryImpl(
+    context.read<PasswordGeneratorLocalDataSource>(),
+  ),
+),
+```
+
+**Стало:**
+```dart
+Provider<PasswordGeneratorRepository>(
+  create: (context) => PasswordGeneratorRepositoryImpl(
+    context.read<PasswordGeneratorLocalDataSource>(),
+  ),
+),
+```
+
+**Статус:** ✅ ИСПРАВЛЕНО
+
+---
+
+## 7. ВЫВОДЫ
+
+### 7.1 Результаты
+✅ **Все критические задачи полностью выполнены:**
+1. **PWD_ACCESSED** — логирование при копировании пароля ✅
+2. **SETTINGS_CHG** — логирование при изменении настроек ✅
+3. **ProviderNotFoundException** — исправлено ✅
+
+### 7.2 Соответствие ТЗ
 - ✅ Все требования ТЗ выполнены
 - ✅ Clean Architecture соблюдена
 - ✅ Use Case паттерн применён корректно
 - ✅ Детали событий соответствуют требованиям
 
-### 6.3 Готовность этапа 8
+### 7.3 Готовность этапа 8
 ```
 Этап 8: Критические исправления ТЗ
 
@@ -253,9 +293,9 @@ class LogEventUseCase {
 
 ---
 
-## 8. ПРИЛОЖЕНИЯ
+## 8. РЕКОМЕНДАЦИИ
 
-### A. Файлы с изменениями
+### 8.1 Файлы с изменениями
 | Файл | Изменения | Статус |
 |---|---|---|
 | `lib/core/constants/event_types.dart` | Константы PWD_ACCESSED, SETTINGS_CHG | ✅ |
@@ -263,8 +303,9 @@ class LogEventUseCase {
 | `lib/presentation/features/settings/settings_controller.dart` | Логирование SETTINGS_CHG | ✅ |
 | `lib/domain/usecases/log/log_event_usecase.dart` | Use Case | ✅ |
 | `lib/domain/repositories/security_log_repository.dart` | Интерфейс | ✅ |
+| `lib/app/app.dart` | Исправление ProviderNotFoundException | ✅ |
 
-### B. Команды для проверки
+### 8.2 Команды для проверки
 ```bash
 # Анализ кода
 flutter analyze
@@ -278,6 +319,26 @@ flutter test
 # Поиск логирования
 grep -r "PWD_ACCESSED" lib/
 grep -r "SETTINGS_CHG" lib/
+```
+
+---
+
+## 9. ПРИЛОЖЕНИЕ: ТЕКСТ ОШИБКИ
+
+**ProviderNotFoundException:**
+```
+Error: Could not find the correct Provider<PasswordGeneratorRepository>
+above this GeneratorScreen Widget
+
+This happens because you used a `BuildContext` that does not include
+the provider of your choice.
+```
+
+**Решение:** Зарегистрировать интерфейс вместо реализации:
+```dart
+Provider<PasswordGeneratorRepository>(
+  create: (context) => PasswordGeneratorRepositoryImpl(...),
+),
 ```
 
 ---

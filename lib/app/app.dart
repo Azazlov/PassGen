@@ -17,6 +17,7 @@ import '../../data/repositories/password_data_repository_impl.dart';
 import '../../data/repositories/password_generator_repository_impl.dart';
 import '../../data/repositories/security_log_repository_impl.dart';
 import '../../data/repositories/storage_repository_impl.dart';
+import '../../domain/repositories/password_generator_repository.dart';
 import '../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../domain/usecases/auth/get_auth_state_usecase.dart';
 import '../../domain/usecases/auth/remove_pin_usecase.dart';
@@ -97,7 +98,7 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
 
         // Repositories
-        Provider(
+        Provider<PasswordGeneratorRepository>(
           create: (context) => PasswordGeneratorRepositoryImpl(
             context.read<PasswordGeneratorLocalDataSource>(),
           ),

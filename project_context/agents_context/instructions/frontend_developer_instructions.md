@@ -390,6 +390,82 @@ flutter pub run build_runner build --delete-conflicting-outputs
 
 ---
 
+## 6.4 ОБЯЗАТЕЛЬНАЯ ПРОЦЕДУРА ПРОВЕРКИ
+
+**⚠️ ВАЖНО:** После ЛЮБЫХ исправлений в коде выполняй следующую процедуру:
+
+### Шаг 1: Статический анализ
+```bash
+# Проверка на критические ошибки
+flutter analyze 2>&1 | grep -E "^  error"
+
+# Если есть ошибки — ИСПРАВЬ перед продолжением
+```
+
+**Критерий успеха:** ❌ Никаких ошибок (`error`) в выводе
+
+### Шаг 2: Сборка приложения
+```bash
+# Сборка для текущей платформы
+flutter build macos    # macOS
+flutter build linux    # Linux
+flutter build windows  # Windows
+flutter build apk      # Android
+
+# ИЛИ запуск приложения
+flutter run -d macos
+```
+
+**Критерий успеха:** ✅ Сборка завершена без ошибок
+
+### Шаг 3: Проверка ProviderNotFoundException
+**Частая проблема:** Несоответствие типов в Provider
+
+**Проверка:**
+1. Все интерфейсы репозиториев должны быть импортированы
+2. Регистрация провайдеров должна использовать тип интерфейса
+
+**Пример правильной регистрации:**
+```dart
+// ✅ ПРАВИЛЬНО:
+Provider<PasswordGeneratorRepository>(
+  create: (_) => PasswordGeneratorRepositoryImpl(...),
+),
+
+// ❌ НЕПРАВИЛЬНО:
+Provider(
+  create: (_) => PasswordGeneratorRepositoryImpl(...),
+),
+```
+
+### Шаг 4: Документирование
+```bash
+# Создай отчёт об исправлении
+cat > project_context/frontend_engineer/reports/FIX_$(date +%Y-%m-%d).md << EOF
+# 🔧 Отчёт об исправлении
+
+**Дата:** $(date +%Y-%m-%d)
+**Проблема:** [Описание]
+**Решение:** [Описание]
+**Файлы:** [Список]
+**Проверка:**
+- [x] flutter analyze — ошибок нет
+- [x] flutter build — сборка успешна
+EOF
+```
+
+### Чек-лист проверки
+```markdown
+## После любых изменений
+- [ ] `flutter analyze` — 0 ошибок
+- [ ] `flutter build` — сборка успешна
+- [ ] Приложение запускается без исключений
+- [ ] ProviderNotFoundException отсутствует
+- [ ] Отчёт об исправлении создан
+```
+
+---
+
 ## 7. ШАБЛОНЫ ДОКУМЕНТОВ
 
 ### 7.1 План задачи
