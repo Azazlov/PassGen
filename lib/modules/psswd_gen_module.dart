@@ -45,7 +45,6 @@ class PasswordGenerator {
     spec2 ? az += '"\'`,./;:[]}{<>\\|' : false;
     spec3 ? az += '~?' : false;
     String psswd = '';
-    // print(generatePassword(seed[0%seed.length], psswdlen, az));
     for (int i = 0; i < psswdlen; i++) {
       psswd += generatePassword(
         seed[i % seed.length],
@@ -56,8 +55,3 @@ class PasswordGenerator {
     return psswd;
   }
 }
-
-// void main(){
-//   String a = PasswordGenerator().getPassword(Uint64List.fromList([2194867269497829361, 2194867269497829361, 2194867269497829361]), 32, true, true, true, true, true, true);
-//   print(a);
-// }

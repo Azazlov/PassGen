@@ -41,7 +41,6 @@ Uint8List random({int len = 0x10}) {
 
 Uint8List encrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}) {
   final Uint8List hashKey = Uint8List.fromList(sha256.convert(key).bytes);
-  // print(bytesToRad(hashKey, 16));
   final int lenkey = hashKey.length;
   final Uint8List salt = random(len: byteLength);
   final Uint8List iv = random(len: byteLength);
@@ -51,7 +50,6 @@ Uint8List encrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}) {
   const int ASCII = 256;
 
   for (int i = 0; i < data.length; i++) {
-    // print('---$i---\n${data[i]}\n${hashKey[i%lenkey]}\n${salt[i%byteLength]}\n${iv[i%byteLength]}\n$ASCII\n---$i---');
     newData[i] =
         (data[i] ^
         (hashKey[i % lenkey] ^ salt[i % byteLength] ^ iv[i % byteLength]) %
@@ -63,25 +61,15 @@ Uint8List encrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}) {
   secret.add(iv);
   secret.add(newData);
   secret.add(hashKey);
-  // print(secret.toBytes());
   final encr = BytesBuilder();
   encr.add(secret.toBytes());
   final Uint8List hashSecret = Uint8List.fromList(
     sha256.convert(secret.toBytes()).bytes,
   );
   encr.add(hashSecret);
-  // print('___ENCRYPT___\nsalt: ${bytesToRad(salt, 16)}\niv: ${bytesToRad(iv, 16)}\nnewData: ${bytesToRad(newData, 16)}\nhashKey: ${bytesToRad(hashKey, 16)}\n\n');
-  // print('__ENCRDATA___\nencr: ${bytesToRad(encr.toBytes(), 16)}\n');
-  // print('secret: ${bytesToRad(secret.toBytes(), 16)}\nhashSecret: ${bytesToRad(hashSecret, 16)}\n');
-  // print('$data $key ${decrypt(encr.toBytes(), key)}');
   if (bytesToRad(decrypt(encr.toBytes(), key), 36) == bytesToRad(data, 36)) {
     return encr.toBytes();
   }
-  // print(bytesToRad(encr.toBytes(), 0x10));
-
-  // print(lenkey);
-  // print(key.toString());
-  // print(BigInt.parse(key.toString(), radix: 16).toRadixString(36));
   throw Error();
 }
 
@@ -109,13 +97,6 @@ Uint8List decrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}) {
   secret.add(iv);
   secret.add(newData);
   secret.add(key);
-  // print('___DECRYPT___\nsalt: ${bytesToRad(salt, 16)}\niv: ${bytesToRad(iv, 16)}\nnewData: ${bytesToRad(newData, 16)}\nkey: ${bytesToRad(key, 16)}\n\n');
-  // print(bytesToRad(secret.toBytes(), 16));
-
-  // print('___DECRYPT___\nsalt: ${bytesToRad(salt, 16)}\niv: ${bytesToRad(iv, 16)}\nnewData: ${bytesToRad(newData, 16)}\nhashKey: ${bytesToRad(key, 16)}\n\n');
-  // print('__hash__\n${bytesToRad((Uint8List.fromList(sha256.convert(secret.toBytes()).bytes)), 16)}\n');
-  // print('__hashdata__\n${bytesToRad(hashData, 16)}\n');
-  // print(bytesToRad((Uint8List.fromList(sha256.convert(secret.toBytes()).bytes)), 16)==bytesToRad(hashData, 16));
   if (bytesToRad(
         (Uint8List.fromList(sha256.convert(secret.toBytes()).bytes)),
         16,
@@ -128,7 +109,6 @@ Uint8List decrypt(Uint8List data, Uint8List key, {int byteLength = 0x10}) {
   const int ASCII = 256;
   data = newData;
   for (int i = 0; i < data.length; i++) {
-    // print('---$i---\n${data[i]}\n${key[i%lenkey]}\n${salt[i%byteLength]}\n${iv[i%byteLength]}\n$ASCII\n---$i---');
     newData[i] =
         (data[i] ^
         (key[i % lenkey] ^ salt[i % byteLength] ^ iv[i % byteLength]) % ASCII);

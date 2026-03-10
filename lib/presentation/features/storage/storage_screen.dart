@@ -234,9 +234,13 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                     IconButton(
                       icon: const Icon(Icons.copy),
                       onPressed: () {
-                        Clipboard.setData(
-                          ClipboardData(text: password.password ?? '(зашифровано)'),
-                        );
+                        final passwordText = password.password ?? '(зашифровано)';
+                        Clipboard.setData(ClipboardData(text: passwordText));
+
+                        // Автоочистка буфера обмена через 60 секунд
+                        Future.delayed(const Duration(seconds: 60), () {
+                          Clipboard.setData(const ClipboardData(text: ''));
+                        });
 
                         // Логирование просмотра пароля (PWD_ACCESSED)
                         context.read<LogEventUseCase>().execute(
@@ -249,7 +253,9 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                         );
 
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Пароль скопирован')),
+                          const SnackBar(
+                            content: Text('Пароль скопирован. Буфер будет очищен через 60 сек.'),
+                          ),
                         );
                       },
                     ),
@@ -266,7 +272,13 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
         AppButton(
           label: 'Скопировать пароль',
           onPressed: () {
-            Clipboard.setData(ClipboardData(text: password.password ?? '(зашифровано)'));
+            final passwordText = password.password ?? '(зашифровано)';
+            Clipboard.setData(ClipboardData(text: passwordText));
+
+            // Автоочистка буфера обмена через 60 секунд
+            Future.delayed(const Duration(seconds: 60), () {
+              Clipboard.setData(const ClipboardData(text: ''));
+            });
 
             // Логирование просмотра пароля (PWD_ACCESSED)
             context.read<LogEventUseCase>().execute(
@@ -281,7 +293,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             showAppDialog(
               context: context,
               title: 'Скопировано',
-              content: 'Пароль скопирован в буфер обмена',
+              content: 'Пароль скопирован в буфер обмена. Буфер будет очищен через 60 сек.',
             );
           },
           icon: Icons.copy,

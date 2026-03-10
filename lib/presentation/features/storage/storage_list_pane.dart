@@ -132,9 +132,13 @@ class StorageListPane extends StatelessWidget {
                                 icon: const Icon(Icons.copy),
                                 onPressed: () {
                                   // Копирование
-                                  Clipboard.setData(
-                                    ClipboardData(text: entry.displayPassword ?? '(зашифровано)'),
-                                  );
+                                  final passwordText = entry.displayPassword ?? '(зашифровано)';
+                                  Clipboard.setData(ClipboardData(text: passwordText));
+
+                                  // Автоочистка буфера обмена через 60 секунд
+                                  Future.delayed(const Duration(seconds: 60), () {
+                                    Clipboard.setData(const ClipboardData(text: ''));
+                                  });
                                 },
                                 tooltip: 'Копировать пароль',
                               ),

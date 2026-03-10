@@ -107,17 +107,6 @@ class StorageController extends ChangeNotifier {
     }).toList();
     _currentIndex = 0;
 
-    // Отладка
-    debugPrint(
-      'Filter applied: categoryId=$_selectedCategoryId, query="$_searchQuery"',
-    );
-    debugPrint(
-      '  All passwords: ${_allPasswords.length}, Filtered: ${_passwords.length}',
-    );
-    if (_allPasswords.isNotEmpty) {
-      debugPrint('  Sample categoryId: ${_allPasswords.first.categoryId}');
-    }
-
     notifyListeners();
   }
 
@@ -131,7 +120,6 @@ class StorageController extends ChangeNotifier {
     // Восстанавливаем выбор первой записи
     _selectedEntry = _passwords.isNotEmpty ? _passwords.first : null;
 
-    debugPrint('Filters cleared');
     notifyListeners();
   }
 
