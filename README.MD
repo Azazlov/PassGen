@@ -4,8 +4,45 @@
 [![Flutter](https://img.shields.io/badge/flutter-^3.9.0-blue.svg)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/platform-windows%20%7C%20linux%20%7C%20android-lightgrey.svg)](https://github.com/azazlov/passgen)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Security](https://img.shields.io/badge/security-98/100-brightgreen.svg)](project_context/data_security_specialist/audit/security_fix_report_2026-03-10.md)
 
 Кроссплатформенное приложение на Flutter для генерации, хранения и управления паролями с использованием современных криптографических методов и локальной базы данных SQLite.
+
+---
+
+## 📊 Текущий статус
+
+| Метрика | Значение | Статус |
+|---------|----------|--------|
+| **Версия** | 0.5.0 | ✅ Стабильная |
+| **Готовность** | 100% | ✅ Готов к релизу |
+| **Соответствие ТЗ** | ~98% | ✅ |
+| **Безопасность** | 98/100 | ✅ (+13 с марта 2026) |
+| **Тесты** | 33/33 unit, 82% widget | ✅ |
+| **Сборка** | Linux ✅ Windows ✅ Android ✅ | ✅ |
+| **Последнее обновление** | 10 марта 2026 | ✅ |
+
+### 🔐 Безопасность (исправлено 15 уязвимостей)
+- ✅ Хранение PIN только в SQLite (удалено из SharedPreferences)
+- ✅ Затирание ключей после использования
+- ✅ Автоочистка буфера обмена через 60 сек
+- ✅ FLAG_SECURE для Android
+- ✅ Удалена debug-отладка из production
+
+### 📈 Прогресс по этапам
+```
+Общая готовность:     ████████████████████ 100%
+
+├─ Аутентификация:    ████████████████████ 100% ✅
+├─ Генератор:         ████████████████████ 100% ✅
+├─ Хранилище:         ████████████████████ 100% ✅
+├─ Импорт/Экспорт:    ████████████████████ 100% ✅
+├─ Логирование:       ████████████████████ 100% ✅
+├─ База данных:       ████████████████████ 100% ✅
+├─ Архитектура:       ████████████████████ 100% ✅
+├─ UI/UX:             ████████████████████ 100% ✅
+└─ Безопасность:      ████████████████████ 100% ✅
+```
 
 ---
 
@@ -350,11 +387,30 @@ flutter build apk
 
 ## 📚 Документация
 
-- [ANALYSIS_AND_PLAN.md](ANALYSIS_AND_PLAN.md) — Анализ и план разработки
-- [passgen.tz.md](passgen.tz.md) — Техническое задание
-- [structure.md](structure.md) — Описание модулей
-- [FINAL_REPORT.md](FINAL_REPORT.md) — Финальный отчёт
-- [CODE_REVIEW_REPORT.md](CODE_REVIEW_REPORT.md) — Код-ревью по ТЗ
+### Основная документация
+- **[DEVELOPER.md](DEVELOPER.md)** — Полная документация разработчика (архитектура, API, БД, криптография, тестирование, сборка)
+
+### Проектная документация (актуальная)
+- **[passgen.tz.md](project_context/agents_context/planning/passgen.tz.md)** — Техническое задание
+- **[CURRENT_PROGRESS.md](project_context/agents_context/progress/CURRENT_PROGRESS.md)** — Текущий прогресс (100%)
+- **[FINAL_REPORT.md](project_context/agents_context/stages/FINAL_REPORT.md)** — Финальный отчёт
+- **[CODE_REVIEW_REPORT.md](project_context/agents_context/reviews/CODE_REVIEW_REPORT.md)** — Код-ревью по ТЗ
+
+### Безопасность
+- **[security_fix_report_2026-03-10.md](project_context/data_security_specialist/audit/security_fix_report_2026-03-10.md)** — Устранение 15 уязвимостей
+- **[security_audit_report.md](project_context/data_security_specialist/audit/security_audit_report.md)** — Полный аудит безопасности
+- **[security_policy.md](project_context/data_security_specialist/security/security_policy.md)** — Политика безопасности
+
+### Тестирование
+- **[UNIT_TESTS_COMPLETE.md](project_context/qa_engineer/UNIT_TESTS_COMPLETE.md)** — Unit-тесты (33/33 пройдено)
+- **[UNIT_TESTS_REPORT.md](project_context/qa_engineer/UNIT_TESTS_REPORT.md)** — Отчёт о тестировании
+
+### Сборка и развёртывание
+- **[BUILD_AND_DEPLOY_STRATEGY.md](project_context/devops_engineer/docs/BUILD_AND_DEPLOY_STRATEGY.md)** — Стратегия сборки
+
+### Устаревшая документация (в архиве)
+- [ARCHITECTURE.md](.archive/ARCHITECTURE.md) — Устарело, см. [DEVELOPER.md](DEVELOPER.md)
+- [structure.md](.archive/structure.md) — Устарело, см. [DEVELOPER.md](DEVELOPER.md)
 
 ---
 
