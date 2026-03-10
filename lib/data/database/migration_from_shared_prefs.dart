@@ -87,7 +87,7 @@ class MigrationFromSharedPreferences {
         final entryModel = PasswordEntryModel(
           service: entry.service,
           login: null, // В старой версии не было login
-          encryptedPassword: utf8.encode(entry.password),
+          encryptedPassword: utf8.encode(entry.password ?? ''),
           nonce: [0], // Пустой nonce для совместимости
           createdAt: entry.createdAt,
           updatedAt: entry.updatedAt ?? entry.createdAt,

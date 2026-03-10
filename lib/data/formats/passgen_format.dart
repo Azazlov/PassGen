@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
+import '../../../core/utils/encryption_versioning.dart';
 
 /// Фирменный формат файла PassGen (.passgen)
 ///
@@ -9,6 +10,8 @@ import 'package:cryptography/cryptography.dart';
 /// - HEADER: "PASSGEN_V1" (10 байт)
 /// - VERSION: версия формата (1 байт)
 /// - FLAGS: флаги (1 байт)
+/// - METADATA_LENGTH: длина метаданных (2 байта)
+/// - METADATA: JSON метаданные шифрования
 /// - NONCE: nonce для шифрования (32 байта)
 /// - DATA_LENGTH: длина зашифрованных данных (4 байта)
 /// - DATA: зашифрованные JSON данные
@@ -23,10 +26,12 @@ class PassgenFormat {
   ///
   /// [data] - данные для экспорта (список паролей)
   /// [masterPassword] - мастер-пароль для шифрования
+  /// [metadata] - опциональные метаданные шифрования
   /// Возвращает Base64 строку с данными в формате .passgen
   Future<String> exportToJson({
     required List<Map<String, dynamic>> data,
     required String masterPassword,
+    EncryptionMetadata? metadata,
   }) async {
     try {
       // Сериализуем данные в JSON
@@ -37,11 +42,23 @@ class PassgenFormat {
       final random = Random.secure();
       final nonce = List<int>.generate(32, (_) => random.nextInt(256));
 
-      // Создаём ключ шифрования
+      // Создаём метаданные (если не переданы)
+      final encryptionMetadata = metadata ?? EncryptionMetadata.current();
+
+      // Сериализуем метаданные в JSON
+      final metadataJson = jsonEncode(encryptionMetadata.toJson());
+      final metadataBytes = utf8.encode(metadataJson);
+
+      // Получаем параметры шифрования для версии
+      final params = EncryptionVersion.getParamsForVersion(
+        encryptionMetadata.version,
+      );
+
+      // Создаём ключ шифрования с параметрами версии
       final pbkdf2 = Pbkdf2(
         macAlgorithm: Hmac.sha256(),
-        iterations: 10000,
-        bits: 256,
+        iterations: params.iterations,
+        bits: params.keyLength,
       );
 
       final secretKey = await pbkdf2.deriveKeyFromPassword(
@@ -60,6 +77,7 @@ class PassgenFormat {
       final headerBytes = utf8.encode(magicHeader); // 10 байт
       final versionBytes = [formatVersion]; // 1 байт
       final flagsBytes = [flagsNone]; // 1 байт
+      final metadataLengthBytes = _intToBytes16(metadataBytes.length); // 2 байта
       final nonceBytes = nonce; // 32 байта
       final dataLengthBytes = _intToBytes(
         secretBox.cipherText.length,
@@ -72,6 +90,8 @@ class PassgenFormat {
         ...headerBytes,
         ...versionBytes,
         ...flagsBytes,
+        ...metadataLengthBytes,
+        ...metadataBytes,
         ...nonceBytes,
         ...dataLengthBytes,
         ...cipherTextBytes,
@@ -121,6 +141,25 @@ class PassgenFormat {
       // FLAGS (1 байт)
       offset += 1;
 
+      // METADATA_LENGTH (2 байта)
+      final metadataLength = _bytesToShort(allBytes.sublist(offset, offset + 2));
+      offset += 2;
+
+      // METADATA (metadataLength байт)
+      final metadataBytes = allBytes.sublist(offset, offset + metadataLength);
+      final metadataJson = utf8.decode(metadataBytes);
+      final encryptionMetadata = EncryptionMetadata.fromJson(
+        jsonDecode(metadataJson) as Map<String, dynamic>,
+      );
+      offset += metadataLength;
+
+      // Проверяем совместимость версии
+      if (!encryptionMetadata.isCompatible) {
+        throw PassgenFormatException(
+          'Неподдерживаемая версия шифрования: ${encryptionMetadata.version}',
+        );
+      }
+
       // NONCE (32 байта)
       final nonce = allBytes.sublist(offset, offset + 32);
       offset += 32;
@@ -136,11 +175,16 @@ class PassgenFormat {
       // MAC (16 байт)
       final macBytes = allBytes.sublist(offset, offset + 16);
 
+      // Получаем параметры шифрования для версии
+      final params = EncryptionVersion.getParamsForVersion(
+        encryptionMetadata.version,
+      );
+
       // Создаём ключ дешифрования
       final pbkdf2 = Pbkdf2(
         macAlgorithm: Hmac.sha256(),
-        iterations: 10000,
-        bits: 256,
+        iterations: params.iterations,
+        bits: params.keyLength,
       );
 
       final secretKey = await pbkdf2.deriveKeyFromPassword(
@@ -166,6 +210,19 @@ class PassgenFormat {
       if (e is PassgenFormatException) rethrow;
       throw PassgenFormatException('Ошибка импорта: $e');
     }
+  }
+
+  /// Преобразует int в 2 байта (little-endian)
+  List<int> _intToBytes16(int value) {
+    return [
+      value & 0xFF,
+      (value >> 8) & 0xFF,
+    ];
+  }
+
+  /// Преобразует 2 байта в int (little-endian)
+  int _bytesToShort(List<int> bytes) {
+    return bytes[0] | (bytes[1] << 8);
   }
 
   /// Преобразует int в 4 байта (little-endian)

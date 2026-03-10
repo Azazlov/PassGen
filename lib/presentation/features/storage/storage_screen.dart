@@ -224,7 +224,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                   children: [
                     Expanded(
                       child: Text(
-                        password.password,
+                        password.password ?? '(зашифровано)',
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontFamily: 'monospace',
                           fontWeight: FontWeight.w500,
@@ -235,7 +235,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                       icon: const Icon(Icons.copy),
                       onPressed: () {
                         Clipboard.setData(
-                          ClipboardData(text: password.password),
+                          ClipboardData(text: password.password ?? '(зашифровано)'),
                         );
 
                         // Логирование просмотра пароля (PWD_ACCESSED)
@@ -266,7 +266,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
         AppButton(
           label: 'Скопировать пароль',
           onPressed: () {
-            Clipboard.setData(ClipboardData(text: password.password));
+            Clipboard.setData(ClipboardData(text: password.password ?? '(зашифровано)'));
 
             // Логирование просмотра пароля (PWD_ACCESSED)
             context.read<LogEventUseCase>().execute(

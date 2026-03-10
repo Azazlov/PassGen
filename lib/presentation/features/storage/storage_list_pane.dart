@@ -133,7 +133,7 @@ class StorageListPane extends StatelessWidget {
                                 onPressed: () {
                                   // Копирование
                                   Clipboard.setData(
-                                    ClipboardData(text: entry.password),
+                                    ClipboardData(text: entry.displayPassword ?? '(зашифровано)'),
                                   );
                                 },
                                 tooltip: 'Копировать пароль',

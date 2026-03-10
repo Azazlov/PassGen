@@ -56,6 +56,10 @@ class EncryptorLocalDataSource {
 
       final secretBox = await _algorithm.encrypt(message, secretKey: secretKey);
 
+      // Извлекаем байты ключа перед затиранием (если нужно)
+      // SecretKey сам управляет памятью, но мы можем затереть входной пароль
+      CryptoUtils.secureWipeData(password);
+
       return {
         'nonce': CryptoUtils.encodeBytesBase64(nonce),
         'nonceBox': CryptoUtils.encodeBytesBase64(secretBox.nonce),
@@ -94,7 +98,12 @@ class EncryptorLocalDataSource {
 
       final secretKey = await _deriveKey(password: password, nonce: nonce);
 
-      return await _algorithm.decrypt(secretBox, secretKey: secretKey);
+      final result = await _algorithm.decrypt(secretBox, secretKey: secretKey);
+
+      // Затираем пароль после использования
+      CryptoUtils.secureWipeData(password);
+
+      return result;
     } catch (e) {
       throw EncryptionFailure(message: 'Ошибка дешифрования: $e');
     }

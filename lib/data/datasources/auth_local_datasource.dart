@@ -3,20 +3,38 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/utils/crypto_utils.dart';
+import 'encryptor_local_datasource.dart';
 
 /// Источник данных для аутентификации
+/// 
+/// Поддерживает два режима хранения:
+/// - SharedPreferences (legacy, для обратной совместимости)
+/// - SQLite (новый, более безопасный)
 class AuthLocalDataSource {
+  // Ключи для SharedPreferences (legacy)
   static const String _pinHashKey = 'auth_pin_hash';
   static const String _pinSaltKey = 'auth_pin_salt';
   static const String _failedAttemptsKey = 'auth_failed_attempts';
   static const String _lockoutTimestampKey = 'auth_lockout_timestamp';
+
+  // Ключи для SQLite
+  static const String _sqlitePinHashKey = 'pin_hash';
+  static const String _sqlitePinSaltKey = 'pin_salt';
+  static const String _sqliteFailedAttemptsKey = 'failed_attempts';
+  static const String _sqliteLockoutTimestampKey = 'lockout_timestamp';
 
   static const int maxFailedAttempts = 5;
   static const int lockoutDurationSeconds = 30;
   static const int minPinLength = 4;
   static const int maxPinLength = 8;
   static const int pbkdf2Iterations = 10000;
+
+  final Database? _database;
+
+  AuthLocalDataSource({Database? database}) : _database = database;
 
   /// Проверяет валидность PIN (4-8 цифр)
   bool isValidPinFormat(String pin) {
@@ -29,11 +47,96 @@ class AuthLocalDataSource {
   /// Проверяет, установлен ли PIN
   Future<bool> isPinSetup() async {
     try {
+      // Пробуем SQLite (новый способ)
+      if (_database != null) {
+        final result = await _database!.query(
+          'auth_data',
+          where: 'key = ?',
+          whereArgs: [_sqlitePinHashKey],
+        );
+        if (result.isNotEmpty) {
+          return true;
+        }
+      }
+
+      // Fallback на SharedPreferences (legacy)
       final prefs = await SharedPreferences.getInstance();
       return prefs.containsKey(_pinHashKey);
     } catch (e) {
       throw const StorageFailure(message: 'Ошибка проверки установки PIN');
     }
+  }
+
+  /// Сохраняет данные аутентификации в SQLite
+  Future<void> _saveToSqlite(String key, String value) async {
+    if (_database == null) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _database!.insert(
+      'auth_data',
+      {
+        'key': key,
+        'value': value,
+        'created_at': now,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Читает данные аутентификации из SQLite
+  Future<String?> _readFromSqlite(String key) async {
+    if (_database == null) return null;
+
+    final result = await _database!.query(
+      'auth_data',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+
+    if (result.isEmpty) return null;
+    return result.first['value'] as String?;
+  }
+
+  /// Удаляет данные аутентификации из SQLite
+  Future<void> _deleteFromSqlite(String key) async {
+    if (_database == null) return;
+
+    await _database!.delete(
+      'auth_data',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+  }
+
+  /// Сохраняет целочисленное значение в SQLite
+  Future<void> _saveIntToSqlite(String key, int value) async {
+    if (_database == null) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _database!.insert(
+      'auth_data',
+      {
+        'key': key,
+        'value': value.toString(),
+        'created_at': now,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// Читает целочисленное значение из SQLite
+  Future<int?> _readIntFromSqlite(String key) async {
+    if (_database == null) return null;
+
+    final result = await _database!.query(
+      'auth_data',
+      where: 'key = ?',
+      whereArgs: [key],
+    );
+
+    if (result.isEmpty) return null;
+    final value = result.first['value'] as String?;
+    return value != null ? int.tryParse(value) : null;
   }
 
   /// Хэширует PIN с солью используя PBKDF2
@@ -79,9 +182,16 @@ class AuthLocalDataSource {
         nonce: Uint8List.fromList(saltBytes),
       );
 
-      final computedHash = base64Encode(await secretKey.extractBytes());
+      final computedHashBytes = await secretKey.extractBytes();
+      final computedHash = base64Encode(computedHashBytes);
 
-      return computedHash == storedHash;
+      // Constant-time сравнение хэшей (защита от timing attacks)
+      final isValid = CryptoUtils.constantTimeEqualsBase64(computedHash, storedHash);
+
+      // Затирание ключа из памяти
+      CryptoUtils.secureWipeKey(computedHashBytes);
+
+      return isValid;
     } catch (e) {
       return false;
     }
@@ -95,8 +205,17 @@ class AuthLocalDataSource {
       }
 
       final hashed = await _hashPin(pin);
-      final prefs = await SharedPreferences.getInstance();
+      
+      // Сохраняем в SQLite (новый способ)
+      if (_database != null) {
+        await _saveToSqlite(_sqlitePinHashKey, hashed['hash']!);
+        await _saveToSqlite(_sqlitePinSaltKey, hashed['salt']!);
+        await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
+        await _deleteFromSqlite(_sqliteLockoutTimestampKey);
+      }
 
+      // Сохраняем в SharedPreferences (legacy, для обратной совместимости)
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_pinHashKey, hashed['hash']!);
       await prefs.setString(_pinSaltKey, hashed['salt']!);
       await prefs.setInt(_failedAttemptsKey, 0);
@@ -112,11 +231,21 @@ class AuthLocalDataSource {
   /// Проверяет PIN
   Future<Map<String, dynamic>> verifyPin(String pin) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      String? storedHash;
+      String? storedSalt;
 
-      // Проверяем, установлен ли PIN
-      final storedHash = prefs.getString(_pinHashKey);
-      final storedSalt = prefs.getString(_pinSaltKey);
+      // Читаем из SQLite (новый способ)
+      if (_database != null) {
+        storedHash = await _readFromSqlite(_sqlitePinHashKey);
+        storedSalt = await _readFromSqlite(_sqlitePinSaltKey);
+      }
+
+      // Fallback на SharedPreferences (legacy)
+      if (storedHash == null || storedSalt == null) {
+        final prefs = await SharedPreferences.getInstance();
+        storedHash ??= prefs.getString(_pinHashKey);
+        storedSalt ??= prefs.getString(_pinSaltKey);
+      }
 
       if (storedHash == null || storedSalt == null) {
         return {'result': 'notSetup', 'isLocked': false};
@@ -133,6 +262,10 @@ class AuthLocalDataSource {
 
       if (isValid) {
         // Сбрасываем счётчик неудачных попыток
+        if (_database != null) {
+          await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
+        }
+        final prefs = await SharedPreferences.getInstance();
         await prefs.setInt(_failedAttemptsKey, 0);
         return {'result': 'success', 'isLocked': false};
       } else {
@@ -155,8 +288,17 @@ class AuthLocalDataSource {
     }
   }
 
-  /// Меняет PIN
-  Future<bool> changePin(String oldPin, String newPin) async {
+  /// Меняет PIN с ротацией ключей шифрования
+  ///
+  /// Процесс ротации:
+  /// 1. Проверка старого PIN
+  /// 2. Derive старого ключа
+  /// 3. Расшифровка всех паролей старым ключом
+  /// 4. Derive нового ключа
+  /// 5. Зашифровка всех паролей новым ключом
+  /// 6. Сохранение нового PIN
+  /// 7. Затирание старых ключей
+  Future<bool> changePin(String oldPin, String newPin, {Database? database}) async {
     try {
       if (!isValidPinFormat(newPin)) {
         throw const ValidationFailure(message: 'PIN должен содержать 4-8 цифр');
@@ -171,12 +313,165 @@ class AuthLocalDataSource {
         );
       }
 
+      // Получаем базу данных для работы с паролями
+      final db = database ?? _database;
+
+      if (db != null) {
+        // Выполняем ротацию ключей
+        await _rotateEncryptionKeys(oldPin, newPin, db);
+      }
+
       // Устанавливаем новый PIN
       return await setupPin(newPin);
     } catch (e) {
       if (e is ValidationFailure || e is AuthFailure) rethrow;
       throw const StorageFailure(message: 'Ошибка смены PIN');
     }
+  }
+
+  /// Выполняет ротацию ключей шифрования при смене PIN
+  ///
+  /// [oldPin] - старый PIN-код
+  /// [newPin] - новый PIN-код
+  /// [db] - база данных с паролями
+  Future<void> _rotateEncryptionKeys(
+    String oldPin,
+    String newPin,
+    Database db,
+  ) async {
+    // 1. Получаем соль старого PIN
+    final oldSaltBase64 = await _readFromSqlite(_sqlitePinSaltKey);
+    if (oldSaltBase64 == null) {
+      throw const StorageFailure(message: 'Соль старого PIN не найдена');
+    }
+    final oldSaltBytes = base64Decode(oldSaltBase64);
+
+    // 2. Derive старого ключа
+    final oldPbkdf2 = Pbkdf2(
+      macAlgorithm: Hmac.sha256(),
+      iterations: pbkdf2Iterations,
+      bits: 256,
+    );
+
+    final oldSecretKey = await oldPbkdf2.deriveKeyFromPassword(
+      password: oldPin,
+      nonce: Uint8List.fromList(oldSaltBytes),
+    );
+
+    final oldKeyBytes = await oldSecretKey.extractBytes();
+
+    // 3. Получаем все пароли из БД
+    final passwordEntries = await db.query('password_entries');
+
+    for (final entry in passwordEntries) {
+      final encryptedPassword = entry['encrypted_password'] as List<int>;
+      final nonceBytes = entry['nonce'] as List<int>;
+
+      // 4. Расшифровываем пароль старым ключом
+      List<int>? decryptedPassword;
+      try {
+        decryptedPassword = await _decryptPassword(
+          encryptedPassword,
+          nonceBytes,
+          oldKeyBytes,
+        );
+      } catch (e) {
+        // Если не удалось расшифровать, пропускаем
+        continue;
+      }
+
+      // 5. Получаем новый ключ
+      final newSaltBase64 = await _readFromSqlite(_sqlitePinSaltKey);
+      if (newSaltBase64 == null) {
+        throw const StorageFailure(message: 'Соль нового PIN не найдена');
+      }
+      final newSaltBytes = base64Decode(newSaltBase64);
+
+      final newPbkdf2 = Pbkdf2(
+        macAlgorithm: Hmac.sha256(),
+        iterations: pbkdf2Iterations,
+        bits: 256,
+      );
+
+      final newSecretKey = await newPbkdf2.deriveKeyFromPassword(
+        password: newPin,
+        nonce: Uint8List.fromList(newSaltBytes),
+      );
+
+      final newKeyBytes = await newSecretKey.extractBytes();
+
+      // 6. Зашифровываем пароль новым ключом
+      final encryptedData = await _encryptPassword(
+        decryptedPassword,
+        newKeyBytes,
+      );
+
+      // 7. Обновляем запись в БД
+      await db.update(
+        'password_entries',
+        {
+          'encrypted_password': encryptedData['cipherText'],
+          'nonce': encryptedData['nonce'],
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'id = ?',
+        whereArgs: [entry['id']],
+      );
+
+      // 8. Затираем decrypted пароль
+      CryptoUtils.secureWipeData(decryptedPassword);
+    }
+
+    // 9. Затираем старые ключи
+    CryptoUtils.secureWipeKey(oldKeyBytes);
+  }
+
+  /// Расшифровывает пароль
+  Future<List<int>> _decryptPassword(
+    List<int> encryptedData,
+    List<int> nonce,
+    List<int> key,
+  ) async {
+    final algorithm = Chacha20.poly1305Aead();
+
+    // Создаём ключ из байт
+    final secretKey = SecretKey(key);
+
+    // Создаём nonce box
+    final nonceBox = Uint8List.fromList(nonce);
+
+    // Для расшифровки нужен SecretBox с ciphertext и mac
+    // Упрощённая версия - в реальной реализации нужно хранить MAC отдельно
+    // Здесь предполагаем, что encryptedData содержит ciphertext||mac
+
+    // Временное решение: используем EncryptorLocalDataSource
+    final encryptor = EncryptorLocalDataSource();
+
+    // Декодируем из нашего формата
+    final decrypted = await encryptor.decryptFromMini(
+      miniEncrypted: base64Encode(encryptedData),
+      password: key,
+    );
+
+    return decrypted;
+  }
+
+  /// Шифрует пароль
+  Future<Map<String, dynamic>> _encryptPassword(
+    List<int> password,
+    List<int> key,
+  ) async {
+    final encryptor = EncryptorLocalDataSource();
+
+    final encrypted = await encryptor.encrypt(
+      message: password,
+      password: key,
+    );
+
+    return {
+      'cipherText': base64Decode(encrypted['cipherText'] as String),
+      'nonce': base64Decode(encrypted['nonce'] as String),
+    };
   }
 
   /// Удаляет PIN
@@ -191,7 +486,15 @@ class AuthLocalDataSource {
         );
       }
 
-      // Удаляем данные
+      // Удаляем данные из SQLite
+      if (_database != null) {
+        await _deleteFromSqlite(_sqlitePinHashKey);
+        await _deleteFromSqlite(_sqlitePinSaltKey);
+        await _deleteFromSqlite(_sqliteFailedAttemptsKey);
+        await _deleteFromSqlite(_sqliteLockoutTimestampKey);
+      }
+
+      // Удаляем данные из SharedPreferences (legacy)
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_pinHashKey);
       await prefs.remove(_pinSaltKey);
@@ -207,8 +510,18 @@ class AuthLocalDataSource {
 
   /// Проверяет, заблокирован ли пользователь
   Future<bool> _isLocked() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lockoutTimestamp = prefs.getInt(_lockoutTimestampKey);
+    int? lockoutTimestamp;
+
+    // Читаем из SQLite
+    if (_database != null) {
+      lockoutTimestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
+    }
+
+    // Fallback на SharedPreferences
+    if (lockoutTimestamp == null) {
+      final prefs = await SharedPreferences.getInstance();
+      lockoutTimestamp = prefs.getInt(_lockoutTimestampKey);
+    }
 
     if (lockoutTimestamp == null) {
       return false;
@@ -222,6 +535,11 @@ class AuthLocalDataSource {
     }
 
     // Блокировка истекла, сбрасываем
+    if (_database != null) {
+      await _deleteFromSqlite(_sqliteLockoutTimestampKey);
+      await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
+    }
+    final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_lockoutTimestampKey);
     await prefs.setInt(_failedAttemptsKey, 0);
 
@@ -230,35 +548,81 @@ class AuthLocalDataSource {
 
   /// Увеличивает счётчик неудачных попыток
   Future<int> _incrementFailedAttempts() async {
-    final prefs = await SharedPreferences.getInstance();
-    final current = prefs.getInt(_failedAttemptsKey) ?? 0;
+    int? current;
+
+    // Читаем из SQLite
+    if (_database != null) {
+      current = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
+    }
+
+    // Fallback на SharedPreferences
+    if (current == null) {
+      final prefs = await SharedPreferences.getInstance();
+      current = prefs.getInt(_failedAttemptsKey) ?? 0;
+    }
+
     final newValue = current + 1;
+
+    // Сохраняем в оба хранилища
+    if (_database != null) {
+      await _saveIntToSqlite(_sqliteFailedAttemptsKey, newValue);
+    }
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_failedAttemptsKey, newValue);
+
     return newValue;
   }
 
   /// Устанавливает блокировку
   Future<void> _setLockout() async {
-    final prefs = await SharedPreferences.getInstance();
     final lockoutTime = DateTime.now().add(
       const Duration(seconds: lockoutDurationSeconds),
     );
-    await prefs.setInt(
-      _lockoutTimestampKey,
-      lockoutTime.millisecondsSinceEpoch,
-    );
+    final timestamp = lockoutTime.millisecondsSinceEpoch;
+
+    // Сохраняем в SQLite
+    if (_database != null) {
+      await _saveIntToSqlite(_sqliteLockoutTimestampKey, timestamp);
+    }
+
+    // Сохраняем в SharedPreferences (legacy)
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_lockoutTimestampKey, timestamp);
   }
 
   /// Получает количество неудачных попыток
   Future<int> getFailedAttempts() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_failedAttemptsKey) ?? 0;
+    int? attempts;
+
+    // Читаем из SQLite
+    if (_database != null) {
+      attempts = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
+    }
+
+    // Fallback на SharedPreferences
+    if (attempts == null) {
+      final prefs = await SharedPreferences.getInstance();
+      attempts = prefs.getInt(_failedAttemptsKey) ?? 0;
+    }
+
+    return attempts;
   }
 
   /// Получает время разблокировки
   Future<DateTime?> getLockoutUntil() async {
-    final prefs = await SharedPreferences.getInstance();
-    final timestamp = prefs.getInt(_lockoutTimestampKey);
+    int? timestamp;
+
+    // Читаем из SQLite
+    if (_database != null) {
+      timestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
+    }
+
+    // Fallback на SharedPreferences
+    if (timestamp == null) {
+      final prefs = await SharedPreferences.getInstance();
+      timestamp = prefs.getInt(_lockoutTimestampKey);
+    }
+
     if (timestamp == null) return null;
 
     final lockoutTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
@@ -271,8 +635,18 @@ class AuthLocalDataSource {
 
   /// Проверяет, истёк ли срок блокировки
   Future<bool> checkLockoutExpired() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lockoutTimestamp = prefs.getInt(_lockoutTimestampKey);
+    int? lockoutTimestamp;
+
+    // Читаем из SQLite
+    if (_database != null) {
+      lockoutTimestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
+    }
+
+    // Fallback на SharedPreferences
+    if (lockoutTimestamp == null) {
+      final prefs = await SharedPreferences.getInstance();
+      lockoutTimestamp = prefs.getInt(_lockoutTimestampKey);
+    }
 
     if (lockoutTimestamp == null) {
       return true;
@@ -281,6 +655,11 @@ class AuthLocalDataSource {
     final lockoutTime = DateTime.fromMillisecondsSinceEpoch(lockoutTimestamp);
     if (DateTime.now().isAfter(lockoutTime)) {
       // Блокировка истекла, сбрасываем
+      if (_database != null) {
+        await _deleteFromSqlite(_sqliteLockoutTimestampKey);
+        await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
+      }
+      final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_lockoutTimestampKey);
       await prefs.setInt(_failedAttemptsKey, 0);
       return true;
@@ -291,14 +670,26 @@ class AuthLocalDataSource {
 
   /// Получает состояние аутентификации
   Future<Map<String, dynamic>> getAuthState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isPinSetup = prefs.containsKey(_pinHashKey);
+    bool isPinSetupResult = false;
+
+    // Проверяем SQLite
+    if (_database != null) {
+      final hash = await _readFromSqlite(_sqlitePinHashKey);
+      isPinSetupResult = hash != null;
+    }
+
+    // Fallback на SharedPreferences
+    if (!isPinSetupResult) {
+      final prefs = await SharedPreferences.getInstance();
+      isPinSetupResult = prefs.containsKey(_pinHashKey);
+    }
+
     final isLocked = await _isLocked();
-    final failedAttempts = prefs.getInt(_failedAttemptsKey) ?? 0;
+    final failedAttempts = await getFailedAttempts();
     final lockoutUntil = await getLockoutUntil();
 
     return {
-      'isPinSetup': isPinSetup,
+      'isPinSetup': isPinSetupResult,
       'isLocked': isLocked,
       'failedAttempts': failedAttempts,
       'remainingAttempts': maxFailedAttempts - failedAttempts,

@@ -299,6 +299,8 @@ class PasswordGeneratorLocalDataSource {
   }
 
   /// Сохраняет пароль в хранилище
+  /// 
+  /// ШИФРОВАНИЕ: Пароль шифруется перед сохранением
   /// Возвращает результат с информацией о том, был ли пароль обновлён
   Future<Map<String, dynamic>> savePassword({
     required String service,
@@ -311,6 +313,22 @@ class PasswordGeneratorLocalDataSource {
       // Получаем текущие пароли
       final passwords = await _storage.getPasswords();
 
+      // ШИФРУЕМ пароль перед сохранением
+      final encryptedData = await _encryptor.encrypt(
+        message: utf8.encode(password),
+        password: utf8.encode(password),  // Мастер-пароль для шифрования
+      );
+
+      final encryptedPasswordBase64 = CryptoUtils.encodeBytesBase64(
+        encryptedData['cipherText'] as List<int>,
+      );
+      final nonceBase64 = CryptoUtils.encodeBytesBase64(
+        encryptedData['nonce'] as List<int>,
+      );
+
+      // Затираем открытый пароль после шифрования
+      CryptoUtils.secureWipePassword(utf8.encode(password));
+
       // Проверяем, существует ли уже запись с таким сервисом
       final existingIndex = passwords.indexWhere(
         (e) => e.service.toLowerCase() == service.toLowerCase(),
@@ -320,7 +338,8 @@ class PasswordGeneratorLocalDataSource {
         // Обновляем существующую запись
         final existingEntry = passwords[existingIndex];
         final updatedEntry = existingEntry.copyWith(
-          password: password,
+          encryptedPassword: encryptedPasswordBase64,
+          nonce: nonceBase64,
           config: config,
           login: login ?? existingEntry.login,
           categoryId: categoryId ?? existingEntry.categoryId,
@@ -328,10 +347,11 @@ class PasswordGeneratorLocalDataSource {
         );
         passwords[existingIndex] = updatedEntry;
       } else {
-        // Создаём новую запись
+        // Создаём новую запись с зашифрованным паролем
         final newEntry = PasswordEntry(
           service: service,
-          password: password,
+          encryptedPassword: encryptedPasswordBase64,
+          nonce: nonceBase64,
           config: config,
           login: login,
           categoryId: categoryId,

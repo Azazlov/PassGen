@@ -1,7 +1,7 @@
 /// Схема базы данных SQLite
-/// Версия схемы: 1
+/// Версия схемы: 2
 class DatabaseSchema {
-  static const int version = 1;
+  static const int version = 2;
 
   // ==================== ТАБЛИЦЫ ====================
 
@@ -63,6 +63,15 @@ class DatabaseSchema {
     )
   ''';
 
+  /// Таблица данных аутентификации (v2)
+  static const String authData = '''
+    CREATE TABLE auth_data (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  ''';
+
   // ==================== ИНДЕКСЫ ====================
 
   /// Индексы для ускорения поиска
@@ -95,6 +104,7 @@ class DatabaseSchema {
     passwordConfigs,
     securityLogs,
     appSettings,
+    authData,
   ];
 
   /// SQL для создания всех индексов

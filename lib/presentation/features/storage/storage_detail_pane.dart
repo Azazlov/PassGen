@@ -107,10 +107,10 @@ class StorageDetailPane extends StatelessWidget {
               children: [
                 Expanded(
                   child: Semantics(
-                    label: 'Пароль: ${entry.password}',
-                    value: entry.password,
+                    label: 'Пароль: ${entry.displayPassword ?? '(зашифровано)'}',
+                    value: entry.displayPassword ?? '(зашифровано)',
                     child: Text(
-                      entry.password,
+                      entry.displayPassword ?? '(зашифровано)',
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontFamily: 'monospace',
                         fontWeight: FontWeight.w500,
@@ -124,7 +124,7 @@ class StorageDetailPane extends StatelessWidget {
                   child: IconButton(
                     icon: const Icon(Icons.copy),
                     onPressed: () {
-                      Clipboard.setData(ClipboardData(text: entry.password));
+                      Clipboard.setData(ClipboardData(text: entry.displayPassword ?? '(зашифровано)'));
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Пароль скопирован')),
                       );

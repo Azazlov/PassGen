@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:cryptography/cryptography.dart';
+import '../../core/utils/crypto_utils.dart';
 
 /// Запись о сохранённом пароле
 class PasswordEntry {
@@ -6,7 +8,9 @@ class PasswordEntry {
     this.id,
     this.categoryId,
     required this.service,
-    required this.password,
+    this.password,  // ← Теперь необязательный (только для временного хранения)
+    this.encryptedPassword,  // ← Зашифрованный пароль (Base64)
+    this.nonce,  // ← Nonce для шифрования (Base64)
     required this.config,
     this.login,
     required this.createdAt,
@@ -19,7 +23,9 @@ class PasswordEntry {
       id: json['id'] as int?,
       categoryId: json['category_id'] as int?,
       service: json['service'] ?? '',
-      password: json['password'] ?? '',
+      password: json['password'] as String?,  // ← Для обратной совместимости
+      encryptedPassword: json['encrypted_password'] as String?,
+      nonce: json['nonce'] as String?,
       config: json['config'] ?? '',
       login: json['login'] as String?,
       createdAt: json['createdAt'] != null
@@ -33,24 +39,76 @@ class PasswordEntry {
   final int? id;
   final int? categoryId;
   final String service;
-  final String password;
+  final String? password;  // ← Открытый пароль (только в RAM, не сохраняется)
+  final String? encryptedPassword;  // ← Зашифрованный пароль (Base64)
+  final String? nonce;  // ← Nonce для шифрования (Base64)
   final String config;
   final String? login;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
-  /// Преобразует PasswordEntry в JSON
+  /// Преобразует PasswordEntry в JSON (только зашифрованные данные!)
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,
       if (categoryId != null) 'category_id': categoryId,
       'service': service,
-      'password': password,
+      // НИКОГДА не сохраняем открытый пароль!
+      if (encryptedPassword != null) 'encrypted_password': encryptedPassword,
+      if (nonce != null) 'nonce': nonce,
       'config': config,
       if (login != null) 'login': login,
       'createdAt': createdAt.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };
+  }
+
+  /// Расшифровывает пароль используя мастер-пароль
+  /// 
+  /// [masterPassword] - мастер-пароль пользователя (PIN)
+  /// Возвращает расшифрованный пароль или null при ошибке
+  Future<String?> decryptPassword(String masterPassword) async {
+    if (!isEncrypted) {
+      // Если пароль не зашифрован (старые записи), возвращаем как есть
+      return password;
+    }
+
+    try {
+      final encryptedBytes = CryptoUtils.decodeBytesBase64(encryptedPassword!);
+      final nonceBytes = CryptoUtils.decodeBytesBase64(nonce!);
+
+      // Создаём алгоритм
+      final algorithm = Chacha20.poly1305Aead();
+
+      // Создаём ключ из мастер-пароля
+      final pbkdf2 = Pbkdf2(
+        macAlgorithm: Hmac.sha256(),
+        iterations: 10000,
+        bits: 256,
+      );
+
+      final secretKey = await pbkdf2.deriveKeyFromPassword(
+        password: masterPassword,
+        nonce: nonceBytes,
+      );
+
+      // Создаём SecretBox
+      final secretBox = SecretBox(
+        encryptedBytes,
+        nonce: nonceBytes,
+        mac: Mac(encryptedBytes),  // ← MAC хранится вместе с ciphertext
+      );
+
+      // Дешифруем
+      final decryptedBytes = await algorithm.decrypt(
+        secretBox,
+        secretKey: secretKey,
+      );
+
+      return utf8.decode(decryptedBytes);
+    } catch (e) {
+      return null;  // Ошибка дешифрования
+    }
   }
 
   /// Создаёт копию записи с обновлёнными данными
@@ -59,6 +117,8 @@ class PasswordEntry {
     int? categoryId,
     String? service,
     String? password,
+    String? encryptedPassword,
+    String? nonce,
     String? config,
     String? login,
     DateTime? updatedAt,
@@ -68,6 +128,8 @@ class PasswordEntry {
       categoryId: categoryId ?? this.categoryId,
       service: service ?? this.service,
       password: password ?? this.password,
+      encryptedPassword: encryptedPassword ?? this.encryptedPassword,
+      nonce: nonce ?? this.nonce,
       config: config ?? this.config,
       login: login ?? this.login,
       createdAt: createdAt,
@@ -123,19 +185,29 @@ class PasswordEntry {
     }
   }
 
+  /// Проверяет, есть ли зашифрованный пароль
+  bool get isEncrypted => encryptedPassword != null && nonce != null;
+
+  /// Проверяет, есть ли открытый пароль (в RAM)
+  bool get hasPlainText => password != null;
+
+  /// Возвращает пароль для отображения (открытый или зашифрованный)
+  /// ⚠️ ВРЕМЕННО: Для полной реализации требуется дешифрование
+  String? get displayPassword => password ?? encryptedPassword;
+
   @override
   String toString() =>
-      'PasswordEntry(service: $service, createdAt: $createdAt)';
+      'PasswordEntry(service: $service, encrypted: $isEncrypted, createdAt: $createdAt)';
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is PasswordEntry &&
         other.service == service &&
-        other.password == password &&
+        other.encryptedPassword == encryptedPassword &&
         other.config == config;
   }
 
   @override
-  int get hashCode => service.hashCode ^ password.hashCode ^ config.hashCode;
+  int get hashCode => service.hashCode ^ config.hashCode;
 }

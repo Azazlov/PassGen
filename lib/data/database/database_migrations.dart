@@ -4,7 +4,10 @@ import 'database_schema.dart';
 /// Миграции базы данных
 class DatabaseMigrations {
   /// Карта миграций: версия → функция миграции
-  static final Map<int, MigrationFunction> _migrations = {1: _migrateToV1};
+  static final Map<int, MigrationFunction> _migrations = {
+    1: _migrateToV1,
+    2: _migrateToV2,
+  };
 
   /// Получение списка миграций для применения
   static List<int> getMigrationsToApply(int oldVersion, int newVersion) {
@@ -42,8 +45,16 @@ class DatabaseMigrations {
   /// Миграция к версии 1
   /// Создание начальной схемы базы данных
   static Future<void> _migrateToV1(Database db) async {
-    // Создаём таблицы
-    for (final table in DatabaseSchema.createAllTables) {
+    // Создаём таблицы v1
+    final v1Tables = [
+      DatabaseSchema.categories,
+      DatabaseSchema.passwordEntries,
+      DatabaseSchema.passwordConfigs,
+      DatabaseSchema.securityLogs,
+      DatabaseSchema.appSettings,
+    ];
+
+    for (final table in v1Tables) {
       await db.execute(table);
     }
 
@@ -62,25 +73,15 @@ class DatabaseMigrations {
     }
   }
 
-  // ==================== ПРИМЕРЫ БУДУЩИХ МИГРАЦИЙ ====================
+  /// Миграция к версии 2
+  /// Добавление таблицы auth_data для хранения данных аутентификации
+  static Future<void> _migrateToV2(Database db) async {
+    // Создаём таблицу auth_data
+    await db.execute(DatabaseSchema.authData);
 
-  /// Миграция к версии 2 (пример)
-  /// static Future<void> _migrateToV2(Database db) async {
-  ///   await db.execute('''
-  ///     ALTER TABLE password_entries ADD COLUMN notes TEXT
-  ///   ''');
-  /// }
-
-  /// Миграция к версии 3 (пример)
-  /// static Future<void> _migrateToV3(Database db) async {
-  ///   await db.execute('''
-  ///     CREATE TABLE tags (
-  ///       id INTEGER PRIMARY KEY AUTOINCREMENT,
-  ///       name TEXT NOT NULL UNIQUE,
-  ///       color TEXT
-  ///     )
-  ///   ''');
-  /// }
+    // Миграция данных из SharedPreferences будет выполнена в AuthLocalDataSource
+    // при первом запуске после обновления
+  }
 }
 
 /// Тип функции миграции
