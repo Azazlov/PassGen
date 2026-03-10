@@ -47,23 +47,32 @@ project_context/devops_engineer/     # Корневая папка DevOps
 ### 2.2 Полная структура
 ```
 project_context/devops_engineer/
-├── scripts/                       # Скрипты сборки
-│   ├── build_all.sh               # Сборка всех платформ (Bash)
+├── scripts/                       # Скрипты сборки (Bash)
+│   ├── build_all.sh               # Сборка всех платформ
 │   ├── build_android.sh           # Сборка Android APK
-│   ├── build_desktop.sh           # Сборка Desktop (Linux/Windows)
-│   ├── build_all.ps1              # Сборка всех платформ (PowerShell)
-│   ├── build_android.ps1          # Android (PowerShell)
-│   └── build_desktop.ps1          # Desktop (PowerShell)
+│   ├── build_desktop.sh           # Сборка Desktop (Linux/Windows/macOS)
+│   ├── build_ios.sh               # Сборка iOS
+│   ├── build_web.sh               # Сборка Web
+│   ├── deploy_test.sh             # Развёртывание в test
+│   ├── deploy_prod.sh             # Развёртывание в prod
+│   ├── notify_slack.py            # Slack уведомления
+│   └── notify_telegram.py         # Telegram уведомления
 ├── docs/                          # Документация
-│   ├── DEPLOYMENT_GUIDE.md        # Руководство по развёртыванию
-│   ├── BUILD_STRATEGY.md          # Стратегия сборки
-│   └── CI_CD_SETUP.md             # Настройка CI/CD
-├── logs/                          # Логи сборок
-│   ├── build_YYYY-MM-DD.log       # Логи сборок
-│   └── deploy_YYYY-MM-DD.log      # Логи развёртывания
+│   ├── BUILD_AND_DEPLOY_STRATEGY.md  # Стратегия сборки
+│   ├── cicd_setup.md                 # Настройка CI/CD
+│   ├── developer_guide.md            # Руководство разработчика
+│   └── TASK_PLAN_BUILD.md            # План задач сборки
+├── logs/                          # Логи и мониторинг
+│   ├── build_*.log                # Логи сборок
+│   ├── deploy_*.log               # Логи развёртывания
+│   ├── sentry.yaml                # Sentry конфигурация
+│   ├── firebase_crashlytics.yaml  # Firebase Crashlytics
+│   └── fastlane_config.rb         # Fastlane конфигурация
 └── ci_cd/                         # CI/CD конфигурации
     └── workflows/
-        └── build.yml              # GitHub Actions workflow
+        ├── github-actions-flutter.yml  # Основной workflow
+        ├── github-actions-pr.yml       # PR валидация
+        └── gitlab-ci.yml               # GitLab CI
 ```
 
 ### 2.3 Связанные директории
@@ -72,6 +81,8 @@ project_context/
 ├── agents_context/
 │   ├── planning/
 │   │   └── passgen.tz.md              # 📋 Техническое задание
+│   ├── progress/
+│   │   └── CURRENT_PROGRESS.md        # 📊 Текущий прогресс
 │   └── instructions/
 │       └── AI_AGENT_INSTRUCTIONS.md   # 🤖 Общие инструкции
 │
@@ -91,16 +102,16 @@ project_context/
 ### 3.1 Обязательное прочтение
 ```bash
 # 1. Техническое задание
-cat agents_context/planning/passgen.tz.md
+cat project_context/agents_context/planning/passgen.tz.md
 
 # 2. Текущий прогресс
-cat agents_context/progress/CURRENT_PROGRESS.md
+cat project_context/agents_context/progress/CURRENT_PROGRESS.md
 
 # 3. Стратегия сборки
-cat devops_engineer/docs/BUILD_STRATEGY.md
+cat project_context/devops_engineer/docs/BUILD_AND_DEPLOY_STRATEGY.md
 
 # 4. Общие инструкции
-cat agents_context/instructions/AI_AGENT_INSTRUCTIONS.md
+cat project_context/agents_context/instructions/AI_AGENT_INSTRUCTIONS.md
 ```
 
 ### 3.2 Чек-лист подготовки
@@ -130,16 +141,16 @@ graph TD
 #### Шаг 1: Анализ требований
 ```bash
 # Изучи ТЗ
-grep -A 20 "Раздел 13" agents_context/planning/passgen.tz.md
+grep -A 20 "Раздел 13" project_context/agents_context/planning/passgen.tz.md
 
 # Проверь текущие скрипты
-ls devops_engineer/scripts/
+ls project_context/devops_engineer/scripts/
 ```
 
 #### Шаг 2: Создание скрипта
 ```bash
 # Создай скрипт сборки
-cat > devops_engineer/scripts/build_*.sh << 'EOF'
+cat > project_context/devops_engineer/scripts/build_*.sh << 'EOF'
 #!/bin/bash
 # Скрипт сборки для [платформа]
 
@@ -153,13 +164,13 @@ flutter build [platform] --release
 echo "Сборка завершена!"
 EOF
 
-chmod +x devops_engineer/scripts/build_*.sh
+chmod +x project_context/devops_engineer/scripts/build_*.sh
 ```
 
 #### Шаг 3: Тестирование
 ```bash
 # Запусти скрипт
-./devops_engineer/scripts/build_*.sh
+./project_context/devops_engineer/scripts/build_*.sh
 
 # Проверь артефакты
 ls build/
@@ -168,7 +179,7 @@ ls build/
 #### Шаг 4: Документирование
 ```bash
 # Создай документацию
-cat > devops_engineer/docs/BUILD_[PLATFORM].md << EOF
+cat > project_context/devops_engineer/docs/BUILD_[PLATFORM].md << EOF
 # Сборка для [платформа]
 
 ## Требования
@@ -227,46 +238,7 @@ devops_engineer/scripts/build_android.sh ✅
 
 ---
 
-### 5.2 Создание PowerShell скрипта для Windows
-
-**Команда:**
-```
-Создай PowerShell скрипт для сборки Windows
-```
-
-**Что делать:**
-1. Создать `devops_engineer/scripts/build_windows.ps1`
-2. Добавить проверку окружения
-3. Добавить сборку EXE
-4. Добавить логирование
-
-**Скрипт:**
-```powershell
-# Сборка Windows EXE
-Write-Host "🚀 Сборка Windows EXE..." -ForegroundColor Green
-
-# Проверка Flutter
-if (-not (Get-Command flutter -ErrorAction SilentlyContinue)) {
-    Write-Host "❌ Flutter не найден!" -ForegroundColor Red
-    exit 1
-}
-
-# Сборка
-flutter build windows --release
-
-# Результат
-Write-Host "✅ EXE создан:" -ForegroundColor Green
-Get-ChildItem build\windows\runner\Release\ -Filter "*.exe"
-```
-
-**Результат:**
-```
-devops_engineer/scripts/build_windows.ps1 ✅
-```
-
----
-
-### 5.3 Настройка GitHub Actions
+### 5.2 Настройка GitHub Actions
 
 **Команда:**
 ```
@@ -330,7 +302,7 @@ jobs:
 
 ---
 
-### 5.4 Создание руководства по развёртыванию
+### 5.3 Создание руководства по развёртыванию
 
 **Команда:**
 ```
@@ -356,9 +328,6 @@ jobs:
 [Команды]
 
 ### Linux
-[Команды]
-
-### Windows
 [Команды]
 
 ## 3. Публикация
@@ -398,25 +367,7 @@ fi
 echo "✅ Сборка завершена!"
 ```
 
-### 6.2 Шаблон скрипта сборки (PowerShell)
-```powershell
-# Сборка [Платформа]
-Write-Host "🚀 Сборка [Платформа]..." -ForegroundColor Green
-
-# Проверка зависимостей
-if (-not (Get-Command [command] -ErrorAction SilentlyContinue)) {
-    Write-Host "❌ [Зависимость] не найдена!" -ForegroundColor Red
-    exit 1
-}
-
-# Сборка
-[Команды]
-
-# Результат
-Write-Host "✅ Сборка завершена!" -ForegroundColor Green
-```
-
-### 6.3 Шаблон отчёта о сборке
+### 6.2 Шаблон отчёта о сборке
 ```markdown
 # Отчёт о сборке
 
@@ -489,25 +440,25 @@ Write-Host "✅ Сборка завершена!" -ForegroundColor Green
 ### 9.1 Сборка
 ```bash
 # Все платформы (Bash)
-./devops_engineer/scripts/build_all.sh release
+./project_context/devops_engineer/scripts/build_all.sh release
 
 # Android
-./devops_engineer/scripts/build_android.sh release
+./project_context/devops_engineer/scripts/build_android.sh release
 
 # Linux
-./devops_engineer/scripts/build_desktop.sh linux release
+./project_context/devops_engineer/scripts/build_desktop.sh linux release
 
-# Windows (PowerShell)
-.\devops_engineer\scripts\build_all.ps1 release
+# Web
+./project_context/devops_engineer/scripts/build_web.sh release
 ```
 
 ### 9.2 Мониторинг
 ```bash
 # Последние логи
-tail -f devops_engineer/logs/build_*.log
+tail -f project_context/devops_engineer/logs/build_*.log
 
 # Статус сборок
-ls -lh devops_engineer/logs/
+ls -lh project_context/devops_engineer/logs/
 ```
 
 ### 9.3 CI/CD
@@ -526,9 +477,9 @@ act push  # Запуск push workflow
 ### 10.1 Готовность DevOps
 ```
 Bash скрипты:    ████████████████████ 100%
-PowerShell:      ████████░░░░░░░░░░░░ ~40%
-CI/CD:           ████░░░░░░░░░░░░░░░░ ~20%
-Документация:    ████████████░░░░░░░░ ~60%
+CI/CD:           ████████████░░░░░░░░ ~60%
+Документация:    ██████████████░░░░░░ ~70%
+Мониторинг:      ████████████░░░░░░░░ ~60%
 ```
 
 ### 10.2 Созданные файлы
@@ -537,23 +488,30 @@ CI/CD:           ████░░░░░░░░░░░░░░░░ ~2
 | `devops_engineer/scripts/build_all.sh` | ✅ |
 | `devops_engineer/scripts/build_android.sh` | ✅ |
 | `devops_engineer/scripts/build_desktop.sh` | ✅ |
-| `devops_engineer/scripts/build_all.ps1` | ⬜ |
-| `devops_engineer/scripts/build_android.ps1` | ⬜ |
-| `.github/workflows/build.yml` | ⬜ |
+| `devops_engineer/scripts/build_ios.sh` | ✅ |
+| `devops_engineer/scripts/build_web.sh` | ✅ |
+| `devops_engineer/scripts/deploy_test.sh` | ✅ |
+| `devops_engineer/scripts/deploy_prod.sh` | ✅ |
+| `devops_engineer/ci_cd/workflows/github-actions-flutter.yml` | ✅ |
+| `devops_engineer/ci_cd/workflows/github-actions-pr.yml` | ✅ |
+| `devops_engineer/ci_cd/workflows/gitlab-ci.yml` | ✅ |
+| `devops_engineer/docs/BUILD_AND_DEPLOY_STRATEGY.md` | ✅ |
+| `devops_engineer/docs/cicd_setup.md` | ✅ |
+| `devops_engineer/docs/developer_guide.md` | ✅ |
 
 ---
 
 ## 11. ПЛАНЫ НА БУДУЩЕЕ
 
 ### 11.1 Ближайшие задачи
-- [ ] Создать PowerShell скрипты
-- [ ] Настроить GitHub Actions
-- [ ] Создать DEPLOYMENT_GUIDE.md
+- [ ] Протестировать все скрипты сборки
+- [ ] Настроить GitHub Actions (добавить секреты)
+- [ ] Интегрировать Sentry мониторинг
 
 ### 11.2 Долгосрочные цели
-- [ ] Автоматические релизы
-- [ ] Мониторинг производительности
-- [ ] Canary релизы
+- [ ] Автоматические релизы при тегах
+- [ ] Мониторинг производительности сборок
+- [ ] Canary релизы для тестирования
 
 ---
 

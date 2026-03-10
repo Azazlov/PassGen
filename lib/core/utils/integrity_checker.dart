@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -43,7 +42,6 @@ enum CheckType {
 /// - Несанкционированных изменений кода
 /// - Подделки приложения
 class IntegrityChecker {
-  static const String _expectedChecksumKey = 'app_checksum';
   static const String _integrityDataFile = '.integrity_check';
 
   final String? _storedChecksum;

@@ -423,14 +423,6 @@ class AuthLocalDataSource {
     List<int> nonce,
     List<int> key,
   ) async {
-    final algorithm = Chacha20.poly1305Aead();
-
-    // Создаём ключ из байт
-    final secretKey = SecretKey(key);
-
-    // Создаём nonce box
-    final nonceBox = Uint8List.fromList(nonce);
-
     // Для расшифровки нужен SecretBox с ciphertext и mac
     // Упрощённая версия - в реальной реализации нужно хранить MAC отдельно
     // Здесь предполагаем, что encryptedData содержит ciphertext||mac

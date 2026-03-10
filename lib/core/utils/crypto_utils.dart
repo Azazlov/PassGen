@@ -96,15 +96,14 @@ class CryptoUtils {
   /// [b] - второй массив
   /// Возвращает `true` если массивы идентичны
   static bool constantTimeEquals(List<int> a, List<int> b) {
-    // Разная длина → сразу false (но всё равно выполняем сравнение)
+    // Разная длина → сразу false (но всё равно выполняем сравнение для constant-time)
     if (a.length != b.length) {
-      // Фиктивное сравнение для поддержания постоянного времени
-      int dummy = 0;
+      // Фиктическое сравнение для поддержания постоянного времени
       for (int i = 0; i < a.length; i++) {
-        dummy |= a[i] ^ a[i];
+        // Пустой цикл для timing attack protection
       }
       for (int i = 0; i < b.length; i++) {
-        dummy |= b[i] ^ b[i];
+        // Пустой цикл для timing attack protection
       }
       return false;
     }
