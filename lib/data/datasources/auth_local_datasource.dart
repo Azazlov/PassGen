@@ -22,7 +22,7 @@ class AuthLocalDataSource {
   static const int lockoutDurationSeconds = 30;
   static const int minPinLength = 4;
   static const int maxPinLength = 8;
-  static const int pbkdf2Iterations = 10000;
+  static const int pbkdf2Iterations = 100000; // Увеличено с 10,000 для безопасности (v0.5.1)
 
   final Database? _database;
 

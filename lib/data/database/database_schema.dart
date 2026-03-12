@@ -1,7 +1,33 @@
 /// Схема базы данных SQLite
-/// Версия схемы: 2
+///
+/// Версия схемы: 2 (v0.5.0)
+/// Версия приложения: 0.5.1
+///
+/// История изменений:
+/// - Version 1: Initial schema (5 таблиц)
+/// - Version 2: Добавлена таблица auth_data, индексы
+/// - Version 2.1 (v0.5.1): Увеличены итерации PBKDF2 до 100K
 class DatabaseSchema {
   static const int version = 2;
+  static const String appVersion = '0.5.1';
+  static const String schemaInfo = '''
+Version 1: Initial schema (5 tables)
+  - categories
+  - password_entries
+  - password_configs
+  - security_logs
+  - app_settings
+
+Version 2: Added auth_data table, indexes
+  - auth_data (для безопасного хранения PIN)
+  - 4 индекса для оптимизации
+
+Version 2.1 (v0.5.1): Security improvements
+  - PBKDF2 iterations: 10,000 → 100,000
+  - Duplicate check on import (service + login)
+  - Rollback on import error
+  - Configurable clipboard timeout
+''';
 
   // ==================== ТАБЛИЦЫ ====================
 

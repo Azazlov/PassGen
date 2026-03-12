@@ -4,7 +4,7 @@ import 'package:lottie/lottie.dart';
 
 /// Виджет для отображения копируемого текста (пароля)
 ///
-/// Копирует текст в буфер обмена с очисткой через 60 секунд
+/// Копирует текст в буфер обмена с очисткой через настраиваемое время
 /// Показывает Lottie анимацию при успешном копировании
 class CopyablePassword extends StatefulWidget {
   const CopyablePassword({
@@ -13,11 +13,13 @@ class CopyablePassword extends StatefulWidget {
     required this.text,
     this.onTap,
     this.isEmpty = false,
+    this.clipboardTimeoutSeconds = 60, // v0.5.1: настраиваемое время
   });
   final String label;
   final String text;
   final VoidCallback? onTap;
   final bool isEmpty;
+  final int clipboardTimeoutSeconds; // v0.5.1: время очистки буфера (сек)
 
   @override
   State<CopyablePassword> createState() => _CopyablePasswordState();
@@ -103,7 +105,7 @@ class _CopyablePasswordState extends State<CopyablePassword> {
     );
   }
 
-  /// Копирование в буфер обмена с очисткой через 60 секунд
+  /// Копирование в буфер обмена с очисткой через настраиваемое время (v0.5.1)
   void _copyToClipboard(BuildContext context, String value) {
     // Копируем в буфер
     Clipboard.setData(ClipboardData(text: value));
@@ -140,16 +142,16 @@ class _CopyablePasswordState extends State<CopyablePassword> {
       ),
     );
 
-    // Очищаем буфер через 60 секунд (согласно ТЗ)
-    Future.delayed(const Duration(seconds: 60), () {
+    // Очищаем буфер через настраиваемое время (v0.5.1)
+    Future.delayed(Duration(seconds: widget.clipboardTimeoutSeconds), () {
       Clipboard.setData(const ClipboardData(text: ''));
 
       // Показываем уведомление об очистке, если виджет ещё в дереве
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Буфер обмена очищен'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text('Буфер обмена очищен (${widget.clipboardTimeoutSeconds} сек)'),
+            duration: const Duration(seconds: 2),
             backgroundColor: Colors.orange,
           ),
         );

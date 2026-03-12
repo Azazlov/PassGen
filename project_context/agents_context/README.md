@@ -77,7 +77,33 @@ project_context/
 
 ## 3. АГЕНТЫ И ИХ ОТВЕТСТВЕННОСТЬ
 
-### 3.1 Frontend Engineer 👨‍💻
+### 3.1 Project Manager 📋
+
+**Область ответственности:**
+- Планирование разработки
+- Мониторинг прогресса
+- Координация агентов
+- Управление рисками
+- Отчётность
+- Контроль соответствия ТЗ
+- Релиз-менеджмент
+
+**Ключевые файлы:**
+```
+project_context/agents_context/PROJECT_MANAGER.md
+project_context/agents_context/planning/WORK_PLAN.md
+project_context/agents_context/progress/CURRENT_PROGRESS.md
+project_context/agents_context/instructions/PROJECT_MANAGER_INSTRUCTIONS.md
+```
+
+**Рабочая директория:**
+```
+project_context/agents_context/  # Централизованный контекст
+```
+
+---
+
+### 3.2 Frontend Engineer 👨‍💻
 
 **Область ответственности:**
 - Разработка UI компонентов и экранов
@@ -478,6 +504,7 @@ grep -r "Техническое задание" project_context/planning/
 
 | Агент | Директория | Инструкция |
 |---|---|---|
+| **Project Manager** | `agents_context/` | `PROJECT_MANAGER_INSTRUCTIONS.md` |
 | Frontend Engineer | `frontend_engineer/` | `frontend_developer_instructions.md` |
 | QA Engineer | `qa_engineer/` | `QA_ENGINEER_INSTRUCTIONS.md` |
 | Data & Security | `data_security_specialist/` | — |
@@ -487,6 +514,6 @@ grep -r "Техническое задание" project_context/planning/
 
 ---
 
-**Документ утверждён:** 8 марта 2026  
-**Версия:** 1.0  
+**Документ утверждён:** 10 марта 2026
+**Версия:** 1.1
 **Статус:** ✅ Актуально

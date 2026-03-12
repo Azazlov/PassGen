@@ -13,13 +13,13 @@ import '../../../domain/usecases/password/save_password_usecase.dart';
 
 /// Конфигурация уровня сложности пароля
 class StrengthConfig {
-  final String label;
-  final int colorIndex;
-  
   const StrengthConfig({
     required this.label,
     required this.colorIndex,
   });
+
+  final String label;
+  final int colorIndex;
 }
 
 /// Контроллер для экрана генератора паролей
@@ -78,8 +78,8 @@ class GeneratorController extends ChangeNotifier {
   }
 
   Color get strengthColor {
-    final colorIndex = strengthConfigs[_strength]?.colorIndex ?? 0;
-    return strengthColors[colorIndex] ?? Colors.grey;
+    final colorIndex = strengthConfigs[_strength]!.colorIndex;
+    return strengthColors[colorIndex]!;
   }
 
   // Переключатели обязательности символов
@@ -350,7 +350,6 @@ class GeneratorController extends ChangeNotifier {
 
           // data может быть Map из dataSource или bool из repository
           return data;
-          return {'success': true, 'updated': false};
         },
       );
     } catch (e) {
@@ -371,7 +370,7 @@ class GeneratorController extends ChangeNotifier {
   }
 
   /// Получает наборы символов из репозитория
-  Future<List<CharacterSet>> getCharacterSets() async {
-    return await repository.getCharacterSets(settings: _settings);
+  Future<List<CharacterSet>> getCharacterSets() {
+    return repository.getCharacterSets(settings: _settings);
   }
 }

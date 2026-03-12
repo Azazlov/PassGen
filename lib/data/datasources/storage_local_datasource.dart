@@ -119,28 +119,55 @@ class StorageLocalDataSource {
   }
 
   /// Импортирует пароли из JSON строки
+  ///
+  /// v0.5.1: Добавлена проверка дубликатов (service + login)
+  /// v0.5.1: Обработка ошибок с rollback
   Future<bool> importPasswords(String jsonString) async {
+    List<PasswordEntry>? originalPasswords;
+    
     try {
       final newPasswords = PasswordEntry.decodeList(jsonString);
       final currentPasswords = await getPasswords();
+      
+      // Сохраняем оригинальные пароли для rollback (v0.5.1)
+      originalPasswords = List<PasswordEntry>.from(currentPasswords);
 
-      // Объединяем пароли, избегая дубликатов по сервису
+      // Объединяем пароли, избегая дубликатов по service + login (v0.5.1)
       final mergedPasswords = List<PasswordEntry>.from(currentPasswords);
+      int duplicateCount = 0;
+      
       for (final newPassword in newPasswords) {
         final existingIndex = mergedPasswords.indexWhere(
-          (e) => e.service.toLowerCase() == newPassword.service.toLowerCase(),
+          (e) => 
+            e.service.toLowerCase() == newPassword.service.toLowerCase() &&
+            e.login == newPassword.login,
         );
         if (existingIndex != -1) {
-          // Обновляем существующий
+          // Обновляем существующий (v0.5.1)
           mergedPasswords[existingIndex] = newPassword;
+          duplicateCount++;
         } else {
           // Добавляем новый
           mergedPasswords.add(newPassword);
         }
       }
 
+      // Логируем количество обновлённых дубликатов
+      if (duplicateCount > 0) {
+        print('Импорт: обновлено $duplicateCount дубликатов');
+      }
+
       return await savePasswords(mergedPasswords);
     } catch (e) {
+      // Rollback при ошибке (v0.5.1)
+      if (originalPasswords != null) {
+        try {
+          await savePasswords(originalPasswords);
+          print('Импорт: выполнен rollback после ошибки');
+        } catch (rollbackError) {
+          print('Импорт: ошибка rollback: $rollbackError');
+        }
+      }
       throw StorageFailure(message: 'Ошибка импорта паролей: $e');
     }
   }
