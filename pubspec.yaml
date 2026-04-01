@@ -134,13 +134,6 @@ flutter:
   assets:
     # Иконки приложения
     - assets/icons/
-    
-    # Lottie анимации (из новой структуры)
-    - project_context/ui_ux_designer/design/animations/
-    
-    # Документы (опционально, для отображения в приложении)
-    - project_context/technical_writer/user_guide.md
-    - project_context/technical_writer/faq.md
 
   # Шрифты (кастомные, при необходимости)
   # fonts:

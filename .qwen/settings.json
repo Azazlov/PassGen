@@ -5,7 +5,8 @@
       "Bash(mkdir *)",
       "Bash(find *)",
       "Bash(mv *)",
-      "Bash(rm *)"
+      "Bash(rm *)",
+      "Bash(flutter *)"
     ]
   },
   "$version": 3

@@ -98,10 +98,14 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
 
         // Repositories
-        Provider<PasswordGeneratorRepository>(
+        Provider<PasswordGeneratorRepositoryImpl>(
           create: (context) => PasswordGeneratorRepositoryImpl(
             context.read<PasswordGeneratorLocalDataSource>(),
           ),
+        ),
+        // Also expose as interface for abstraction
+        Provider<PasswordGeneratorRepository>(
+          create: (context) => context.read<PasswordGeneratorRepositoryImpl>(),
         ),
         Provider(
           create: (context) =>
