@@ -46,7 +46,7 @@ class AppConstants {
   const AppConstants._();
 
   static const String appName = 'PassGen';
-  static const String appVersion = '0.3.2';
+  static const String appVersion = '0.5.2';
   static const String developer = '@Azazlov';
 
   // Ключи хранилища
