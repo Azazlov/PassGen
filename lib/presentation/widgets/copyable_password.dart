@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
+import '../../core/services/navigation_service.dart';
 
 /// Виджет для отображения копируемого текста (пароля)
 ///
 /// Копирует текст в буфер обмена с очисткой через настраиваемое время
-/// Показывает Lottie анимацию при успешном копировании
+/// Показывает уведомление при успешном копировании
 class CopyablePassword extends StatefulWidget {
   const CopyablePassword({
     super.key,
@@ -115,16 +116,11 @@ class _CopyablePasswordState extends State<CopyablePassword> {
       SnackBar(
         content: Row(
           children: [
-            // Lottie анимация вместо иконки
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: Lottie.asset(
-                'project_context/design/animations/copy_success.json',
-                width: 24,
-                height: 24,
-                fit: BoxFit.contain,
-              ),
+            // Иконка вместо Lottie анимации
+            const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 24,
             ),
             const SizedBox(width: 12),
             const Text('Пароль скопирован'),
@@ -136,7 +132,14 @@ class _CopyablePasswordState extends State<CopyablePassword> {
           label: 'Открыть',
           textColor: Theme.of(context).colorScheme.onSecondary,
           onPressed: () {
-            // Можно добавить навигацию к хранилищу
+            // Навигация к хранилищу
+            try {
+              final navigationService = context.read<NavigationService>();
+              navigationService.navigateToStorage();
+            } catch (e) {
+              // Если сервис недоступен, игнорируем
+              debugPrint('NavigationService not available: $e');
+            }
           },
         ),
       ),

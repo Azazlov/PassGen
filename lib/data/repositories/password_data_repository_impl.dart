@@ -62,12 +62,37 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
         return Left(StorageFailure(message: 'Неверный формат JSON'));
       }
 
-      final passwords = decoded
+      final importedPasswords = decoded
           .map((e) => PasswordEntry.fromJson(e as Map<String, dynamic>))
           .toList();
 
       final existing = await dataSource.getPasswords();
-      existing.addAll(passwords);
+      
+      // Проверяем на дубликаты и добавляем только уникальные
+      int addedCount = 0;
+      int skippedCount = 0;
+      
+      for (final imported in importedPasswords) {
+        // Проверяем, существует ли уже запись с таким сервисом и логином
+        final exists = existing.any(
+          (e) => 
+            e.service.toLowerCase() == imported.service.toLowerCase() &&
+            (e.login ?? '').toLowerCase() == (imported.login ?? '').toLowerCase(),
+        );
+        
+        if (!exists) {
+          existing.add(imported);
+          addedCount++;
+        } else {
+          skippedCount++;
+        }
+      }
+      
+      if (addedCount == 0) {
+        return Left(StorageFailure(
+          message: 'Все пароли уже существуют (пропущено: $skippedCount)',
+        ));
+      }
 
       await dataSource.savePasswords(existing);
       return Right(true);
@@ -90,12 +115,37 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
         masterPassword: masterPassword,
       );
 
-      final passwords = (decrypted as List)
+      final importedPasswords = (decrypted as List)
           .map((e) => PasswordEntry.fromJson(e as Map<String, dynamic>))
           .toList();
 
       final existing = await dataSource.getPasswords();
-      existing.addAll(passwords);
+      
+      // Проверяем на дубликаты и добавляем только уникальные
+      int addedCount = 0;
+      int skippedCount = 0;
+      
+      for (final imported in importedPasswords) {
+        // Проверяем, существует ли уже запись с таким сервисом и логином
+        final exists = existing.any(
+          (e) => 
+            e.service.toLowerCase() == imported.service.toLowerCase() &&
+            (e.login ?? '').toLowerCase() == (imported.login ?? '').toLowerCase(),
+        );
+        
+        if (!exists) {
+          existing.add(imported);
+          addedCount++;
+        } else {
+          skippedCount++;
+        }
+      }
+      
+      if (addedCount == 0) {
+        return Left(StorageFailure(
+          message: 'Все пароли уже существуют (пропущено: $skippedCount)',
+        ));
+      }
 
       await dataSource.savePasswords(existing);
       return Right(true);

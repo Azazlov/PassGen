@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 
 /// Виджет анимации успешного копирования
 class LottieCopySuccess extends StatelessWidget {
@@ -9,12 +8,11 @@ class LottieCopySuccess extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Lottie.asset(
-      'project_context/design/animations/copy_success.json',
-      width: size,
-      height: size,
-      animate: autoplay,
-      fit: BoxFit.contain,
+    // Временная замена: иконка вместо отсутствующей Lottie анимации
+    return Icon(
+      Icons.check_circle,
+      size: size,
+      color: Colors.green,
     );
   }
 }
@@ -27,12 +25,11 @@ class LottiePinError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Lottie.asset(
-      'project_context/design/animations/pin_error.json',
-      width: size,
-      height: size,
-      animate: autoplay,
-      fit: BoxFit.contain,
+    // Временная замена: иконка вместо отсутствующей Lottie анимации
+    return Icon(
+      Icons.error,
+      size: size,
+      color: Colors.red,
     );
   }
 }
@@ -53,12 +50,26 @@ class LottieStrengthPulse extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Lottie.asset(
-      'project_context/design/animations/strength_pulse.json',
+    // Временная замена: круговой индикатор вместо отсутствующей Lottie анимации
+    return SizedBox(
       width: size,
       height: size,
-      animate: autoplay,
-      fit: BoxFit.contain,
+      child: CircularProgressIndicator(
+        value: strength,
+        strokeWidth: 3,
+        backgroundColor: Colors.grey.withOpacity(0.3),
+        valueColor: AlwaysStoppedAnimation<Color>(
+          _getColorForStrength(strength),
+        ),
+      ),
     );
+  }
+
+  Color _getColorForStrength(double strength) {
+    if (strength < 0.25) return Colors.red;
+    if (strength < 0.5) return Colors.orange;
+    if (strength < 0.75) return Colors.yellow[700]!;
+    if (strength < 0.9) return Colors.green;
+    return Colors.blue;
   }
 }

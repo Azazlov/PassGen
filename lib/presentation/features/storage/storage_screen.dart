@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/constants/event_types.dart';
+import '../../../core/services/navigation_service.dart';
 import '../../../domain/entities/category.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
@@ -53,6 +54,8 @@ class _StorageScreenContent extends StatefulWidget {
 }
 
 class _StorageScreenContentState extends State<_StorageScreenContent> {
+  NavigationService? _navigationService;
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +63,27 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<StorageController>().loadPasswords();
     });
+    
+    // Подписываемся на изменения навигации
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navigationService = context.read<NavigationService>();
+      _navigationService?.addListener(_handleNavigationChange);
+    });
+  }
+
+  @override
+  void dispose() {
+    _navigationService?.removeListener(_handleNavigationChange);
+    super.dispose();
+  }
+
+  void _handleNavigationChange() {
+    // Если перешли на вкладку хранилища, обновляем список паролей
+    if (_navigationService?.currentTab == AppTab.storage) {
+      if (mounted) {
+        context.read<StorageController>().loadPasswords();
+      }
+    }
   }
 
   @override

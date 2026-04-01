@@ -1,10 +1,10 @@
 # PassGen — Менеджер паролей с локальным шифрованием
 
-[![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)](https://github.com/azazlov/passgen/releases)
+[![Version](https://img.shields.io/badge/version-0.5.2-blue.svg)](https://github.com/azazlov/passgen/releases)
 [![Flutter](https://img.shields.io/badge/flutter-^3.9.0-blue.svg)](https://flutter.dev)
-[![Platform](https://img.shields.io/badge/platform-windows%20%7C%20linux%20%7C%20android-lightgrey.svg)](https://github.com/azazlov/passgen)
+[![Platform](https://img.shields.io/badge/platform-windows%20%7C%20linux%20%7C%20android%20%7C%20macos-lightgrey.svg)](https://github.com/azazlov/passgen)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Security](https://img.shields.io/badge/security-98/100-brightgreen.svg)](project_context/data_security_specialist/audit/security_fix_report_2026-03-10.md)
+[![Security](https://img.shields.io/badge/security-98/100-brightgreen.svg)](DEVELOPER.MD)
 
 Кроссплатформенное приложение на Flutter для генерации, хранения и управления паролями с использованием современных криптографических методов и локальной базы данных SQLite.
 
@@ -14,13 +14,24 @@
 
 | Метрика | Значение | Статус |
 |---------|----------|--------|
-| **Версия** | 0.5.0 | ✅ Стабильная |
+| **Версия** | 0.5.2 | ✅ Стабильная |
 | **Готовность** | 100% | ✅ Готов к релизу |
 | **Соответствие ТЗ** | ~98% | ✅ |
 | **Безопасность** | 98/100 | ✅ (+13 с марта 2026) |
 | **Тесты** | 33/33 unit, 82% widget | ✅ |
-| **Сборка** | Linux ✅ Windows ✅ Android ✅ | ✅ |
-| **Последнее обновление** | 10 марта 2026 | ✅ |
+| **Сборка** | Linux ✅ Windows ✅ Android ✅ macOS ✅ | ✅ |
+| **Последнее обновление** | 1 апреля 2026 | ✅ |
+
+### 🆕 Новое в версии 0.5.2
+
+| Функция | Описание |
+|---------|----------|
+| **История паролей** | Таблица `password_history` для отслеживания изменений |
+| **Система уведомлений** | Уведомления о слабых/старых паролях, дубликатах |
+| **Автообновление** | Обновление списка при импорте и переключении вкладок |
+| **Импорт без дубликатов** | Проверка по service + login при импорте |
+| **Исправлен .passgen** | Корректное использование ChaCha20 nonce (12 байт) |
+| **macOS entitlements** | Разрешения на доступ к файлам |
 
 ### 🔐 Безопасность (исправлено 15 уязвимостей)
 - ✅ Хранение PIN только в SQLite (удалено из SharedPreferences)

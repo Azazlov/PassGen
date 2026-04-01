@@ -1,7 +1,7 @@
 # PassGen — Документация разработчика
 
-**Версия:** 0.5.0
-**Последнее обновление:** 10 марта 2026
+**Версия:** 0.5.2
+**Последнее обновление:** 1 апреля 2026
 **Статус:** ✅ Готов к релизу
 
 ---
@@ -15,8 +15,8 @@
 | **Безопасность** | 98/100 | ✅ (+13 с аудита) |
 | **Unit-тесты** | 33/33 пройдено | ✅ |
 | **Widget-тесты** | 82% покрытие | ✅ |
-| **Файлов Dart** | 118+ | ✅ |
-| **Строк кода** | ~9500+ | ✅ |
+| **Файлов Dart** | 130+ | ✅ |
+| **Строк кода** | ~11000+ | ✅ |
 
 ### 🔐 Безопасность (15 исправлений)
 - ✅ Хранение PIN только в SQLite
@@ -25,8 +25,21 @@
 - ✅ FLAG_SECURE для Android
 - ✅ Удалена debug-отладка
 
+### 🆕 Новое в версии 0.5.2
+
+| Функция | Описание | Статус |
+|---------|----------|--------|
+| **История паролей** | Таблица `password_history` для отслеживания изменений | ✅ |
+| **Система уведомлений** | Уведомления о слабых/старых паролях, дубликатах | ✅ |
+| **Сервис навигации** | Централизованное управление вкладками | ✅ |
+| **Автообновление** | Обновление списка при импорте и переключении вкладок | ✅ |
+| **Импорт без дубликатов** | Проверка по service + login при импорте | ✅ |
+| **Исправлен .passgen** | Корректное использование ChaCha20 nonce (12 байт) | ✅ |
+| **macOS entitlements** | Разрешения на доступ к файлам | ✅ |
+
 ### 📈 Детальный прогресс
-См. [CURRENT_PROGRESS.md](project_context/agents_context/progress/CURRENT_PROGRESS.md)
+См. [PROJECT_STATUS_REPORT.md](docs/PROJECT_STATUS_REPORT.md)
+См. [IMPLEMENTATION_REPORT.md](docs/IMPLEMENTATION_REPORT.md)
 
 ---
 
@@ -101,15 +114,16 @@ PassGen — кроссплатформенный менеджер паролей
 
 | Метрика | Значение |
 |---------|----------|
-| **Файлов Dart** | 110+ |
-| **Строк кода** | ~9500+ |
-| **Entities** | 8 |
-| **Repository интерфейсов** | 7-10 |
-| **Use Cases** | 25+ |
+| **Файлов Dart** | 130+ |
+| **Строк кода** | ~11000+ |
+| **Entities** | 10 (добавлены PasswordHistoryEntry, Notification) |
+| **Repository интерфейсов** | 11 (добавлен PasswordHistoryRepository) |
+| **Use Cases** | 29+ (добавлены для истории паролей) |
 | **Controllers** | 7 |
 | **Экранов** | 8-9 |
-| **Виджетов** | 6-12 |
-| **Таблиц БД** | 5 |
+| **Виджетов** | 15+ (добавлены NotificationCard, Lottie-заглушки) |
+| **Таблиц БД** | 6 (добавлена password_history) |
+| **Сервисов** | 1 (NavigationService) |
 | **Покрытие тестами** | ~82% |
 
 ---
@@ -199,41 +213,47 @@ lib/
 │   │   └── spacing.dart          # Отступы
 │   ├── errors/
 │   │   └── failures.dart         # Failure классы для Either
+│   ├── services/
+│   │   └── navigation_service.dart  # Сервис навигации между вкладками
 │   └── utils/
 │       ├── crypto_utils.dart     # Криптографические утилиты
 │       └── password_utils.dart   # Оценка надёжности паролей
 │
 ├── domain/                       # Бизнес-логика (НЕ зависит от других слоёв)
-│   ├── entities/                 # Бизнес-объекты
+│   ├── entities/                 # Бизнес-объекты (10)
 │   │   ├── auth_state.dart       # Состояние аутентификации
 │   │   ├── auth_result.dart      # Результат аутентификации
 │   │   ├── category.dart         # Категория паролей
+│   │   ├── notification.dart     # Уведомления (новое в 0.5.2)
 │   │   ├── password_config.dart  # Конфигурация пароля
 │   │   ├── password_entry.dart   # Запись пароля
 │   │   ├── password_generation_settings.dart  # Настройки генератора
+│   │   ├── password_history_entry.dart  # История паролей (новое в 0.5.2)
 │   │   ├── password_result.dart  # Результат генерации
 │   │   └── security_log.dart     # Лог безопасности
 │   │
-│   ├── repositories/             # Интерфейсы репозиториев
+│   ├── repositories/             # Интерфейсы репозиториев (11)
 │   │   ├── app_settings_repository.dart
 │   │   ├── auth_repository.dart
 │   │   ├── category_repository.dart
 │   │   ├── encryptor_repository.dart
-│   │   ├── password_entry_repository.dart
+│   │   ├── password_data_repository.dart  # Импорт/экспорт
 │   │   ├── password_generator_repository.dart
-│   │   ├── password_export_repository.dart
-│   │   ├── password_import_repository.dart
+│   │   ├── password_history_repository.dart  # История (новое в 0.5.2)
 │   │   ├── security_log_repository.dart
 │   │   └── storage_repository.dart
 │   │
-│   ├── usecases/                 # Бизнес-правила (Use Cases)
+│   ├── usecases/                 # Бизнес-правила (Use Cases, 29+)
 │   │   ├── auth/                 # Аутентификация (5)
 │   │   ├── category/             # Категории (4)
 │   │   ├── encryptor/            # Шифрование (2)
 │   │   ├── log/                  # Логирование (2)
-│   │   ├── password/             # Генерация (2)
+│   │   ├── password/             # Генерация (4, добавлены history)
 │   │   ├── settings/             # Настройки (3)
 │   │   └── storage/              # Хранилище (6-8)
+│   │
+│   ├── services/
+│   │   └── password_strength_notification_service.dart  # Уведомления
 │   │
 │   └── validators/
 │       └── password_settings_validator.dart
@@ -241,18 +261,18 @@ lib/
 ├── data/                         # Слой данных (зависит от domain)
 │   ├── database/
 │   │   ├── database_helper.dart  # Помощник БД
-│   │   ├── database_schema.dart  # Схема БД
+│   │   ├── database_schema.dart  # Схема БД (6 таблиц)
 │   │   ├── database_migrations.dart  # Миграции
 │   │   └── migration_from_shared_preferences.dart
 │   │
-│   ├── datasources/              # Источники данных
+│   ├── datasources/              # Источники данных (4)
 │   │   ├── auth_local_datasource.dart
 │   │   ├── encryptor_local_datasource.dart
 │   │   ├── password_generator_local_datasource.dart
 │   │   └── storage_local_datasource.dart
 │   │
 │   ├── formats/
-│   │   └── passgen_format.dart   # Формат .passgen
+│   │   └── passgen_format.dart   # Формат .passgen (исправлен в 0.5.2)
 │   │
 │   ├── models/                   # Модели данных (расширяют Entities)
 │   │   ├── app_settings_model.dart
@@ -261,19 +281,19 @@ lib/
 │   │   ├── password_entry_model.dart
 │   │   └── security_log_model.dart
 │   │
-│   └── repositories/             # Реализации репозиториев
+│   └── repositories/             # Реализации репозиториев (11)
 │       ├── app_settings_repository_impl.dart
 │       ├── auth_repository_impl.dart
 │       ├── category_repository_impl.dart
 │       ├── encryptor_repository_impl.dart
+│       ├── password_data_repository_impl.dart
 │       ├── password_generator_repository_impl.dart
-│       ├── password_export_repository_impl.dart
-│       ├── password_import_repository_impl.dart
+│       ├── password_history_repository_impl.dart  # История (новое)
 │       ├── security_log_repository_impl.dart
 │       └── storage_repository_impl.dart
 │
 ├── presentation/                 # UI слой (зависит от domain)
-│   ├── features/                 # Экраны приложения
+│   ├── features/                 # Экраны приложения (8)
 │   │   ├── about/                # О приложении
 │   │   ├── auth/                 # Аутентификация
 │   │   ├── categories/           # Категории
@@ -283,12 +303,15 @@ lib/
 │   │   ├── settings/             # Настройки
 │   │   └── storage/              # Хранилище
 │   │
-│   └── widgets/                  # Переиспользуемые виджеты
+│   └── widgets/                  # Переиспользуемые виджеты (15+)
 │       ├── app_button.dart
 │       ├── app_dialogs.dart
 │       ├── app_switch.dart
 │       ├── app_text_field.dart
-│       ├── copyable_password.dart
+│       ├── character_set_display.dart
+│       ├── copyable_password.dart  # Исправлено уведомление (0.5.2)
+│       ├── lottie_animations.dart  # Заглушки вместо Lottie (0.5.2)
+│       ├── notification_card.dart  # Карточка уведомления (новое)
 │       └── shimmer_effect.dart
 │
 └── shared/                       # Общие компоненты
@@ -494,7 +517,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
 ## База данных
 
-### Схема БД (5 таблиц)
+### Схема БД (6 таблиц)
+
+**Версия схемы:** 3 (v0.5.2)
 
 ```sql
 -- Категории
@@ -549,6 +574,22 @@ CREATE TABLE app_settings (
   value TEXT NOT NULL,
   encrypted INTEGER DEFAULT 0
 );
+
+-- История изменений паролей (добавлено в v0.5.2)
+CREATE TABLE password_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  entry_id INTEGER NOT NULL REFERENCES password_entries(id) ON DELETE CASCADE,
+  service TEXT NOT NULL,
+  encrypted_password BLOB NOT NULL,
+  nonce BLOB NOT NULL,
+  config TEXT NOT NULL,
+  login TEXT,
+  created_at INTEGER NOT NULL,
+  reason TEXT
+);
+
+CREATE INDEX idx_password_history_entry ON password_history(entry_id);
+CREATE INDEX idx_password_history_created ON password_history(created_at);
 ```
 
 ### Системные категории (7)
@@ -588,7 +629,9 @@ CREATE TABLE app_settings (
 | **PBKDF2-HMAC-SHA256** | Деривация ключа из PIN | 10 000 итераций, 256-bit |
 | **CSPRNG** | Генерация случайных чисел | `Random.secure()` |
 
-### Формат .passgen
+### Формат .passgen (исправлен в v0.5.2)
+
+**Структура файла:**
 
 ```
 ┌─────────────────────────────────────┐
@@ -598,7 +641,13 @@ CREATE TABLE app_settings (
 ├─────────────────────────────────────┤
 │ FLAGS: 0 (1 байт)                   │
 ├─────────────────────────────────────┤
-│ NONCE: случайные 32 байта           │
+│ METADATA_LENGTH: длина (2 байта)    │
+├─────────────────────────────────────┤
+│ METADATA: EncryptionMetadata JSON   │
+├─────────────────────────────────────┤
+│ PBKDF2_NONCE: 32 байта              │ ← Для деривации ключа
+├─────────────────────────────────────┤
+│ CHACHA_NONCE: 12 байт               │ ← Для ChaCha20-Poly1305
 ├─────────────────────────────────────┤
 │ DATA_LENGTH: длина (4 байта)        │
 ├─────────────────────────────────────┤
@@ -607,6 +656,10 @@ CREATE TABLE app_settings (
 │ MAC: authentication tag (16 байт)   │
 └─────────────────────────────────────┘
 ```
+
+**⚠️ Важно:** В версии 0.5.2 исправлена ошибка с nonce:
+- **До:** Использовался один 32-байтовый nonce для обоих целей (ошибка!)
+- **После:** Разделён на PBKDF2_NONCE (32 байта) и CHACHA_NONCE (12 байт)
 
 ### Структура зашифрованной записи
 
@@ -694,7 +747,50 @@ flutter build apk
 
 # Android App Bundle
 flutter build appbundle
+
+# macOS (требуется настройка entitlements)
+flutter build macos
 ```
+
+### macOS Entitlements
+
+Для работы с файлами (импорт/экспорт) требуются разрешения в файлах `.entitlements`:
+
+**Файлы:**
+- `macos/Runner/DebugProfile.entitlements`
+- `macos/Runner/Release.entitlements`
+
+**Необходимые разрешения:**
+
+```xml
+<!-- Доступ к файлам, выбранным пользователем -->
+<key>com.apple.security.files.user-selected.read-write</key>
+<true/>
+```
+
+**Полный список разрешений:**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- App Sandbox -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    
+    <!-- JIT для debug-сборки -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    
+    <!-- Доступ к файлам -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+</dict>
+</plist>
+```
+
+**⚠️ Важно:** Без разрешения `com.apple.security.files.user-selected.read-write` импорт/экспорт файлов будет выдавать ошибку `ENTITLEMENT_NOT_FOUND`.
 
 ### Установка зависимостей
 

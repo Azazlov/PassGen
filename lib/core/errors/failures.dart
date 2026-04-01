@@ -62,4 +62,18 @@ class AuthFailure extends Failure {
 }
 
 /// Типы ошибок аутентификации
-enum AuthFailureType { general, wrongPin, locked, notSetup, validation }
+enum AuthFailureType {
+  general,
+  invalidPin,
+  lockedOut,
+  notAuthenticated,
+  wrongPin,
+  locked,
+  notSetup,
+  validation,
+}
+
+/// Ошибка истории паролей
+class PasswordHistoryFailure extends Failure {
+  const PasswordHistoryFailure({required super.message});
+}

@@ -7,6 +7,7 @@ import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/datasources/encryptor_local_datasource.dart';
 import '../../data/datasources/password_generator_local_datasource.dart';
 import '../../data/datasources/storage_local_datasource.dart';
+import '../../data/database/database_helper.dart';
 import '../../data/formats/passgen_format.dart';
 import '../../data/repositories/app_settings_repository_impl.dart';
 import '../../data/repositories/auth_repository_impl.dart';
@@ -15,6 +16,7 @@ import '../../data/repositories/encryptor_repository_impl.dart';
 // Repositories
 import '../../data/repositories/password_data_repository_impl.dart';
 import '../../data/repositories/password_generator_repository_impl.dart';
+import '../../data/repositories/password_history_repository_impl.dart';
 import '../../data/repositories/security_log_repository_impl.dart';
 import '../../data/repositories/storage_repository_impl.dart';
 import '../../domain/repositories/password_generator_repository.dart';
@@ -34,6 +36,8 @@ import '../../domain/usecases/log/get_logs_usecase.dart';
 import '../../domain/usecases/log/log_event_usecase.dart';
 // Use cases
 import '../../domain/usecases/password/generate_password_usecase.dart';
+import '../../domain/usecases/password/get_password_history_usecase.dart';
+import '../../domain/usecases/password/save_password_history_usecase.dart';
 import '../../domain/usecases/password/save_password_usecase.dart';
 import '../../domain/usecases/settings/get_setting_usecase.dart';
 import '../../domain/usecases/settings/remove_setting_usecase.dart';
@@ -62,22 +66,11 @@ import '../../presentation/widgets/global_error_handler.dart';
 // Core
 import '../core/constants/breakpoints.dart';
 import '../core/constants/spacing.dart';
+import '../core/services/navigation_service.dart';
 
 /// Перечисление для типобезопасного управления вкладками
-enum AppTab {
-  generator(Icons.create, 'Генератор'),
-  encryptor(Icons.lock, 'Шифратор'),
-  storage(Icons.archive, 'Хранилище'),
-  settings(Icons.settings, 'Настройки'),
-  about(Icons.info, 'О программе');
-
-  const AppTab(this.icon, this.label);
-  final IconData icon;
-  final String label;
-
-  static AppTab fromIndex(int index) =>
-      values[index.clamp(0, values.length - 1)];
-}
+/// Определено в navigation_service.dart
+// enum AppTab - больше не нужен, импортируется из navigation_service.dart
 
 class PasswordGeneratorApp extends StatelessWidget {
   const PasswordGeneratorApp({super.key});
@@ -86,6 +79,12 @@ class PasswordGeneratorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // Database Helper (должен быть первым!)
+        Provider(create: (_) => DatabaseHelper()),
+
+        // Сервис навигации
+        ChangeNotifierProvider(create: (_) => NavigationService()),
+
         // Data Sources (singletons)
         Provider(create: (_) => EncryptorLocalDataSource()),
         Provider(create: (_) => StorageLocalDataSource()),
@@ -129,6 +128,11 @@ class PasswordGeneratorApp extends StatelessWidget {
         Provider(create: (context) => SecurityLogRepositoryImpl()),
         Provider(create: (context) => CategoryRepositoryImpl()),
         Provider(create: (context) => AppSettingsRepositoryImpl()),
+        Provider(
+          create: (context) => PasswordHistoryRepositoryImpl(
+            context.read<DatabaseHelper>(),
+          ),
+        ),
         ChangeNotifierProvider(create: (context) => GlobalErrorHandler()),
 
         // Use Cases
@@ -146,6 +150,17 @@ class PasswordGeneratorApp extends StatelessWidget {
         Provider(
           create: (context) => SavePasswordUseCase(
             context.read<PasswordGeneratorRepositoryImpl>(),
+            context.read<PasswordHistoryRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => SavePasswordHistoryUseCase(
+            context.read<PasswordHistoryRepositoryImpl>(),
+          ),
+        ),
+        Provider(
+          create: (context) => GetPasswordHistoryUseCase(
+            context.read<PasswordHistoryRepositoryImpl>(),
           ),
         ),
         Provider(
@@ -431,13 +446,47 @@ class TabScaffold extends StatefulWidget {
 
 class _TabScaffoldState extends State<TabScaffold> {
   AppTab _currentTab = AppTab.generator;
+  NavigationService? _navigationService;
 
   void _onTabTapped(int index) {
     final newTab = AppTab.fromIndex(index);
     if (_currentTab != newTab) {
       setState(() => _currentTab = newTab);
+      _navigationService?.navigateTo(newTab);
     }
     // Сбрасываем таймер неактивности при переключении вкладок
+    context.read<AuthController>().resetInactivityTimer();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Получаем сервис навигации
+    _navigationService = context.read<NavigationService>();
+    // Слушаем изменения из сервиса
+    _navigationService!.addListener(_handleNavigationChange);
+  }
+
+  @override
+  void dispose() {
+    _navigationService?.removeListener(_handleNavigationChange);
+    super.dispose();
+  }
+
+  void _handleNavigationChange() {
+    if (_navigationService != null && _currentTab != _navigationService!.currentTab) {
+      setState(() {
+        _currentTab = _navigationService!.currentTab;
+      });
+    }
+  }
+
+  /// Переключает на вкладку хранилища
+  void navigateToStorage() {
+    if (_currentTab != AppTab.storage) {
+      setState(() => _currentTab = AppTab.storage);
+      _navigationService?.navigateTo(AppTab.storage);
+    }
     context.read<AuthController>().resetInactivityTimer();
   }
 

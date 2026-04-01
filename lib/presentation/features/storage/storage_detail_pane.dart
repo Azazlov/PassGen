@@ -224,9 +224,7 @@ class StorageDetailPane extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Редактирование
-                  },
+                  onPressed: () => _showEditDialog(context, controller, entry),
                   icon: const Icon(Icons.edit),
                   label: const Text('Редактировать'),
                 ),
@@ -255,9 +253,7 @@ class StorageDetailPane extends StatelessWidget {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () {
-                  // Редактирование
-                },
+                onPressed: () => _showEditDialog(context, controller, entry),
                 icon: const Icon(Icons.edit),
                 label: const Text('Редактировать'),
               ),
@@ -306,6 +302,65 @@ class StorageDetailPane extends StatelessWidget {
               foregroundColor: Theme.of(context).colorScheme.onError,
             ),
             child: const Text('Удалить'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditDialog(
+    BuildContext context,
+    StorageController controller,
+    PasswordEntry entry,
+  ) {
+    final serviceController = TextEditingController(text: entry.service);
+    final loginController = TextEditingController(text: entry.login ?? '');
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Редактировать пароль'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: serviceController,
+                decoration: const InputDecoration(
+                  labelText: 'Сервис',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: loginController,
+                decoration: const InputDecoration(
+                  labelText: 'Логин',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // TODO: Реализовать обновление пароля через контроллер
+              // controller.updatePassword(
+              //   id: entry.id,
+              //   service: serviceController.text,
+              //   login: loginController.text,
+              // );
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Функция редактирования в разработке')),
+              );
+            },
+            child: const Text('Сохранить'),
           ),
         ],
       ),

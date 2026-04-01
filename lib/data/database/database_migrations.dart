@@ -7,6 +7,7 @@ class DatabaseMigrations {
   static final Map<int, MigrationFunction> _migrations = {
     1: _migrateToV1,
     2: _migrateToV2,
+    3: _migrateToV3,
   };
 
   /// Получение списка миграций для применения
@@ -81,6 +82,21 @@ class DatabaseMigrations {
 
     // Миграция данных из SharedPreferences будет выполнена в AuthLocalDataSource
     // при первом запуске после обновления
+  }
+
+  /// Миграция к версии 3
+  /// Добавление таблицы password_history для истории изменений паролей
+  static Future<void> _migrateToV3(Database db) async {
+    // Создаём таблицу password_history
+    await db.execute(DatabaseSchema.passwordHistory);
+
+    // Создаём индексы для таблицы истории
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_password_history_entry ON password_history(entry_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_password_history_created ON password_history(created_at)',
+    );
   }
 }
 

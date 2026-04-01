@@ -319,12 +319,9 @@ class PasswordGeneratorLocalDataSource {
         password: utf8.encode(password),  // Мастер-пароль для шифрования
       );
 
-      final encryptedPasswordBase64 = CryptoUtils.encodeBytesBase64(
-        encryptedData['cipherText'] as List<int>,
-      );
-      final nonceBase64 = CryptoUtils.encodeBytesBase64(
-        encryptedData['nonce'] as List<int>,
-      );
+      // encryptedData уже содержит Base64 строки
+      final encryptedPasswordBase64 = encryptedData['cipherText'] as String;
+      final nonceBase64 = encryptedData['nonce'] as String;
 
       // Затираем открытый пароль после шифрования
       CryptoUtils.secureWipePassword(utf8.encode(password));

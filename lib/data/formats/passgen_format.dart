@@ -38,9 +38,9 @@ class PassgenFormat {
       final jsonData = jsonEncode(data);
       final jsonDataBytes = utf8.encode(jsonData);
 
-      // Генерируем nonce
+      // Генерируем nonce: 32 байта для PBKDF2
       final random = Random.secure();
-      final nonce = List<int>.generate(32, (_) => random.nextInt(256));
+      final pbkdf2Nonce = List<int>.generate(32, (_) => random.nextInt(256));
 
       // Создаём метаданные (если не переданы)
       final encryptionMetadata = metadata ?? EncryptionMetadata.current();
@@ -63,7 +63,7 @@ class PassgenFormat {
 
       final secretKey = await pbkdf2.deriveKeyFromPassword(
         password: masterPassword,
-        nonce: Uint8List.fromList(nonce),
+        nonce: Uint8List.fromList(pbkdf2Nonce),
       );
 
       // Шифруем данные
@@ -78,7 +78,8 @@ class PassgenFormat {
       final versionBytes = [formatVersion]; // 1 байт
       final flagsBytes = [flagsNone]; // 1 байт
       final metadataLengthBytes = _intToBytes16(metadataBytes.length); // 2 байта
-      final nonceBytes = nonce; // 32 байта
+      final pbkdf2NonceBytes = pbkdf2Nonce; // 32 байта для PBKDF2
+      final chachaNonceBytes = secretBox.nonce; // 12 байт из secretBox
       final dataLengthBytes = _intToBytes(
         secretBox.cipherText.length,
       ); // 4 байта
@@ -92,7 +93,8 @@ class PassgenFormat {
         ...flagsBytes,
         ...metadataLengthBytes,
         ...metadataBytes,
-        ...nonceBytes,
+        ...pbkdf2NonceBytes,
+        ...chachaNonceBytes,
         ...dataLengthBytes,
         ...cipherTextBytes,
         ...macBytes,
@@ -160,9 +162,12 @@ class PassgenFormat {
         );
       }
 
-      // NONCE (32 байта)
-      final nonce = allBytes.sublist(offset, offset + 32);
+      // NONCE (32 байта для PBKDF2 + 12 байт для ChaCha20)
+      final pbkdf2Nonce = allBytes.sublist(offset, offset + 32);
       offset += 32;
+      
+      final chachaNonce = allBytes.sublist(offset, offset + 12);
+      offset += 12;
 
       // DATA_LENGTH (4 байта)
       final dataLength = _bytesToInt(allBytes.sublist(offset, offset + 4));
@@ -189,12 +194,12 @@ class PassgenFormat {
 
       final secretKey = await pbkdf2.deriveKeyFromPassword(
         password: masterPassword,
-        nonce: Uint8List.fromList(nonce),
+        nonce: Uint8List.fromList(pbkdf2Nonce),
       );
 
       // Дешифруем данные
       final algorithm = Chacha20.poly1305Aead();
-      final secretBox = SecretBox(cipherText, nonce: nonce, mac: Mac(macBytes));
+      final secretBox = SecretBox(cipherText, nonce: chachaNonce, mac: Mac(macBytes));
 
       final decryptedBytes = await algorithm.decrypt(
         secretBox,

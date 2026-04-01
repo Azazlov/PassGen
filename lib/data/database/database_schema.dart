@@ -1,15 +1,16 @@
 /// Схема базы данных SQLite
 ///
-/// Версия схемы: 2 (v0.5.0)
-/// Версия приложения: 0.5.1
+/// Версия схемы: 3 (v0.5.2)
+/// Версия приложения: 0.5.2
 ///
 /// История изменений:
 /// - Version 1: Initial schema (5 таблиц)
 /// - Version 2: Добавлена таблица auth_data, индексы
 /// - Version 2.1 (v0.5.1): Увеличены итерации PBKDF2 до 100K
+/// - Version 3 (v0.5.2): Добавлена таблица password_history для истории паролей
 class DatabaseSchema {
-  static const int version = 2;
-  static const String appVersion = '0.5.1';
+  static const int version = 3;
+  static const String appVersion = '0.5.2';
   static const String schemaInfo = '''
 Version 1: Initial schema (5 tables)
   - categories
@@ -27,6 +28,10 @@ Version 2.1 (v0.5.1): Security improvements
   - Duplicate check on import (service + login)
   - Rollback on import error
   - Configurable clipboard timeout
+
+Version 3 (v0.5.2): Password history tracking
+  - password_history (история изменений паролей)
+  - Индекс для быстрого поиска по entry_id
 ''';
 
   // ==================== ТАБЛИЦЫ ====================
@@ -98,6 +103,21 @@ Version 2.1 (v0.5.1): Security improvements
     )
   ''';
 
+  /// Таблица истории паролей (v3)
+  static const String passwordHistory = '''
+    CREATE TABLE password_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      entry_id INTEGER NOT NULL REFERENCES password_entries(id) ON DELETE CASCADE,
+      service TEXT NOT NULL,
+      encrypted_password BLOB NOT NULL,
+      nonce BLOB NOT NULL,
+      config TEXT NOT NULL,
+      login TEXT,
+      created_at INTEGER NOT NULL,
+      reason TEXT
+    )
+  ''';
+
   // ==================== ИНДЕКСЫ ====================
 
   /// Индексы для ускорения поиска
@@ -106,6 +126,8 @@ Version 2.1 (v0.5.1): Security improvements
     'CREATE INDEX IF NOT EXISTS idx_password_entries_service ON password_entries(service)',
     'CREATE INDEX IF NOT EXISTS idx_security_logs_action ON security_logs(action_type)',
     'CREATE INDEX IF NOT EXISTS idx_security_logs_timestamp ON security_logs(timestamp)',
+    'CREATE INDEX IF NOT EXISTS idx_password_history_entry ON password_history(entry_id)',
+    'CREATE INDEX IF NOT EXISTS idx_password_history_created ON password_history(created_at)',
   ];
 
   // ==================== СИСТЕМНЫЕ КАТЕГОРИИ ====================
@@ -131,6 +153,7 @@ Version 2.1 (v0.5.1): Security improvements
     securityLogs,
     appSettings,
     authData,
+    passwordHistory,
   ];
 
   /// SQL для создания всех индексов
