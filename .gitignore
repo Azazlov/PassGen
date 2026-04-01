@@ -55,3 +55,47 @@ flutter_*.log
 
 # SQLite databases (if generated)
 **/*.db
+
+# Qwen Code project context (auto-generated)
+# Keep essential documentation, ignore runtime/temp/archive files
+project_context/temp/
+project_context/memory/embeddings/
+
+# Archive internal working documents
+project_context/.archive/
+
+# Keep essential context documentation
+!project_context/product-manager-tracker/README.md
+!project_context/product-manager-tracker/planning/passgen.tz.md
+!project_context/product-manager-tracker/progress/CURRENT_PROGRESS.md
+!project_context/product-manager-tracker/stages/
+!project_context/product-manager-tracker/reviews/CODE_REVIEW_REPORT.md
+!project_context/product-manager-tracker/reviews/DATA_SECURITY_AUDIT.md
+
+# Security data flow analyzer (critical for diploma)
+!project_context/security-data-flow-analyzer/README.md
+!project_context/security-data-flow-analyzer/audit/
+!project_context/security-data-flow-analyzer/security/
+
+# Technical writer (user docs & presentation)
+!project_context/tech-docs-writer/README.md
+!project_context/tech-docs-writer/presentation/slides.md
+!project_context/tech-docs-writer/user_guide.md
+!project_context/tech-docs-writer/faq.md
+!project_context/tech-docs-writer/CHANGELOG.md
+
+# Diploma thesis specialist
+!project_context/diploma-thesis-specialist/README.md
+!project_context/diploma-thesis-specialist/workspace/
+
+# Diagrams
+!project_context/diagrams/
+
+# Agents overview
+!project_context/AGENTS.md
+
+# Metadata files
+.metadata
+
+# DevTools settings (user-specific)
+devtools_options.yaml
