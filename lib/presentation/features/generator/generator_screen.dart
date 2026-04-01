@@ -111,7 +111,13 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+            // Добавляем отступ снизу для плавающей кнопки
+            padding: EdgeInsets.only(
+              left: isSmallScreen ? 12 : 16,
+              right: isSmallScreen ? 12 : 16,
+              top: isSmallScreen ? 12 : 16,
+              bottom: 100, // Отступ для плавающей кнопки
+            ),
             children: [
               SizedBox(height: isSmallScreen ? 8 : 16),
 
@@ -328,16 +334,6 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                 ],
               ),
 
-              const SizedBox(height: 32),
-
-              // Кнопка генерации
-              AppButton(
-                label: 'Сгенерировать',
-                onPressed: controller.generatePassword,
-                isLoading: controller.isLoading,
-                icon: Icons.refresh,
-              ),
-
               const SizedBox(height: 16),
 
               // Отображение используемых символов
@@ -361,6 +357,28 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
 
               const SizedBox(height: 32),
             ],
+          ),
+        ),
+      ),
+      // Плавающая кнопка генерации
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: controller.isLoading ? null : controller.generatePassword,
+        icon: controller.isLoading
+            ? SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    theme.colorScheme.onPrimary,
+                  ),
+                ),
+              )
+            : const Icon(Icons.refresh),
+        label: Text(
+          controller.isLoading ? 'Генерация...' : 'Сгенерировать',
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),
