@@ -52,6 +52,8 @@ import '../../domain/validators/password_settings_validator.dart';
 import '../../presentation/features/about/about_screen.dart';
 import '../../presentation/features/auth/auth_controller.dart';
 import '../../presentation/features/auth/auth_screen.dart';
+import '../../presentation/features/categories/categories_controller.dart';
+import '../../presentation/features/categories/categories_screen.dart';
 import '../../presentation/features/encryptor/encryptor_controller.dart';
 import '../../presentation/features/encryptor/encryptor_screen.dart';
 // Controllers
@@ -253,6 +255,14 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
 
         // Controllers
+        ChangeNotifierProvider<CategoriesController>(
+          create: (context) => CategoriesController(
+            getCategoriesUseCase: context.read<GetCategoriesUseCase>(),
+            createCategoryUseCase: context.read<CreateCategoryUseCase>(),
+            updateCategoryUseCase: context.read<UpdateCategoryUseCase>(),
+            deleteCategoryUseCase: context.read<DeleteCategoryUseCase>(),
+          )..loadCategories(),
+        ),
         ChangeNotifierProxyProvider5<
           GeneratePasswordUseCase,
           SavePasswordUseCase,

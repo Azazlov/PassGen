@@ -15,20 +15,29 @@ class CategoriesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => CategoriesController(
-        getCategoriesUseCase: context.read<GetCategoriesUseCase>(),
-        createCategoryUseCase: context.read<CreateCategoryUseCase>(),
-        updateCategoryUseCase: context.read<UpdateCategoryUseCase>(),
-        deleteCategoryUseCase: context.read<DeleteCategoryUseCase>(),
-      )..loadCategories(),
-      child: const _CategoriesScreenContent(),
-    );
+    // Используем глобальный CategoriesController из app.dart
+    return const _CategoriesScreenContent();
   }
 }
 
-class _CategoriesScreenContent extends StatelessWidget {
+class _CategoriesScreenContent extends StatefulWidget {
   const _CategoriesScreenContent();
+
+  @override
+  State<_CategoriesScreenContent> createState() => _CategoriesScreenContentState();
+}
+
+class _CategoriesScreenContentState extends State<_CategoriesScreenContent> {
+  @override
+  void initState() {
+    super.initState();
+    // Обновляем список категорий при каждом входе на экран
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CategoriesController>().loadCategories();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,33 +95,29 @@ class _CategoriesScreenContent extends StatelessWidget {
     final systemCategories = controller.getSystemCategories();
     final userCategories = controller.getUserCategories();
 
-    return Builder(
-      builder: (context) => ListView(
-        key: const PageStorageKey('categories_list'),
-        padding: const EdgeInsets.all(16),
-        children: [
-          if (systemCategories.isNotEmpty) ...[
-            _buildSectionTitle('Системные', theme),
-            ...systemCategories.map(
-              (cat) => _buildCategoryTile(
-                cat,
-                controller,
-                theme,
-                isSystem: true,
-                context: context,
-              ),
+    return ListView(
+      // Убираем PageStorageKey, чтобы список обновлялся корректно
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (systemCategories.isNotEmpty) ...[
+          _buildSectionTitle('Системные', theme),
+          ...systemCategories.map(
+            (cat) => _buildCategoryTile(
+              cat,
+              controller,
+              theme,
+              isSystem: true,
             ),
-            const SizedBox(height: 16),
-          ],
-          if (userCategories.isNotEmpty) ...[
-            _buildSectionTitle('Пользовательские', theme),
-            ...userCategories.map(
-              (cat) =>
-                  _buildCategoryTile(cat, controller, theme, context: context),
-            ),
-          ],
+          ),
+          const SizedBox(height: 16),
         ],
-      ),
+        if (userCategories.isNotEmpty) ...[
+          _buildSectionTitle('Пользовательские', theme),
+          ...userCategories.map(
+            (cat) => _buildCategoryTile(cat, controller, theme),
+          ),
+        ],
+      ],
     );
   }
 
@@ -134,7 +139,6 @@ class _CategoriesScreenContent extends StatelessWidget {
     CategoriesController controller,
     ThemeData theme, {
     bool isSystem = false,
-    required BuildContext context,
   }) {
     return Card(
       key: ValueKey('category_${category.id}'),
@@ -154,14 +158,16 @@ class _CategoriesScreenContent extends StatelessWidget {
                   IconButton(
                     key: ValueKey('edit_${category.id}'),
                     icon: const Icon(Icons.edit, size: 20),
-                    onPressed: () =>
-                        _showEditCategoryDialog(context, controller, category),
+                    onPressed: () => _showEditCategoryDialog(
+                      context,
+                      controller,
+                      category,
+                    ),
                   ),
                   IconButton(
                     key: ValueKey('delete_${category.id}'),
                     icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                    onPressed: () =>
-                        _confirmDelete(context, controller, category),
+                    onPressed: () => _confirmDelete(context, controller, category),
                   ),
                 ],
               ),
@@ -257,21 +263,29 @@ class _CategoriesScreenContent extends StatelessWidget {
                   );
                   return;
                 }
-                Navigator.of(ctx).pop();
+                
                 final success = await controller.createCategory(
                   nameController.text.trim(),
                   selectedIcon,
                 );
-                if (context.mounted) {
-                  if (success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Категория создана')),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(controller.error ?? 'Ошибка')),
-                    );
-                  }
+                
+                if (!context.mounted) return;
+                
+                // Закрываем диалог только после создания
+                Navigator.of(ctx).pop();
+                
+                if (success) {
+                  // Обновляем список категорий (уже вызвано в контроллере)
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Категория создана'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(controller.error ?? 'Ошибка')),
+                  );
                 }
               },
               child: const Text('Создать'),

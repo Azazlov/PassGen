@@ -53,6 +53,7 @@ class CategoriesController extends ChangeNotifier {
   /// Создание категории
   Future<bool> createCategory(String name, String icon) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
@@ -62,33 +63,46 @@ class CategoriesController extends ChangeNotifier {
         isSystem: false,
         createdAt: DateTime.now(),
       );
-      await _createCategoryUseCase.execute(category);
-      await loadCategories();
+      final result = await _createCategoryUseCase.execute(category);
+      
+      // Немедленно обновляем список после создания
+      _categories = await _getCategoriesUseCase.execute();
+      _isLoading = false;
+      notifyListeners();  // Явно уведомляем после обновления
       return true;
     } catch (e) {
       _error = 'Ошибка создания категории: $e';
+      _isLoading = false;
       notifyListeners();
       return false;
-    } finally {
-      _isLoading = false;
     }
   }
 
   /// Обновление категории
   Future<bool> updateCategory(Category category) async {
+    if (category.id == null) {
+      _error = 'Неверный ID категории';
+      notifyListeners();
+      return false;
+    }
+
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
       await _updateCategoryUseCase.execute(category);
-      await loadCategories();
+      
+      // Немедленно обновляем список после обновления
+      _categories = await _getCategoriesUseCase.execute();
+      _isLoading = false;
+      notifyListeners();  // Явно уведомляем после обновления
       return true;
     } catch (e) {
       _error = 'Ошибка обновления категории: $e';
+      _isLoading = false;
       notifyListeners();
       return false;
-    } finally {
-      _isLoading = false;
     }
   }
 
