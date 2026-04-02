@@ -262,6 +262,14 @@ class PasswordGeneratorApp extends StatelessWidget {
           create: (context) =>
               RemoveSettingUseCase(context.read<AppSettingsRepositoryImpl>()),
         ),
+        Provider(
+          create: (context) =>
+              ChangePinUseCase(context.read<AuthRepositoryImpl>()),
+        ),
+        Provider(
+          create: (context) =>
+              RemovePinUseCase(context.read<AuthRepositoryImpl>()),
+        ),
 
         // Controllers
         ChangeNotifierProvider<CategoriesController>(
