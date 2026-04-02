@@ -103,12 +103,44 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
   }
 
   /// Подтверждение ввода PIN
-  void _handleConfirm() {
+  void _handleConfirm() async{
     final controller = context.read<AuthController>();
     if (controller.isPinComplete && !controller.isLoading) {
       // Для режима установки PIN
       if (!controller.authState.isPinSetup) {
-        controller.setupPin();
+        debugPrint('[AuthScreen] режим установки PIN');
+        final success = await controller.setupPin();
+        debugPrint('[AuthScreen] setupPin результат: $success');
+        debugPrint('[AuthScreen] isPinSetup: ${controller.authState.isPinSetup}');
+        debugPrint('[AuthScreen] isAuthenticated: ${controller.authState.isAuthenticated}');
+      } else {
+        // Для режима входа
+        debugPrint('[AuthScreen] режим входа');
+        final result = await controller.verifyPin();
+        debugPrint('[AuthScreen] verifyPin результат: $result');
+        
+        if (!mounted) return;
+        
+        // Обрабатываем результат
+        switch (result) {
+          case AuthResult.success:
+            debugPrint('[AuthScreen] Успешный вход!');
+            // Успешный вход - приложение само обновит UI
+            break;
+          case AuthResult.wrongPin:
+            debugPrint('[AuthScreen] Неверный PIN');
+            controller.clearPin();
+            HapticFeedback.vibrate();
+            break;
+          case AuthResult.locked:
+            debugPrint('[AuthScreen] Заблокировано');
+            controller.clearPin();
+            HapticFeedback.vibrate();
+            break;
+          case AuthResult.notSetup:
+            debugPrint('[AuthScreen] PIN не установлен');
+            break;
+        }
       }
     }
   }
@@ -351,34 +383,33 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
 
               // Цифровая клавиатура
               NumericKeypad(
-                onDigitTap: (digit) async {
+                onDigitTap: (digit) {
                   controller.addDigit(digit);
-                  // Автопроверка при вводе 4+ цифр
-                  if (controller.pinLength >= 4) {
-                    await Future.delayed(const Duration(milliseconds: 200));
-                    final result = await controller.verifyPin();
-
-                    if (!mounted) return;
-
-                    switch (result) {
-                      case AuthResult.success:
-                        // Успешный вход - выходим из экрана
-                        break;
-                      case AuthResult.wrongPin:
-                        controller.clearPin();
-                        HapticFeedback.vibrate();
-                        break;
-                      case AuthResult.locked:
-                        controller.clearPin();
-                        HapticFeedback.vibrate();
-                        break;
-                      case AuthResult.notSetup:
-                        break;
-                    }
-                  }
                 },
                 onBackspace: () => controller.removeDigit(),
                 isLoading: controller.isLoading,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Кнопка подтверждения
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: controller.isPinComplete && !controller.isLoading
+                      ? _handleConfirm
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: controller.isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Войти'),
+                ),
               ),
               const SizedBox(height: 16),
             ],

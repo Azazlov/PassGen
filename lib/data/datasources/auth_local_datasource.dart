@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/crypto_utils.dart';
+import '../database/database_helper.dart';
 import 'encryptor_local_datasource.dart';
 
 /// Источник данных для аутентификации
@@ -24,9 +26,21 @@ class AuthLocalDataSource {
   static const int maxPinLength = 8;
   static const int pbkdf2Iterations = 100000; // Увеличено с 10,000 для безопасности (v0.5.1)
 
-  final Database? _database;
+  Database? _database;
 
+  /// Конструктор с готовой базой данных
   AuthLocalDataSource({Database? database}) : _database = database;
+
+  /// Получает базу данных
+  Future<Database> get _db async {
+  debugPrint('[AuthLocalDataSource] _db вызван, _database = ${_database != null ? "инициализирована" : "NULL"}');
+    if (_database != null) {
+  debugPrint('[AuthLocalDataSource] _db возвращает существующую базу');
+      return _database!;
+    }
+  debugPrint('[AuthLocalDataSource] _db выбрасывает ошибку - база не инициализирована');
+    throw const StorageFailure(message: 'База данных не инициализирована');
+  }
 
   /// Проверяет валидность PIN (4-8 цифр)
   bool isValidPinFormat(String pin) {
@@ -37,97 +51,121 @@ class AuthLocalDataSource {
   }
 
   /// Проверяет, установлен ли PIN
-  /// 
+  ///
   /// Проверка выполняется ТОЛЬКО в SQLite.
   Future<bool> isPinSetup() async {
+  debugPrint('[AuthLocalDataSource] isPinSetup вызван');
+  debugPrint('[AuthLocalDataSource] isPinSetup: _database = ${_database != null ? "инициализирована" : "NULL"}');
+    
     try {
       // Проверяем ТОЛЬКО SQLite
-      if (_database != null) {
-        final result = await _database!.query(
-          'auth_data',
-          where: 'key = ?',
-          whereArgs: [_sqlitePinHashKey],
-        );
-        if (result.isNotEmpty) {
-          return true;
-        }
-      }
+  debugPrint('[AuthLocalDataSource] isPinSetup: получение базы данных...');
+      final db = await _db;
+  debugPrint('[AuthLocalDataSource] isPinSetup: база данных получена');
+      
+  debugPrint('[AuthLocalDataSource] isPinSetup: запрос к БД...');
+      final result = await db.query(
+        'auth_data',
+        where: 'key = ?',
+        whereArgs: [_sqlitePinHashKey],
+      );
+  debugPrint('[AuthLocalDataSource] isPinSetup: результат = ${result.length} записей');
+      
+      final isSetup = result.isNotEmpty;
+  debugPrint('[AuthLocalDataSource] isPinSetup: возвращает $isSetup');
+      return isSetup;
+    } catch (_) {
+  debugPrint('[AuthLocalDataSource] isPinSetup: ОШИБКА, возвращает false');
+      // Если ошибка - считаем что PIN не установлен
       return false;
-    } catch (e) {
-      throw const StorageFailure(message: 'Ошибка проверки установки PIN');
     }
   }
 
   /// Сохраняет данные аутентификации в SQLite
   Future<void> _saveToSqlite(String key, String value) async {
-    if (_database == null) return;
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    await _database!.insert(
-      'auth_data',
-      {
-        'key': key,
-        'value': value,
-        'created_at': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    try {
+      final db = await _db;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db.insert(
+        'auth_data',
+        {
+          'key': key,
+          'value': value,
+          'created_at': now,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (_) {
+      // Игнорируем ошибки сохранения
+    }
   }
 
   /// Читает данные аутентификации из SQLite
   Future<String?> _readFromSqlite(String key) async {
-    if (_database == null) return null;
+    try {
+      final db = await _db;
+      final result = await db.query(
+        'auth_data',
+        where: 'key = ?',
+        whereArgs: [key],
+      );
 
-    final result = await _database!.query(
-      'auth_data',
-      where: 'key = ?',
-      whereArgs: [key],
-    );
-
-    if (result.isEmpty) return null;
-    return result.first['value'] as String?;
+      if (result.isEmpty) return null;
+      return result.first['value'] as String?;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Удаляет данные аутентификации из SQLite
   Future<void> _deleteFromSqlite(String key) async {
-    if (_database == null) return;
-
-    await _database!.delete(
-      'auth_data',
-      where: 'key = ?',
-      whereArgs: [key],
-    );
+    try {
+      final db = await _db;
+      await db.delete(
+        'auth_data',
+        where: 'key = ?',
+        whereArgs: [key],
+      );
+    } catch (_) {
+      // Игнорируем ошибки удаления
+    }
   }
 
   /// Сохраняет целочисленное значение в SQLite
   Future<void> _saveIntToSqlite(String key, int value) async {
-    if (_database == null) return;
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    await _database!.insert(
-      'auth_data',
-      {
-        'key': key,
-        'value': value.toString(),
-        'created_at': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    try {
+      final db = await _db;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db.insert(
+        'auth_data',
+        {
+          'key': key,
+          'value': value.toString(),
+          'created_at': now,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (_) {
+      // Игнорируем ошибки сохранения
+    }
   }
 
   /// Читает целочисленное значение из SQLite
   Future<int?> _readIntFromSqlite(String key) async {
-    if (_database == null) return null;
+    try {
+      final db = await _db;
+      final result = await db.query(
+        'auth_data',
+        where: 'key = ?',
+        whereArgs: [key],
+      );
 
-    final result = await _database!.query(
-      'auth_data',
-      where: 'key = ?',
-      whereArgs: [key],
-    );
-
-    if (result.isEmpty) return null;
-    final value = result.first['value'] as String?;
-    return value != null ? int.tryParse(value) : null;
+      if (result.isEmpty) return null;
+      final value = result.first['value'] as String?;
+      return value != null ? int.tryParse(value) : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Хэширует PIN с солью используя PBKDF2
@@ -189,48 +227,80 @@ class AuthLocalDataSource {
   }
 
   /// Устанавливает новый PIN
-  /// 
+  ///
   /// Хранение данных выполняется ТОЛЬКО в SQLite для безопасности.
   /// SharedPreferences не используется для хранения чувствительных данных.
   Future<bool> setupPin(String pin) async {
+  debugPrint('[AuthLocalDataSource] setupPin вызван, PIN длина: ${pin.length}');
+  debugPrint('[AuthLocalDataSource] setupPin: _database = ${_database != null ? "инициализирована" : "NULL"}');
+    
     try {
       if (!isValidPinFormat(pin)) {
+  debugPrint('[AuthLocalDataSource] setupPin: неверный формат PIN');
         throw const ValidationFailure(message: 'PIN должен содержать 4-8 цифр');
       }
 
+  debugPrint('[AuthLocalDataSource] setupPin: хэширование PIN...');
       final hashed = await _hashPin(pin);
+  debugPrint('[AuthLocalDataSource] setupPin: PIN захэширован');
 
       // Сохраняем ТОЛЬКО в SQLite (безопасное хранилище)
-      if (_database != null) {
-        await _saveToSqlite(_sqlitePinHashKey, hashed['hash']!);
-        await _saveToSqlite(_sqlitePinSaltKey, hashed['salt']!);
-        await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
-        await _deleteFromSqlite(_sqliteLockoutTimestampKey);
-      }
+  debugPrint('[AuthLocalDataSource] setupPin: получение базы данных...');
+      final db = await _db;
+  debugPrint('[AuthLocalDataSource] setupPin: база данных получена');
+      
+  debugPrint('[AuthLocalDataSource] setupPin: сохранение hash...');
+      await _saveToSqlite(_sqlitePinHashKey, hashed['hash']!);
+  debugPrint('[AuthLocalDataSource] setupPin: hash сохранён');
+      
+  debugPrint('[AuthLocalDataSource] setupPin: сохранение salt...');
+      await _saveToSqlite(_sqlitePinSaltKey, hashed['salt']!);
+  debugPrint('[AuthLocalDataSource] setupPin: salt сохранён');
+      
+  debugPrint('[AuthLocalDataSource] setupPin: сброс попыток...');
+      await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
+  debugPrint('[AuthLocalDataSource] setupPin: попытки сброшены');
+      
+  debugPrint('[AuthLocalDataSource] setupPin: удаление lockout...');
+      await _deleteFromSqlite(_sqliteLockoutTimestampKey);
+  debugPrint('[AuthLocalDataSource] setupPin: lockout удалён');
 
+  debugPrint('[AuthLocalDataSource] setupPin: УСПЕХ! PIN установлен');
       return true;
     } catch (e) {
+  debugPrint('[AuthLocalDataSource] setupPin: ОШИБКА: $e');
       if (e is ValidationFailure) rethrow;
       throw const StorageFailure(message: 'Ошибка установки PIN');
     }
   }
 
   /// Проверяет PIN
-  /// 
+  ///
   /// Чтение данных выполняется ТОЛЬКО из SQLite.
   /// SharedPreferences не используется для чтения чувствительных данных.
   Future<Map<String, dynamic>> verifyPin(String pin) async {
+  debugPrint('[AuthLocalDataSource] verifyPin вызван, PIN длина: ${pin.length}');
+  debugPrint('[AuthLocalDataSource] verifyPin: _database = ${_database != null ? "инициализирована" : "NULL"}');
+    
     try {
       String? storedHash;
       String? storedSalt;
 
       // Читаем ТОЛЬКО из SQLite (безопасное хранилище)
-      if (_database != null) {
-        storedHash = await _readFromSqlite(_sqlitePinHashKey);
-        storedSalt = await _readFromSqlite(_sqlitePinSaltKey);
-      }
+  debugPrint('[AuthLocalDataSource] verifyPin: получение базы данных...');
+      final db = await _db;
+  debugPrint('[AuthLocalDataSource] verifyPin: база данных получена');
+      
+  debugPrint('[AuthLocalDataSource] verifyPin: чтение hash...');
+      storedHash = await _readFromSqlite(_sqlitePinHashKey);
+  debugPrint('[AuthLocalDataSource] verifyPin: hash = ${storedHash != null ? "найден" : "NULL"}');
+      
+  debugPrint('[AuthLocalDataSource] verifyPin: чтение salt...');
+      storedSalt = await _readFromSqlite(_sqlitePinSaltKey);
+  debugPrint('[AuthLocalDataSource] verifyPin: salt = ${storedSalt != null ? "найден" : "NULL"}');
 
       if (storedHash == null || storedSalt == null) {
+  debugPrint('[AuthLocalDataSource] verifyPin: PIN НЕ УСТАНОВЛЕН (hash или salt = null)');
         return {'result': 'notSetup', 'isLocked': false};
       }
 
@@ -295,12 +365,10 @@ class AuthLocalDataSource {
       }
 
       // Получаем базу данных для работы с паролями
-      final db = database ?? _database;
+      final db = await _db;
 
-      if (db != null) {
-        // Выполняем ротацию ключей
-        await _rotateEncryptionKeys(oldPin, newPin, db);
-      }
+      // Выполняем ротацию ключей
+      await _rotateEncryptionKeys(oldPin, newPin, db);
 
       // Устанавливаем новый PIN
       return await setupPin(newPin);
@@ -487,15 +555,13 @@ class AuthLocalDataSource {
   }
 
   /// Проверяет, заблокирован ли пользователь
-  /// 
+  ///
   /// Чтение данных выполняется ТОЛЬКО из SQLite.
   Future<bool> _isLocked() async {
     int? lockoutTimestamp;
 
     // Читаем ТОЛЬКО из SQLite
-    if (_database != null) {
-      lockoutTimestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
-    }
+    lockoutTimestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
 
     if (lockoutTimestamp == null) {
       return false;
@@ -509,24 +575,17 @@ class AuthLocalDataSource {
     }
 
     // Блокировка истекла, сбрасываем
-    if (_database != null) {
-      await _deleteFromSqlite(_sqliteLockoutTimestampKey);
-      await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
-    }
+    await _deleteFromSqlite(_sqliteLockoutTimestampKey);
+    await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
 
     return false;
   }
 
   /// Увеличивает счётчик неудачных попыток
-  /// 
+  ///
   /// Сохранение выполняется ТОЛЬКО в SQLite.
   Future<int> _incrementFailedAttempts() async {
-    int? current;
-
-    // Читаем ТОЛЬКО из SQLite
-    if (_database != null) {
-      current = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
-    }
+    int? current = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
 
     if (current == null) {
       current = 0;
@@ -535,15 +594,13 @@ class AuthLocalDataSource {
     final newValue = current + 1;
 
     // Сохраняем ТОЛЬКО в SQLite
-    if (_database != null) {
-      await _saveIntToSqlite(_sqliteFailedAttemptsKey, newValue);
-    }
+    await _saveIntToSqlite(_sqliteFailedAttemptsKey, newValue);
 
     return newValue;
   }
 
   /// Устанавливает блокировку
-  /// 
+  ///
   /// Сохранение выполняется ТОЛЬКО в SQLite.
   Future<void> _setLockout() async {
     final lockoutTime = DateTime.now().add(
@@ -552,39 +609,22 @@ class AuthLocalDataSource {
     final timestamp = lockoutTime.millisecondsSinceEpoch;
 
     // Сохраняем ТОЛЬКО в SQLite
-    if (_database != null) {
-      await _saveIntToSqlite(_sqliteLockoutTimestampKey, timestamp);
-    }
+    await _saveIntToSqlite(_sqliteLockoutTimestampKey, timestamp);
   }
 
   /// Получает количество неудачных попыток
-  /// 
+  ///
   /// Чтение выполняется ТОЛЬКО из SQLite.
   Future<int> getFailedAttempts() async {
-    int? attempts;
-
-    // Читаем ТОЛЬКО из SQLite
-    if (_database != null) {
-      attempts = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
-    }
-
-    if (attempts == null) {
-      attempts = 0;
-    }
-
-    return attempts;
+    int? attempts = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
+    return attempts ?? 0;
   }
 
   /// Получает время разблокировки
-  /// 
+  ///
   /// Чтение выполняется ТОЛЬКО из SQLite.
   Future<DateTime?> getLockoutUntil() async {
-    int? timestamp;
-
-    // Читаем ТОЛЬКО из SQLite
-    if (_database != null) {
-      timestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
-    }
+    int? timestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
 
     if (timestamp == null) return null;
 
@@ -597,15 +637,10 @@ class AuthLocalDataSource {
   }
 
   /// Проверяет, истёк ли срок блокировки
-  /// 
+  ///
   /// Чтение и сброс выполняются ТОЛЬКО в SQLite.
   Future<bool> checkLockoutExpired() async {
-    int? lockoutTimestamp;
-
-    // Читаем ТОЛЬКО из SQLite
-    if (_database != null) {
-      lockoutTimestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
-    }
+    int? lockoutTimestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
 
     if (lockoutTimestamp == null) {
       return true;
@@ -614,10 +649,8 @@ class AuthLocalDataSource {
     final lockoutTime = DateTime.fromMillisecondsSinceEpoch(lockoutTimestamp);
     if (DateTime.now().isAfter(lockoutTime)) {
       // Блокировка истекла, сбрасываем
-      if (_database != null) {
-        await _deleteFromSqlite(_sqliteLockoutTimestampKey);
-        await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
-      }
+      await _deleteFromSqlite(_sqliteLockoutTimestampKey);
+      await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
       return true;
     }
 
@@ -625,15 +658,27 @@ class AuthLocalDataSource {
   }
 
   /// Получает состояние аутентификации
-  /// 
+  ///
   /// Чтение выполняется ТОЛЬКО из SQLite.
   Future<Map<String, dynamic>> getAuthState() async {
     bool isPinSetupResult = false;
 
-    // Проверяем ТОЛЬКО SQLite
-    if (_database != null) {
-      final hash = await _readFromSqlite(_sqlitePinHashKey);
-      isPinSetupResult = hash != null;
+    // Проверяем ТОЛЬКО SQLite с обработкой ошибок
+    try {
+      final db = await _db;
+      // Проверяем существует ли таблица
+      final tables = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='auth_data'",
+      );
+      
+      if (tables.isNotEmpty) {
+        final hash = await _readFromSqlite(_sqlitePinHashKey);
+        isPinSetupResult = hash != null;
+      }
+    } catch (_) {
+      // Если база не инициализирована или таблица не существует,
+      // считаем что PIN не установлен
+      isPinSetupResult = false;
     }
 
     final isLocked = await _isLocked();

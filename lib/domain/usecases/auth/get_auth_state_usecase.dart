@@ -1,3 +1,5 @@
+import 'dart:developer' as dev;
+
 import '../../entities/auth_state.dart';
 import '../../repositories/auth_repository.dart';
 
@@ -7,6 +9,16 @@ class GetAuthStateUseCase {
   final AuthRepository repository;
 
   Future<AuthState> execute() async {
-    return repository.getAuthState();
+    dev.log('[GetAuthStateUseCase] execute вызван');
+    dev.log('[GetAuthStateUseCase] repository = $repository');
+    
+    final isPinSetup = await repository.isPinSetup();
+    dev.log('[GetAuthStateUseCase] isPinSetup = $isPinSetup');
+    
+    return AuthState(
+      isPinSetup: isPinSetup,
+      isAuthenticated: false,
+      isLocked: false,
+    );
   }
 }

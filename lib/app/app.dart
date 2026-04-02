@@ -75,10 +75,36 @@ import '../core/services/navigation_service.dart';
 // enum AppTab - больше не нужен, импортируется из navigation_service.dart
 
 class PasswordGeneratorApp extends StatelessWidget {
-  const PasswordGeneratorApp({super.key});
+  const PasswordGeneratorApp({
+    super.key,
+    this.authDataSource,
+    this.authRepository,
+    this.setupPinUseCase,
+    this.verifyPinUseCase,
+    this.changePinUseCase,
+    this.removePinUseCase,
+    this.getAuthStateUseCase,
+    this.logEventUseCase,
+  });
+  final AuthLocalDataSource? authDataSource;
+  final AuthRepositoryImpl? authRepository;
+  final SetupPinUseCase? setupPinUseCase;
+  final VerifyPinUseCase? verifyPinUseCase;
+  final ChangePinUseCase? changePinUseCase;
+  final RemovePinUseCase? removePinUseCase;
+  final GetAuthStateUseCase? getAuthStateUseCase;
+  final LogEventUseCase? logEventUseCase;
 
   @override
   Widget build(BuildContext context) {
+    // Сохраняем Use Cases в локальные переменные
+    final setupPinUseCase = this.setupPinUseCase!;
+    final verifyPinUseCase = this.verifyPinUseCase!;
+    final changePinUseCase = this.changePinUseCase!;
+    final removePinUseCase = this.removePinUseCase!;
+    final getAuthStateUseCase = this.getAuthStateUseCase!;
+    final logEventUseCase = this.logEventUseCase!;
+    
     return MultiProvider(
       providers: [
         // Database Helper (должен быть первым!)
@@ -86,6 +112,10 @@ class PasswordGeneratorApp extends StatelessWidget {
 
         // Сервис навигации
         ChangeNotifierProvider(create: (_) => NavigationService()),
+
+        // Auth Repository - передаём готовый экземпляр
+        Provider<AuthRepositoryImpl>.value(value: authRepository!),
+        Provider(create: (context) => SecurityLogRepositoryImpl()),
 
         // Data Sources (singletons)
         Provider(create: (_) => EncryptorLocalDataSource()),
@@ -123,11 +153,6 @@ class PasswordGeneratorApp extends StatelessWidget {
             context.read<PassgenFormat>(),
           ),
         ),
-        Provider(
-          create: (context) =>
-              AuthRepositoryImpl(context.read<AuthLocalDataSource>()),
-        ),
-        Provider(create: (context) => SecurityLogRepositoryImpl()),
         Provider(create: (context) => CategoryRepositoryImpl()),
         Provider(create: (context) => AppSettingsRepositoryImpl()),
         Provider(
@@ -200,22 +225,6 @@ class PasswordGeneratorApp extends StatelessWidget {
           create: (context) => ImportPassgenUseCase(
             context.read<PasswordDataRepositoryImpl>(),
           ),
-        ),
-        Provider(
-          create: (context) =>
-              VerifyPinUseCase(context.read<AuthRepositoryImpl>()),
-        ),
-        Provider(
-          create: (context) =>
-              ChangePinUseCase(context.read<AuthRepositoryImpl>()),
-        ),
-        Provider(
-          create: (context) =>
-              RemovePinUseCase(context.read<AuthRepositoryImpl>()),
-        ),
-        Provider(
-          create: (context) =>
-              GetAuthStateUseCase(context.read<AuthRepositoryImpl>()),
         ),
         Provider(
           create: (context) =>
@@ -314,45 +323,15 @@ class PasswordGeneratorApp extends StatelessWidget {
             logEventUseCase: context.read<LogEventUseCase>(),
           ),
         ),
-        Provider(
-          create: (context) =>
-              SetupPinUseCase(context.read<AuthRepositoryImpl>()),
-        ),
-        ChangeNotifierProxyProvider6<
-          SetupPinUseCase,
-          VerifyPinUseCase,
-          ChangePinUseCase,
-          RemovePinUseCase,
-          GetAuthStateUseCase,
-          LogEventUseCase,
-          AuthController
-        >(
+        ChangeNotifierProvider<AuthController>(
           create: (context) => AuthController(
-            setupPinUseCase: context.read<SetupPinUseCase>(),
-            verifyPinUseCase: context.read<VerifyPinUseCase>(),
-            changePinUseCase: context.read<ChangePinUseCase>(),
-            removePinUseCase: context.read<RemovePinUseCase>(),
-            getAuthStateUseCase: context.read<GetAuthStateUseCase>(),
-            logEventUseCase: context.read<LogEventUseCase>(),
+            setupPinUseCase: setupPinUseCase!,
+            verifyPinUseCase: verifyPinUseCase!,
+            changePinUseCase: changePinUseCase!,
+            removePinUseCase: removePinUseCase!,
+            getAuthStateUseCase: getAuthStateUseCase!,
+            logEventUseCase: logEventUseCase!,
           ),
-          update:
-              (
-                _,
-                setupUc,
-                verifyUc,
-                changeUc,
-                removeUc,
-                getStateUc,
-                logUc,
-                controller,
-              ) => AuthController(
-                setupPinUseCase: setupUc,
-                verifyPinUseCase: verifyUc,
-                changePinUseCase: changeUc,
-                removePinUseCase: removeUc,
-                getAuthStateUseCase: getStateUc,
-                logEventUseCase: logUc,
-              ),
         ),
       ],
       child: MaterialApp(

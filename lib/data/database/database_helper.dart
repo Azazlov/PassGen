@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'database_schema.dart';
+import 'database_migrations.dart';
 
 /// Синглтон для управления базой данных SQLite
 class DatabaseHelper {
@@ -72,10 +73,8 @@ class DatabaseHelper {
 
   /// Миграция при обновлении версии БД
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Здесь будут миграции между версиями
-    if (oldVersion < newVersion) {
-      // Миграция будет реализована в database_migrations.dart
-    }
+    // Применяем миграции
+    await DatabaseMigrations.applyMigrations(db, oldVersion, newVersion);
   }
 
   // ==================== CRUD операции ====================

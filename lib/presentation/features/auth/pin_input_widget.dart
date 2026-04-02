@@ -19,6 +19,11 @@ class PinInputWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    // Адаптивный размер ячеек в зависимости от ширины экрана
+    final cellSize = screenWidth < 400 ? 35.0 : 50.0;
+    final cellMargin = screenWidth < 400 ? 3.0 : 6.0;
 
     return Column(
       children: [
@@ -30,9 +35,9 @@ class PinInputWidget extends StatelessWidget {
             final isLast = index == pinLength;
 
             return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 6),
-              width: 50,
-              height: 50,
+              margin: EdgeInsets.symmetric(horizontal: cellMargin),
+              width: cellSize,
+              height: cellSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isFilled
@@ -42,15 +47,15 @@ class PinInputWidget extends StatelessWidget {
                   color: isError
                       ? theme.colorScheme.error
                       : isLast && !isFilled
-                      ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                      ? theme.colorScheme.primary.withOpacity(0.5)
                       : Colors.transparent,
                   width: 2,
                 ),
                 boxShadow: isLast && !isFilled
                     ? [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.3,
+                          color: theme.colorScheme.primary.withOpacity(
+                            0.3,
                           ),
                           blurRadius: 8,
                           spreadRadius: 2,
@@ -59,7 +64,7 @@ class PinInputWidget extends StatelessWidget {
                     : null,
               ),
               child: Center(
-                child: isFilled ? const Icon(Icons.circle, size: 20) : null,
+                child: isFilled ? const Icon(Icons.circle, size: 16) : null,
               ),
             );
           }),
@@ -124,7 +129,8 @@ class NumericKeypad extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _KeypadButton(label: '', onTap: null, isLoading: isLoading),
+                // Пустое место (невидимое)
+                const SizedBox(width: 70, height: 70),
                 _KeypadButton(
                   label: '0',
                   onTap: isLoading ? null : () => onDigitTap('0'),

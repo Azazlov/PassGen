@@ -6,7 +6,10 @@
       "Bash(find *)",
       "Bash(mv *)",
       "Bash(rm *)",
-      "Bash(flutter *)"
+      "Bash(flutter *)",
+      "Bash(sed *)",
+      "Bash(git checkout *)",
+      "Bash(python3 *)"
     ]
   },
   "$version": 3

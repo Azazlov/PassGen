@@ -61,17 +61,37 @@ class AuthController extends ChangeNotifier {
 
   /// Загружает состояние аутентификации
   Future<void> _loadAuthState() async {
+    debugPrint('[AuthController] _loadAuthState вызван');
     _isLoading = true;
     notifyListeners();
 
     try {
+      // Небольшая задержка чтобы дать БД инициализироваться
+      debugPrint('[AuthController] задержка 100мс...');
+      await Future.delayed(const Duration(milliseconds: 100));
+      
+      debugPrint('[AuthController] вызов getAuthStateUseCase...');
       _authState = await getAuthStateUseCase.execute();
+      debugPrint('[AuthController] isPinSetup = ${_authState.isPinSetup}');
+      debugPrint('[AuthController] isAuthenticated = ${_authState.isAuthenticated}');
+      
       _isSetupMode = !_authState.isPinSetup;
+      debugPrint('[AuthController] _isSetupMode = $_isSetupMode');
     } catch (e) {
+      debugPrint('[AuthController] ОШИБКА загрузки состояния: $e');
       _error = 'Ошибка загрузки состояния: $e';
+      // Если ошибка - считаем что PIN не установлен
+      _authState = const AuthState(
+        isPinSetup: false,
+        isAuthenticated: false,
+        isLocked: false,
+      );
+      _isSetupMode = true;
+      debugPrint('[AuthController] _isSetupMode = true (из-за ошибки)');
     } finally {
       _isLoading = false;
       notifyListeners();
+      debugPrint('[AuthController] _loadAuthState завершён');
     }
   }
 
@@ -113,7 +133,6 @@ class AuthController extends ChangeNotifier {
 
     try {
       final result = await setupPinUseCase.execute(_enteredPin);
-
       return result.fold(
         (failure) {
           _error = failure.message;
@@ -124,11 +143,10 @@ class AuthController extends ChangeNotifier {
           if (success) {
             _authState = _authState.copyWith(
               isPinSetup: true,
-              isAuthenticated: true,
+              isAuthenticated: false,  // ← ОСТАВЛЯЕМ false для проверки входа
             );
             _isSetupMode = false;
-            _enteredPin = '';
-
+            _enteredPin = '';  // Очищаем PIN для нового ввода
             // Логируем установку PIN
             await logEventUseCase.execute(EventTypes.pinSetup);
           }
