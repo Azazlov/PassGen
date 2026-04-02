@@ -25,11 +25,15 @@ void main() {
       const testPassword = 'password123';
       const decryptedMessage = 'Secret message';
 
-      when(mockRepository.decrypt(encryptedData, testPassword))
-          .thenAnswer((_) async => const Right(decryptedMessage));
+      when(
+        mockRepository.decrypt(encryptedData, testPassword),
+      ).thenAnswer((_) async => const Right(decryptedMessage));
 
       // Act
-      final result = await useCase.execute(encryptedData: encryptedData, password: testPassword);
+      final result = await useCase.execute(
+        encryptedData: encryptedData,
+        password: testPassword,
+      );
 
       // Assert
       expect(result, isA<Right>());
@@ -43,11 +47,15 @@ void main() {
       const testPassword = 'password123';
       const decryptedMessage = 'Секретное сообщение';
 
-      when(mockRepository.decrypt(encryptedData, testPassword))
-          .thenAnswer((_) async => const Right(decryptedMessage));
+      when(
+        mockRepository.decrypt(encryptedData, testPassword),
+      ).thenAnswer((_) async => const Right(decryptedMessage));
 
       // Act
-      final result = await useCase.execute(encryptedData: encryptedData, password: testPassword);
+      final result = await useCase.execute(
+        encryptedData: encryptedData,
+        password: testPassword,
+      );
 
       // Assert
       expect(result, isA<Right>());
@@ -58,13 +66,19 @@ void main() {
       // Arrange
       const encryptedData = 'encrypted_data';
       const wrongPassword = 'wrong_password';
-      const failure = EncryptionFailure(message: 'Неверный пароль или повреждённые данные');
+      const failure = EncryptionFailure(
+        message: 'Неверный пароль или повреждённые данные',
+      );
 
-      when(mockRepository.decrypt(encryptedData, wrongPassword))
-          .thenAnswer((_) async => const Left(failure));
+      when(
+        mockRepository.decrypt(encryptedData, wrongPassword),
+      ).thenAnswer((_) async => const Left(failure));
 
       // Act
-      final result = await useCase.execute(encryptedData: encryptedData, password: wrongPassword);
+      final result = await useCase.execute(
+        encryptedData: encryptedData,
+        password: wrongPassword,
+      );
 
       // Assert
       expect(result, isA<Left>());
@@ -75,32 +89,45 @@ void main() {
       // Arrange
       const invalidData = 'invalid_encrypted_data';
       const testPassword = 'password';
-      const failure = EncryptionFailure(message: 'Некорректный формат зашифрованных данных');
+      const failure = EncryptionFailure(
+        message: 'Некорректный формат зашифрованных данных',
+      );
 
-      when(mockRepository.decrypt(invalidData, testPassword))
-          .thenAnswer((_) async => const Left(failure));
+      when(
+        mockRepository.decrypt(invalidData, testPassword),
+      ).thenAnswer((_) async => const Left(failure));
 
       // Act
-      final result = await useCase.execute(encryptedData: invalidData, password: testPassword);
+      final result = await useCase.execute(
+        encryptedData: invalidData,
+        password: testPassword,
+      );
 
       // Assert
       expect(result, isA<Left>());
       expect((result as Left).value, equals(failure));
     });
 
-    test('должен вызвать repository.decrypt с правильными параметрами', () async {
-      // Arrange
-      const encryptedData = 'test_encrypted';
-      const testPassword = 'secure_password';
-      when(mockRepository.decrypt(encryptedData, testPassword))
-          .thenAnswer((_) async => const Right('decrypted'));
+    test(
+      'должен вызвать repository.decrypt с правильными параметрами',
+      () async {
+        // Arrange
+        const encryptedData = 'test_encrypted';
+        const testPassword = 'secure_password';
+        when(
+          mockRepository.decrypt(encryptedData, testPassword),
+        ).thenAnswer((_) async => const Right('decrypted'));
 
-      // Act
-      await useCase.execute(encryptedData: encryptedData, password: testPassword);
+        // Act
+        await useCase.execute(
+          encryptedData: encryptedData,
+          password: testPassword,
+        );
 
-      // Assert
-      verify(mockRepository.decrypt(encryptedData, testPassword)).called(1);
-      verifyNoMoreInteractions(mockRepository);
-    });
+        // Assert
+        verify(mockRepository.decrypt(encryptedData, testPassword)).called(1);
+        verifyNoMoreInteractions(mockRepository);
+      },
+    );
   });
 }

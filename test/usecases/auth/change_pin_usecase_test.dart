@@ -24,8 +24,9 @@ void main() {
 
     test('должен успешно сменить PIN', () async {
       // Arrange
-      when(mockRepository.changePin(oldPin, newPin))
-          .thenAnswer((_) async => const Right(true));
+      when(
+        mockRepository.changePin(oldPin, newPin),
+      ).thenAnswer((_) async => const Right(true));
 
       // Act
       final result = await useCase.execute(oldPin, newPin);
@@ -38,8 +39,9 @@ void main() {
 
     test('должен вернуть false при неверном старом PIN', () async {
       // Arrange
-      when(mockRepository.changePin(oldPin, newPin))
-          .thenAnswer((_) async => const Right(false));
+      when(
+        mockRepository.changePin(oldPin, newPin),
+      ).thenAnswer((_) async => const Right(false));
 
       // Act
       final result = await useCase.execute(oldPin, newPin);
@@ -51,21 +53,30 @@ void main() {
 
     test('должен вернуть ошибку при пустом старом PIN', () async {
       // Arrange
-      when(mockRepository.changePin('', newPin))
-          .thenAnswer((_) async => const Left<AuthFailure, bool>(AuthFailure(message: 'Старый PIN не может быть пустым')));
+      when(mockRepository.changePin('', newPin)).thenAnswer(
+        (_) async => const Left<AuthFailure, bool>(
+          AuthFailure(message: 'Старый PIN не может быть пустым'),
+        ),
+      );
 
       // Act
       final result = await useCase.execute('', newPin);
 
       // Assert
       expect(result, isA<Left>());
-      expect((result as Left).value.message, contains('Старый PIN не может быть пустым'));
+      expect(
+        (result as Left).value.message,
+        contains('Старый PIN не может быть пустым'),
+      );
     });
 
     test('должен вернуть ошибку при пустом новом PIN', () async {
       // Arrange
-      when(mockRepository.changePin(oldPin, ''))
-          .thenAnswer((_) async => const Left<AuthFailure, bool>(AuthFailure(message: 'Новый PIN не может быть пустым')));
+      when(mockRepository.changePin(oldPin, '')).thenAnswer(
+        (_) async => const Left<AuthFailure, bool>(
+          AuthFailure(message: 'Новый PIN не может быть пустым'),
+        ),
+      );
 
       // Act
       final result = await useCase.execute(oldPin, '');
@@ -74,17 +85,21 @@ void main() {
       expect(result, isA<Left>());
     });
 
-    test('должен вызвать repository.changePin с правильными параметрами', () async {
-      // Arrange
-      when(mockRepository.changePin(oldPin, newPin))
-          .thenAnswer((_) async => const Right(true));
+    test(
+      'должен вызвать repository.changePin с правильными параметрами',
+      () async {
+        // Arrange
+        when(
+          mockRepository.changePin(oldPin, newPin),
+        ).thenAnswer((_) async => const Right(true));
 
-      // Act
-      await useCase.execute(oldPin, newPin);
+        // Act
+        await useCase.execute(oldPin, newPin);
 
-      // Assert
-      verify(mockRepository.changePin(oldPin, newPin)).called(1);
-      verifyNoMoreInteractions(mockRepository);
-    });
+        // Assert
+        verify(mockRepository.changePin(oldPin, newPin)).called(1);
+        verifyNoMoreInteractions(mockRepository);
+      },
+    );
   });
 }

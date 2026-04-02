@@ -23,8 +23,9 @@ void main() {
 
     test('должен вернуть true при успешном удалении', () async {
       // Arrange
-      when(mockRepository.removePasswordAt(testIndex))
-          .thenAnswer((_) async => const Right(true));
+      when(
+        mockRepository.removePasswordAt(testIndex),
+      ).thenAnswer((_) async => const Right(true));
 
       // Act
       final result = await useCase.execute(testIndex);
@@ -37,8 +38,9 @@ void main() {
 
     test('должен вернуть false при неудачном удалении', () async {
       // Arrange
-      when(mockRepository.removePasswordAt(testIndex))
-          .thenAnswer((_) async => const Right(false));
+      when(
+        mockRepository.removePasswordAt(testIndex),
+      ).thenAnswer((_) async => const Right(false));
 
       // Act
       final result = await useCase.execute(testIndex);
@@ -52,8 +54,9 @@ void main() {
     test('должен вернуть StorageFailure при ошибке', () async {
       // Arrange
       const failure = StorageFailure(message: 'Ошибка удаления пароля');
-      when(mockRepository.removePasswordAt(testIndex))
-          .thenAnswer((_) async => const Left(failure));
+      when(
+        mockRepository.removePasswordAt(testIndex),
+      ).thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await useCase.execute(testIndex);
@@ -64,23 +67,28 @@ void main() {
       verify(mockRepository.removePasswordAt(testIndex)).called(1);
     });
 
-    test('должен вызвать repository.removePasswordAt с правильным индексом', () async {
-      // Arrange
-      when(mockRepository.removePasswordAt(testIndex))
-          .thenAnswer((_) async => const Right(true));
+    test(
+      'должен вызвать repository.removePasswordAt с правильным индексом',
+      () async {
+        // Arrange
+        when(
+          mockRepository.removePasswordAt(testIndex),
+        ).thenAnswer((_) async => const Right(true));
 
-      // Act
-      await useCase.execute(testIndex);
+        // Act
+        await useCase.execute(testIndex);
 
-      // Assert
-      verify(mockRepository.removePasswordAt(testIndex)).called(1);
-      verifyNoMoreInteractions(mockRepository);
-    });
+        // Assert
+        verify(mockRepository.removePasswordAt(testIndex)).called(1);
+        verifyNoMoreInteractions(mockRepository);
+      },
+    );
 
     test('должен работать с разными индексами', () async {
       // Arrange
-      when(mockRepository.removePasswordAt(5))
-          .thenAnswer((_) async => const Right(true));
+      when(
+        mockRepository.removePasswordAt(5),
+      ).thenAnswer((_) async => const Right(true));
 
       // Act
       await useCase.execute(5);

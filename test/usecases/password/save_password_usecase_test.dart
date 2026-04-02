@@ -26,12 +26,14 @@ void main() {
     test('должен успешно сохранить пароль', () async {
       // Arrange
       final expectedResult = {'success': true, 'updated': false};
-      
-      when(mockRepository.savePassword(
-        service: testService,
-        password: testPassword,
-        config: testConfig,
-      )).thenAnswer((_) async => Right(expectedResult));
+
+      when(
+        mockRepository.savePassword(
+          service: testService,
+          password: testPassword,
+          config: testConfig,
+        ),
+      ).thenAnswer((_) async => Right(expectedResult));
 
       // Act
       final result = await useCase.execute(
@@ -43,23 +45,27 @@ void main() {
       // Assert
       expect(result, isA<Right>());
       expect((result as Right).value['success'], isTrue);
-      verify(mockRepository.savePassword(
-        service: testService,
-        password: testPassword,
-        config: testConfig,
-      )).called(1);
+      verify(
+        mockRepository.savePassword(
+          service: testService,
+          password: testPassword,
+          config: testConfig,
+        ),
+      ).called(1);
     });
 
     test('должен сохранить пароль с categoryId', () async {
       // Arrange
       final expectedResult = {'success': true, 'updated': false};
-      
-      when(mockRepository.savePassword(
-        service: testService,
-        password: testPassword,
-        config: testConfig,
-        categoryId: 1,
-      )).thenAnswer((_) async => Right(expectedResult));
+
+      when(
+        mockRepository.savePassword(
+          service: testService,
+          password: testPassword,
+          config: testConfig,
+          categoryId: 1,
+        ),
+      ).thenAnswer((_) async => Right(expectedResult));
 
       // Act
       final result = await useCase.execute(
@@ -71,24 +77,28 @@ void main() {
 
       // Assert
       expect(result, isA<Right>());
-      verify(mockRepository.savePassword(
-        service: testService,
-        password: testPassword,
-        config: testConfig,
-        categoryId: 1,
-      )).called(1);
+      verify(
+        mockRepository.savePassword(
+          service: testService,
+          password: testPassword,
+          config: testConfig,
+          categoryId: 1,
+        ),
+      ).called(1);
     });
 
     test('должен сохранить пароль с login', () async {
       // Arrange
       final expectedResult = {'success': true, 'updated': false};
-      
-      when(mockRepository.savePassword(
-        service: testService,
-        password: testPassword,
-        config: testConfig,
-        login: 'user@example.com',
-      )).thenAnswer((_) async => Right(expectedResult));
+
+      when(
+        mockRepository.savePassword(
+          service: testService,
+          password: testPassword,
+          config: testConfig,
+          login: 'user@example.com',
+        ),
+      ).thenAnswer((_) async => Right(expectedResult));
 
       // Act
       final result = await useCase.execute(
@@ -100,21 +110,28 @@ void main() {
 
       // Assert
       expect(result, isA<Right>());
-      verify(mockRepository.savePassword(
-        service: testService,
-        password: testPassword,
-        config: testConfig,
-        login: 'user@example.com',
-      )).called(1);
+      verify(
+        mockRepository.savePassword(
+          service: testService,
+          password: testPassword,
+          config: testConfig,
+          login: 'user@example.com',
+        ),
+      ).called(1);
     });
 
     test('должен вернуть ошибку при неудачном сохранении', () async {
       // Arrange
-      when(mockRepository.savePassword(
-        service: testService,
-        password: testPassword,
-        config: testConfig,
-      )).thenAnswer((_) async => const Left(PasswordGenerationFailure(message: 'Ошибка сохранения')));
+      when(
+        mockRepository.savePassword(
+          service: testService,
+          password: testPassword,
+          config: testConfig,
+        ),
+      ).thenAnswer(
+        (_) async =>
+            const Left(PasswordGenerationFailure(message: 'Ошибка сохранения')),
+      );
 
       // Act
       final result = await useCase.execute(
@@ -131,12 +148,14 @@ void main() {
     test('должен вернуть updated=true при обновлении', () async {
       // Arrange
       final expectedResult = {'success': true, 'updated': true};
-      
-      when(mockRepository.savePassword(
-        service: testService,
-        password: testPassword,
-        config: testConfig,
-      )).thenAnswer((_) async => Right(expectedResult));
+
+      when(
+        mockRepository.savePassword(
+          service: testService,
+          password: testPassword,
+          config: testConfig,
+        ),
+      ).thenAnswer((_) async => Right(expectedResult));
 
       // Act
       final result = await useCase.execute(

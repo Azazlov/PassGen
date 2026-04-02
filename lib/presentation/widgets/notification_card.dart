@@ -65,7 +65,9 @@ class NotificationCard extends StatelessWidget {
                           onPressed: onDismiss,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                     ],
                   ),
@@ -95,7 +97,7 @@ class NotificationCard extends StatelessWidget {
 
   Map<String, Color> _getTypeColors(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     switch (notification.type) {
       case app_entities.NotificationType.weakPassword:
         return {
@@ -104,32 +106,37 @@ class NotificationCard extends StatelessWidget {
           'iconColor': theme.colorScheme.error,
           'titleColor': theme.colorScheme.onErrorContainer,
         };
-      
+
       case app_entities.NotificationType.duplicatePassword:
         return {
-          'backgroundColor': theme.colorScheme.warningContainer ?? 
-                            theme.colorScheme.errorContainer,
+          'backgroundColor':
+              theme.colorScheme.warningContainer ??
+              theme.colorScheme.errorContainer,
           'iconBackgroundColor': theme.colorScheme.error.withValues(alpha: 0.1),
           'iconColor': theme.colorScheme.error,
           'titleColor': theme.colorScheme.onErrorContainer,
         };
-      
+
       case app_entities.NotificationType.oldPassword:
         return {
           'backgroundColor': theme.colorScheme.tertiaryContainer,
-          'iconBackgroundColor': theme.colorScheme.tertiary.withValues(alpha: 0.1),
+          'iconBackgroundColor': theme.colorScheme.tertiary.withValues(
+            alpha: 0.1,
+          ),
           'iconColor': theme.colorScheme.tertiary,
           'titleColor': theme.colorScheme.onTertiaryContainer,
         };
-      
+
       case app_entities.NotificationType.success:
         return {
           'backgroundColor': theme.colorScheme.primaryContainer,
-          'iconBackgroundColor': theme.colorScheme.primary.withValues(alpha: 0.1),
+          'iconBackgroundColor': theme.colorScheme.primary.withValues(
+            alpha: 0.1,
+          ),
           'iconColor': theme.colorScheme.primary,
           'titleColor': theme.colorScheme.onPrimaryContainer,
         };
-      
+
       case app_entities.NotificationType.error:
         return {
           'backgroundColor': theme.colorScheme.errorContainer,
@@ -137,7 +144,7 @@ class NotificationCard extends StatelessWidget {
           'iconColor': theme.colorScheme.error,
           'titleColor': theme.colorScheme.onErrorContainer,
         };
-      
+
       case app_entities.NotificationType.securityWarning:
         return {
           'backgroundColor': theme.colorScheme.errorContainer,

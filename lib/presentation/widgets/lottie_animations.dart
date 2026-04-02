@@ -9,11 +9,7 @@ class LottieCopySuccess extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Временная замена: иконка вместо отсутствующей Lottie анимации
-    return Icon(
-      Icons.check_circle,
-      size: size,
-      color: Colors.green,
-    );
+    return Icon(Icons.check_circle, size: size, color: Colors.green);
   }
 }
 
@@ -26,11 +22,7 @@ class LottiePinError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Временная замена: иконка вместо отсутствующей Lottie анимации
-    return Icon(
-      Icons.error,
-      size: size,
-      color: Colors.red,
-    );
+    return Icon(Icons.error, size: size, color: Colors.red);
   }
 }
 

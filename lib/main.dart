@@ -27,13 +27,13 @@ void main() async {
   final dbHelper = DatabaseHelper();
   final db = await dbHelper.database;
   debugPrint('[MAIN] База данных инициализирована: ${db.path}');
-  
+
   // Проверяем существование таблицы auth_data
   debugPrint('[MAIN] Проверка существования таблицы auth_data...');
   final tables = await db.rawQuery(
     "SELECT name FROM sqlite_master WHERE type='table' AND name='auth_data'",
   );
-  
+
   if (tables.isEmpty) {
     debugPrint('[MAIN] Таблица auth_data не найдена, создаём...');
     await db.execute('''
@@ -68,12 +68,12 @@ void main() async {
   debugPrint('[MAIN] Создание AuthLocalDataSource...');
   final authDataSource = AuthLocalDataSource(database: db);
   debugPrint('[MAIN] AuthLocalDataSource создан');
-  
+
   // Инициализация AuthRepositoryImpl с готовым AuthLocalDataSource
   debugPrint('[MAIN] Создание AuthRepositoryImpl...');
   final authRepository = AuthRepositoryImpl(authDataSource);
   debugPrint('[MAIN] AuthRepositoryImpl создан');
-  
+
   // Создаём Use Cases с правильным репозиторием
   debugPrint('[MAIN] Создание Use Cases...');
   final securityLogRepository = SecurityLogRepositoryImpl();

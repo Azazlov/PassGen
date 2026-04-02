@@ -60,7 +60,9 @@ class _ShimmerEffectState extends State<ShimmerEffect>
                     ? theme.colorScheme.surfaceContainerHighest
                     : theme.colorScheme.surfaceContainerHighest,
                 isDark
-                    ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
+                    ? theme.colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.3,
+                      )
                     : theme.colorScheme.surfaceContainerHighest.withOpacity(
                         0.3,
                       ),

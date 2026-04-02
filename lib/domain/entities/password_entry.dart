@@ -8,9 +8,9 @@ class PasswordEntry {
     this.id,
     this.categoryId,
     required this.service,
-    this.password,  // ← Теперь необязательный (только для временного хранения)
-    this.encryptedPassword,  // ← Зашифрованный пароль (Base64)
-    this.nonce,  // ← Nonce для шифрования (Base64)
+    this.password, // ← Теперь необязательный (только для временного хранения)
+    this.encryptedPassword, // ← Зашифрованный пароль (Base64)
+    this.nonce, // ← Nonce для шифрования (Base64)
     required this.config,
     this.login,
     required this.createdAt,
@@ -23,7 +23,7 @@ class PasswordEntry {
       id: json['id'] as int?,
       categoryId: json['category_id'] as int?,
       service: json['service'] ?? '',
-      password: json['password'] as String?,  // ← Для обратной совместимости
+      password: json['password'] as String?, // ← Для обратной совместимости
       encryptedPassword: json['encrypted_password'] as String?,
       nonce: json['nonce'] as String?,
       config: json['config'] ?? '',
@@ -39,9 +39,9 @@ class PasswordEntry {
   final int? id;
   final int? categoryId;
   final String service;
-  final String? password;  // ← Открытый пароль (только в RAM, не сохраняется)
-  final String? encryptedPassword;  // ← Зашифрованный пароль (Base64)
-  final String? nonce;  // ← Nonce для шифрования (Base64)
+  final String? password; // ← Открытый пароль (только в RAM, не сохраняется)
+  final String? encryptedPassword; // ← Зашифрованный пароль (Base64)
+  final String? nonce; // ← Nonce для шифрования (Base64)
   final String config;
   final String? login;
   final DateTime createdAt;
@@ -64,7 +64,7 @@ class PasswordEntry {
   }
 
   /// Расшифровывает пароль используя мастер-пароль
-  /// 
+  ///
   /// [masterPassword] - мастер-пароль пользователя (PIN)
   /// Возвращает расшифрованный пароль или null при ошибке
   Future<String?> decryptPassword(String masterPassword) async {
@@ -96,7 +96,7 @@ class PasswordEntry {
       final secretBox = SecretBox(
         encryptedBytes,
         nonce: nonceBytes,
-        mac: Mac(encryptedBytes),  // ← MAC хранится вместе с ciphertext
+        mac: Mac(encryptedBytes), // ← MAC хранится вместе с ciphertext
       );
 
       // Дешифруем
@@ -107,7 +107,7 @@ class PasswordEntry {
 
       return utf8.decode(decryptedBytes);
     } catch (e) {
-      return null;  // Ошибка дешифрования
+      return null; // Ошибка дешифрования
     }
   }
 

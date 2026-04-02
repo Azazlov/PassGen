@@ -26,7 +26,10 @@ class CharacterSet {
   /// Исключить похожие символы (l, 1, I, O, 0)
   CharacterSet excludeSimilar() {
     final similar = {'l', '1', 'I', 'O', '0'};
-    final filtered = characters.split('').where((c) => !similar.contains(c)).join();
+    final filtered = characters
+        .split('')
+        .where((c) => !similar.contains(c))
+        .join();
     return CharacterSet(
       label: label,
       subtitle: subtitle,
@@ -48,5 +51,6 @@ class CharacterSet {
           isEnabled == other.isEnabled;
 
   @override
-  int get hashCode => Object.hash(label, subtitle, characters, count, isEnabled);
+  int get hashCode =>
+      Object.hash(label, subtitle, characters, count, isEnabled);
 }

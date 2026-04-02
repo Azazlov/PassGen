@@ -20,8 +20,9 @@ void main() {
     test('должен залогировать событие с типом действия', () async {
       // Arrange
       const actionType = 'AUTH_SUCCESS';
-      when(mockRepository.logEvent(actionType, details: null))
-          .thenAnswer((_) async {});
+      when(
+        mockRepository.logEvent(actionType, details: null),
+      ).thenAnswer((_) async {});
 
       // Act
       await useCase.execute(actionType);
@@ -34,8 +35,9 @@ void main() {
       // Arrange
       const actionType = 'PWD_CREATED';
       final details = {'service': 'Gmail', 'password_id': 123};
-      when(mockRepository.logEvent(actionType, details: details))
-          .thenAnswer((_) async {});
+      when(
+        mockRepository.logEvent(actionType, details: details),
+      ).thenAnswer((_) async {});
 
       // Act
       await useCase.execute(actionType, details: details);
@@ -48,8 +50,9 @@ void main() {
       // Arrange
       const actionType = 'DATA_EXPORT';
       final details = {'format': 'JSON', 'count': 10};
-      when(mockRepository.logEvent(actionType, details: details))
-          .thenAnswer((_) async {});
+      when(
+        mockRepository.logEvent(actionType, details: details),
+      ).thenAnswer((_) async {});
 
       // Act
       await useCase.execute(actionType, details: details);
@@ -62,8 +65,9 @@ void main() {
       // Arrange
       const actionType = 'SETTINGS_CHG';
       final details = {'setting': 'pin_code', 'changed': true};
-      when(mockRepository.logEvent(actionType, details: details))
-          .thenAnswer((_) async {});
+      when(
+        mockRepository.logEvent(actionType, details: details),
+      ).thenAnswer((_) async {});
 
       // Act
       await useCase.execute(actionType, details: details);
@@ -72,18 +76,22 @@ void main() {
       verify(mockRepository.logEvent(actionType, details: details)).called(1);
     });
 
-    test('должен вызвать repository.logEvent с правильными параметрами', () async {
-      // Arrange
-      const actionType = 'AUTH_FAILURE';
-      when(mockRepository.logEvent(actionType, details: null))
-          .thenAnswer((_) async {});
+    test(
+      'должен вызвать repository.logEvent с правильными параметрами',
+      () async {
+        // Arrange
+        const actionType = 'AUTH_FAILURE';
+        when(
+          mockRepository.logEvent(actionType, details: null),
+        ).thenAnswer((_) async {});
 
-      // Act
-      await useCase.execute(actionType);
+        // Act
+        await useCase.execute(actionType);
 
-      // Assert
-      verify(mockRepository.logEvent(actionType, details: null)).called(1);
-      verifyNoMoreInteractions(mockRepository);
-    });
+        // Assert
+        verify(mockRepository.logEvent(actionType, details: null)).called(1);
+        verifyNoMoreInteractions(mockRepository);
+      },
+    );
   });
 }

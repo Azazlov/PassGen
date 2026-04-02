@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/auth_result.dart';
@@ -14,21 +13,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<bool> isPinSetup() async {
-    debugPrint('[AuthRepositoryImpl] isPinSetup вызван');
-    debugPrint('[AuthRepositoryImpl] dataSource = $dataSource');
-    final result = await dataSource.isPinSetup();
-    debugPrint('[AuthRepositoryImpl] isPinSetup результат = $result');
-    return result;
+    return dataSource.isPinSetup();
   }
 
   @override
   Future<Either<AuthFailure, bool>> setupPin(String pin) async {
-    debugPrint('[AuthRepositoryImpl] setupPin вызван, PIN длина: ${pin.length}');
-    debugPrint('[AuthRepositoryImpl] setupPin dataSource = $dataSource');
-    
     try {
       if (!dataSource.isValidPinFormat(pin)) {
-        debugPrint('[AuthRepositoryImpl] setupPin: неверный формат PIN');
         return left(
           const AuthFailure(
             message: 'PIN должен содержать от 4 до 8 цифр',
@@ -37,20 +28,15 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
-      debugPrint('[AuthRepositoryImpl] setupPin: вызов dataSource.setupPin...');
       final result = await dataSource.setupPin(pin);
-      debugPrint('[AuthRepositoryImpl] setupPin результат = $result');
       return right(result);
     } on ValidationFailure catch (e) {
-      debugPrint('[AuthRepositoryImpl] setupPin ValidationFailure: ${e.message}');
       return left(
         AuthFailure(message: e.message, type: AuthFailureType.validation),
       );
     } on StorageFailure catch (e) {
-      debugPrint('[AuthRepositoryImpl] setupPin StorageFailure: ${e.message}');
       return left(AuthFailure(message: e.message));
     } catch (e) {
-      debugPrint('[AuthRepositoryImpl] setupPin Exception: $e');
       return left(AuthFailure(message: e.toString()));
     }
   }

@@ -1,5 +1,5 @@
 /// Запись истории изменений пароля
-/// 
+///
 /// Сохраняет предыдущие версии паролей для возможности отката
 /// или аудита изменений
 class PasswordHistoryEntry {
@@ -33,14 +33,15 @@ class PasswordHistoryEntry {
   }
 
   final int? id;
-  final int entryId;  // Ссылка на текущую запись PasswordEntry
+  final int entryId; // Ссылка на текущую запись PasswordEntry
   final String service;
-  final String encryptedPassword;  // Зашифрованный пароль (Base64)
-  final String nonce;  // Nonce для шифрования (Base64)
-  final String config;  // Конфигурация генерации
+  final String encryptedPassword; // Зашифрованный пароль (Base64)
+  final String nonce; // Nonce для шифрования (Base64)
+  final String config; // Конфигурация генерации
   final String? login;
   final DateTime createdAt;
-  final String? reason;  // Причина изменения (например, "Плановая смена", "Компрометация")
+  final String?
+  reason; // Причина изменения (например, "Плановая смена", "Компрометация")
 
   /// Преобразует PasswordHistoryEntry в JSON
   Map<String, dynamic> toJson() {

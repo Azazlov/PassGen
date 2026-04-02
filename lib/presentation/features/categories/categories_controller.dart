@@ -64,11 +64,11 @@ class CategoriesController extends ChangeNotifier {
         createdAt: DateTime.now(),
       );
       final result = await _createCategoryUseCase.execute(category);
-      
+
       // Немедленно обновляем список после создания
       _categories = await _getCategoriesUseCase.execute();
       _isLoading = false;
-      notifyListeners();  // Явно уведомляем после обновления
+      notifyListeners(); // Явно уведомляем после обновления
       return true;
     } catch (e) {
       _error = 'Ошибка создания категории: $e';
@@ -92,11 +92,11 @@ class CategoriesController extends ChangeNotifier {
 
     try {
       await _updateCategoryUseCase.execute(category);
-      
+
       // Немедленно обновляем список после обновления
       _categories = await _getCategoriesUseCase.execute();
       _isLoading = false;
-      notifyListeners();  // Явно уведомляем после обновления
+      notifyListeners(); // Явно уведомляем после обновления
       return true;
     } catch (e) {
       _error = 'Ошибка обновления категории: $e';

@@ -20,7 +20,8 @@ class _CategoriesScreenContent extends StatefulWidget {
   const _CategoriesScreenContent();
 
   @override
-  State<_CategoriesScreenContent> createState() => _CategoriesScreenContentState();
+  State<_CategoriesScreenContent> createState() =>
+      _CategoriesScreenContentState();
 }
 
 class _CategoriesScreenContentState extends State<_CategoriesScreenContent> {
@@ -98,12 +99,7 @@ class _CategoriesScreenContentState extends State<_CategoriesScreenContent> {
         if (systemCategories.isNotEmpty) ...[
           _buildSectionTitle('Системные', theme),
           ...systemCategories.map(
-            (cat) => _buildCategoryTile(
-              cat,
-              controller,
-              theme,
-              isSystem: true,
-            ),
+            (cat) => _buildCategoryTile(cat, controller, theme, isSystem: true),
           ),
           const SizedBox(height: 16),
         ],
@@ -154,16 +150,14 @@ class _CategoriesScreenContentState extends State<_CategoriesScreenContent> {
                   IconButton(
                     key: ValueKey('edit_${category.id}'),
                     icon: const Icon(Icons.edit, size: 20),
-                    onPressed: () => _showEditCategoryDialog(
-                      context,
-                      controller,
-                      category,
-                    ),
+                    onPressed: () =>
+                        _showEditCategoryDialog(context, controller, category),
                   ),
                   IconButton(
                     key: ValueKey('delete_${category.id}'),
                     icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                    onPressed: () => _confirmDelete(context, controller, category),
+                    onPressed: () =>
+                        _confirmDelete(context, controller, category),
                   ),
                 ],
               ),
@@ -259,17 +253,17 @@ class _CategoriesScreenContentState extends State<_CategoriesScreenContent> {
                   );
                   return;
                 }
-                
+
                 final success = await controller.createCategory(
                   nameController.text.trim(),
                   selectedIcon,
                 );
-                
+
                 if (!context.mounted) return;
-                
+
                 // Закрываем диалог только после создания
                 Navigator.of(ctx).pop();
-                
+
                 if (success) {
                   // Обновляем список категорий (уже вызвано в контроллере)
                   ScaffoldMessenger.of(context).showSnackBar(

@@ -21,9 +21,24 @@ void main() {
     test('должен вернуть список всех категорий', () async {
       // Arrange
       final testCategories = [
-        Category(name: 'Соцсети', icon: '👥', isSystem: true, createdAt: DateTime(2024, 1, 1)),
-        Category(name: 'Почта', icon: '📧', isSystem: true, createdAt: DateTime(2024, 1, 1)),
-        Category(name: 'Банки', icon: '🏦', isSystem: true, createdAt: DateTime(2024, 1, 1)),
+        Category(
+          name: 'Соцсети',
+          icon: '👥',
+          isSystem: true,
+          createdAt: DateTime(2024, 1, 1),
+        ),
+        Category(
+          name: 'Почта',
+          icon: '📧',
+          isSystem: true,
+          createdAt: DateTime(2024, 1, 1),
+        ),
+        Category(
+          name: 'Банки',
+          icon: '🏦',
+          isSystem: true,
+          createdAt: DateTime(2024, 1, 1),
+        ),
       ];
 
       when(mockRepository.getAll()).thenAnswer((_) async => testCategories);

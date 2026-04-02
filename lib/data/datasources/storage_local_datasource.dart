@@ -124,23 +124,23 @@ class StorageLocalDataSource {
   /// v0.5.1: Обработка ошибок с rollback
   Future<bool> importPasswords(String jsonString) async {
     List<PasswordEntry>? originalPasswords;
-    
+
     try {
       final newPasswords = PasswordEntry.decodeList(jsonString);
       final currentPasswords = await getPasswords();
-      
+
       // Сохраняем оригинальные пароли для rollback (v0.5.1)
       originalPasswords = List<PasswordEntry>.from(currentPasswords);
 
       // Объединяем пароли, избегая дубликатов по service + login (v0.5.1)
       final mergedPasswords = List<PasswordEntry>.from(currentPasswords);
       int duplicateCount = 0;
-      
+
       for (final newPassword in newPasswords) {
         final existingIndex = mergedPasswords.indexWhere(
-          (e) => 
-            e.service.toLowerCase() == newPassword.service.toLowerCase() &&
-            e.login == newPassword.login,
+          (e) =>
+              e.service.toLowerCase() == newPassword.service.toLowerCase() &&
+              e.login == newPassword.login,
         );
         if (existingIndex != -1) {
           // Обновляем существующий (v0.5.1)

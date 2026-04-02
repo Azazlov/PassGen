@@ -103,42 +103,32 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
   }
 
   /// Подтверждение ввода PIN
-  void _handleConfirm() async{
+  void _handleConfirm() async {
     final controller = context.read<AuthController>();
     if (controller.isPinComplete && !controller.isLoading) {
       // Для режима установки PIN
       if (!controller.authState.isPinSetup) {
-        debugPrint('[AuthScreen] режим установки PIN');
-        final success = await controller.setupPin();
-        debugPrint('[AuthScreen] setupPin результат: $success');
-        debugPrint('[AuthScreen] isPinSetup: ${controller.authState.isPinSetup}');
-        debugPrint('[AuthScreen] isAuthenticated: ${controller.authState.isAuthenticated}');
+        await controller.setupPin();
       } else {
         // Для режима входа
-        debugPrint('[AuthScreen] режим входа');
         final result = await controller.verifyPin();
-        debugPrint('[AuthScreen] verifyPin результат: $result');
-        
+
         if (!mounted) return;
-        
+
         // Обрабатываем результат
         switch (result) {
           case AuthResult.success:
-            debugPrint('[AuthScreen] Успешный вход!');
             // Успешный вход - приложение само обновит UI
             break;
           case AuthResult.wrongPin:
-            debugPrint('[AuthScreen] Неверный PIN');
             controller.clearPin();
             HapticFeedback.vibrate();
             break;
           case AuthResult.locked:
-            debugPrint('[AuthScreen] Заблокировано');
             controller.clearPin();
             HapticFeedback.vibrate();
             break;
           case AuthResult.notSetup:
-            debugPrint('[AuthScreen] PIN не установлен');
             break;
         }
       }

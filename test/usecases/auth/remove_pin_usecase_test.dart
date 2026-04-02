@@ -23,8 +23,9 @@ void main() {
 
     test('должен успешно удалить PIN', () async {
       // Arrange
-      when(mockRepository.removePin(testPin))
-          .thenAnswer((_) async => const Right(true));
+      when(
+        mockRepository.removePin(testPin),
+      ).thenAnswer((_) async => const Right(true));
 
       // Act
       final result = await useCase.execute(testPin);
@@ -37,8 +38,9 @@ void main() {
 
     test('должен вернуть false при неверном PIN', () async {
       // Arrange
-      when(mockRepository.removePin(testPin))
-          .thenAnswer((_) async => const Right(false));
+      when(
+        mockRepository.removePin(testPin),
+      ).thenAnswer((_) async => const Right(false));
 
       // Act
       final result = await useCase.execute(testPin);
@@ -50,8 +52,11 @@ void main() {
 
     test('должен вернуть ошибку при пустом PIN', () async {
       // Arrange
-      when(mockRepository.removePin(''))
-          .thenAnswer((_) async => const Left<AuthFailure, bool>(AuthFailure(message: 'PIN не может быть пустым')));
+      when(mockRepository.removePin('')).thenAnswer(
+        (_) async => const Left<AuthFailure, bool>(
+          AuthFailure(message: 'PIN не может быть пустым'),
+        ),
+      );
 
       // Act
       final result = await useCase.execute('');
@@ -62,8 +67,9 @@ void main() {
 
     test('должен вызвать repository.removePin ровно 1 раз', () async {
       // Arrange
-      when(mockRepository.removePin(testPin))
-          .thenAnswer((_) async => const Right(true));
+      when(
+        mockRepository.removePin(testPin),
+      ).thenAnswer((_) async => const Right(true));
 
       // Act
       await useCase.execute(testPin);

@@ -13,10 +13,7 @@ import '../../../domain/usecases/password/save_password_usecase.dart';
 
 /// Конфигурация уровня сложности пароля
 class StrengthConfig {
-  const StrengthConfig({
-    required this.label,
-    required this.colorIndex,
-  });
+  const StrengthConfig({required this.label, required this.colorIndex});
 
   final String label;
   final int colorIndex;
@@ -105,11 +102,11 @@ class GeneratorController extends ChangeNotifier {
 
   /// Конфигурация уровня сложности
   static const List<Color> strengthColors = [
-    Colors.red,       // 0: Очень слабый
-    Colors.orange,    // 1: Слабый
-    Color.fromARGB(255, 215, 223, 52),  // 2: Средний
-    Colors.green,     // 3: Надёжный
-    Colors.blue,      // 4: Очень надёжный
+    Colors.red, // 0: Очень слабый
+    Colors.orange, // 1: Слабый
+    Color.fromARGB(255, 215, 223, 52), // 2: Средний
+    Colors.green, // 3: Надёжный
+    Colors.blue, // 4: Очень надёжный
   ];
 
   /// Обновляет уровень сложности

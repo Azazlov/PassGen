@@ -24,8 +24,9 @@ void main() {
 
     test('должен успешно установить PIN', () async {
       // Arrange
-      when(mockRepository.setupPin(testPin))
-          .thenAnswer((_) async => const Right(true));
+      when(
+        mockRepository.setupPin(testPin),
+      ).thenAnswer((_) async => const Right(true));
 
       // Act
       final result = await useCase.execute(testPin);
@@ -38,8 +39,9 @@ void main() {
 
     test('должен установить длинный PIN (8 цифр)', () async {
       // Arrange
-      when(mockRepository.setupPin(testPinLong))
-          .thenAnswer((_) async => const Right(true));
+      when(
+        mockRepository.setupPin(testPinLong),
+      ).thenAnswer((_) async => const Right(true));
 
       // Act
       final result = await useCase.execute(testPinLong);
@@ -52,8 +54,11 @@ void main() {
 
     test('должен вернуть ошибку при коротком PIN (< 4 цифр)', () async {
       // Arrange
-      when(mockRepository.setupPin('123'))
-          .thenAnswer((_) async => const Left<AuthFailure, bool>(AuthFailure(message: 'PIN должен быть от 4 до 8 цифр')));
+      when(mockRepository.setupPin('123')).thenAnswer(
+        (_) async => const Left<AuthFailure, bool>(
+          AuthFailure(message: 'PIN должен быть от 4 до 8 цифр'),
+        ),
+      );
 
       // Act
       final result = await useCase.execute('123');
@@ -65,8 +70,11 @@ void main() {
 
     test('должен вернуть ошибку при длинном PIN (> 8 цифр)', () async {
       // Arrange
-      when(mockRepository.setupPin('123456789'))
-          .thenAnswer((_) async => const Left<AuthFailure, bool>(AuthFailure(message: 'PIN должен быть от 4 до 8 цифр')));
+      when(mockRepository.setupPin('123456789')).thenAnswer(
+        (_) async => const Left<AuthFailure, bool>(
+          AuthFailure(message: 'PIN должен быть от 4 до 8 цифр'),
+        ),
+      );
 
       // Act
       final result = await useCase.execute('123456789');
@@ -77,8 +85,11 @@ void main() {
 
     test('должен вернуть ошибку при пустом PIN', () async {
       // Arrange
-      when(mockRepository.setupPin(''))
-          .thenAnswer((_) async => const Left<AuthFailure, bool>(AuthFailure(message: 'PIN не может быть пустым')));
+      when(mockRepository.setupPin('')).thenAnswer(
+        (_) async => const Left<AuthFailure, bool>(
+          AuthFailure(message: 'PIN не может быть пустым'),
+        ),
+      );
 
       // Act
       final result = await useCase.execute('');
@@ -89,8 +100,9 @@ void main() {
 
     test('должен вызвать repository.setupPin ровно 1 раз', () async {
       // Arrange
-      when(mockRepository.setupPin(testPin))
-          .thenAnswer((_) async => const Right(true));
+      when(
+        mockRepository.setupPin(testPin),
+      ).thenAnswer((_) async => const Right(true));
 
       // Act
       await useCase.execute(testPin);

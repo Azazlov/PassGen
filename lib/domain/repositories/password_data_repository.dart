@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../core/errors/failures.dart';
 
 /// Интерфейс репозитория для импорта/экспорта паролей
-/// 
+///
 /// Объединяет операции импорта и экспорта для уменьшения количества интерфейсов.
 abstract class PasswordDataRepository {
   /// Экспортирует пароли в JSON строку

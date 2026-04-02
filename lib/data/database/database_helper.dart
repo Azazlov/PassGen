@@ -230,9 +230,11 @@ class DatabaseHelper {
 
   /// Выполнение транзакции
   Future<T?> transaction<T>(Future<T?> Function(Transaction txn) action) {
-    return database.then((db) => db.transaction((txn) async {
-      return action(txn);
-    }));
+    return database.then(
+      (db) => db.transaction((txn) async {
+        return action(txn);
+      }),
+    );
   }
 
   /// Пакетное выполнение операций

@@ -2,19 +2,19 @@
 enum NotificationType {
   /// Предупреждение о слабом пароле
   weakPassword,
-  
+
   /// Предупреждение о повторяющемся пароле
   duplicatePassword,
-  
+
   /// Предупреждение о старом пароле
   oldPassword,
-  
+
   /// Информация об успешном действии
   success,
-  
+
   /// Ошибка
   error,
-  
+
   /// Предупреждение безопасности
   securityWarning,
 }
@@ -37,11 +37,11 @@ class Notification {
   final NotificationType type;
   final String title;
   final String message;
-  final int? entryId;  // Связь с записью пароля (если применимо)
-  final String? service;  // Название сервиса (если применимо)
+  final int? entryId; // Связь с записью пароля (если применимо)
+  final String? service; // Название сервиса (если применимо)
   final bool isRead;
   final DateTime createdAt;
-  final String? actionUrl;  // URL для действия (если применимо)
+  final String? actionUrl; // URL для действия (если применимо)
 
   /// Создаёт уведомление о слабом пароле
   factory Notification.weakPassword({
@@ -70,7 +70,8 @@ class Notification {
       id: 'dup_pwd_$entryId${DateTime.now().millisecondsSinceEpoch}',
       type: NotificationType.duplicatePassword,
       title: 'Повторяющийся пароль',
-      message: 'Пароль для сервиса "$service" совпадает с паролем для "$duplicateService"',
+      message:
+          'Пароль для сервиса "$service" совпадает с паролем для "$duplicateService"',
       entryId: entryId,
       service: service,
       createdAt: DateTime.now(),
@@ -109,10 +110,7 @@ class Notification {
   }
 
   /// Создаёт уведомление об ошибке
-  factory Notification.error({
-    required String title,
-    required String message,
-  }) {
+  factory Notification.error({required String title, required String message}) {
     return Notification(
       id: 'error_${DateTime.now().millisecondsSinceEpoch}',
       type: NotificationType.error,

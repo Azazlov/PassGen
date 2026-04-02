@@ -68,15 +68,11 @@ class AuthLocalDataSource {
     try {
       final db = await _db;
       final now = DateTime.now().millisecondsSinceEpoch;
-      await db.insert(
-        'auth_data',
-        {
-          'key': key,
-          'value': value,
-          'created_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('auth_data', {
+        'key': key,
+        'value': value,
+        'created_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     } catch (_) {
       // Игнорируем ошибки сохранения
     }
@@ -103,11 +99,7 @@ class AuthLocalDataSource {
   Future<void> _deleteFromSqlite(String key) async {
     try {
       final db = await _db;
-      await db.delete(
-        'auth_data',
-        where: 'key = ?',
-        whereArgs: [key],
-      );
+      await db.delete('auth_data', where: 'key = ?', whereArgs: [key]);
     } catch (_) {
       // Игнорируем ошибки удаления
     }
@@ -118,15 +110,11 @@ class AuthLocalDataSource {
     try {
       final db = await _db;
       final now = DateTime.now().millisecondsSinceEpoch;
-      await db.insert(
-        'auth_data',
-        {
-          'key': key,
-          'value': value.toString(),
-          'created_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('auth_data', {
+        'key': key,
+        'value': value.toString(),
+        'created_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     } catch (_) {
       // Игнорируем ошибки сохранения
     }
@@ -197,7 +185,10 @@ class AuthLocalDataSource {
       final computedHash = base64Encode(computedHashBytes);
 
       // Constant-time сравнение хэшей (защита от timing attacks)
-      final isValid = CryptoUtils.constantTimeEqualsBase64(computedHash, storedHash);
+      final isValid = CryptoUtils.constantTimeEqualsBase64(
+        computedHash,
+        storedHash,
+      );
 
       try {
         // Затирание ключа из памяти
@@ -215,7 +206,6 @@ class AuthLocalDataSource {
   /// Хранение данных выполняется ТОЛЬКО в SQLite для безопасности.
   /// SharedPreferences не используется для хранения чувствительных данных.
   Future<bool> setupPin(String pin) async {
-    
     try {
       if (!isValidPinFormat(pin)) {
         throw const ValidationFailure(message: 'PIN должен содержать 4-8 цифр');
@@ -304,7 +294,11 @@ class AuthLocalDataSource {
   /// 5. Зашифровка всех паролей новым ключом
   /// 6. Сохранение нового PIN
   /// 7. Затирание старых ключей
-  Future<bool> changePin(String oldPin, String newPin, {Database? database}) async {
+  Future<bool> changePin(
+    String oldPin,
+    String newPin, {
+    Database? database,
+  }) async {
     try {
       if (!isValidPinFormat(newPin)) {
         throw const ValidationFailure(message: 'PIN должен содержать 4-8 цифр');
@@ -312,7 +306,7 @@ class AuthLocalDataSource {
 
       // Проверяем старый PIN
       final verifyResult = await verifyPin(oldPin);
-      
+
       if (verifyResult['result'] != 'success') {
         throw const AuthFailure(
           message: 'Неверный старый PIN',
@@ -328,7 +322,7 @@ class AuthLocalDataSource {
 
       // Устанавливаем новый PIN
       final setupResult = await setupPin(newPin);
-      
+
       return setupResult;
     } catch (e) {
       if (e is ValidationFailure || e is AuthFailure) rethrow;
@@ -341,7 +335,7 @@ class AuthLocalDataSource {
   /// [oldPin] - старый PIN-код
   /// [newPin] - новый PIN-код
   /// [db] - база данных с паролями
-  /// 
+  ///
   /// Процесс ротации:
   /// 1. Получаем соль старого PIN
   /// 2. Derive старого ключа
@@ -444,7 +438,7 @@ class AuthLocalDataSource {
     try {
       CryptoUtils.secureWipeKey(oldKeyBytes);
     } catch (_) {}
-    
+
     try {
       CryptoUtils.secureWipeKey(newKeyBytes);
     } catch (_) {}
@@ -479,10 +473,7 @@ class AuthLocalDataSource {
   ) async {
     final encryptor = EncryptorLocalDataSource();
 
-    final encrypted = await encryptor.encrypt(
-      message: password,
-      password: key,
-    );
+    final encrypted = await encryptor.encrypt(message: password, password: key);
 
     return {
       'cipherText': base64Decode(encrypted['cipherText'] as String),
@@ -491,7 +482,7 @@ class AuthLocalDataSource {
   }
 
   /// Удаляет PIN
-  /// 
+  ///
   /// Удаление выполняется ТОЛЬКО из SQLite.
   Future<bool> removePin(String pin) async {
     try {
@@ -605,7 +596,9 @@ class AuthLocalDataSource {
   ///
   /// Чтение и сброс выполняются ТОЛЬКО в SQLite.
   Future<bool> checkLockoutExpired() async {
-    int? lockoutTimestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
+    int? lockoutTimestamp = await _readIntFromSqlite(
+      _sqliteLockoutTimestampKey,
+    );
 
     if (lockoutTimestamp == null) {
       return true;
@@ -635,7 +628,7 @@ class AuthLocalDataSource {
       final tables = await db.rawQuery(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='auth_data'",
       );
-      
+
       if (tables.isNotEmpty) {
         final hash = await _readFromSqlite(_sqlitePinHashKey);
         isPinSetupResult = hash != null;

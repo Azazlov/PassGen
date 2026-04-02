@@ -25,9 +25,10 @@ void main() {
         isPinSetup: true,
         isLocked: false,
       );
-      
-      when(mockRepository.getAuthState())
-          .thenAnswer((_) async => expectedState);
+
+      when(
+        mockRepository.getAuthState(),
+      ).thenAnswer((_) async => expectedState);
 
       // Act
       final result = await useCase.execute();
@@ -46,9 +47,10 @@ void main() {
         isPinSetup: true,
         isLocked: false,
       );
-      
-      when(mockRepository.getAuthState())
-          .thenAnswer((_) async => expectedState);
+
+      when(
+        mockRepository.getAuthState(),
+      ).thenAnswer((_) async => expectedState);
 
       // Act
       final result = await useCase.execute();
@@ -67,9 +69,10 @@ void main() {
         isLocked: true,
         lockoutUntil: lockoutTime,
       );
-      
-      when(mockRepository.getAuthState())
-          .thenAnswer((_) async => expectedState);
+
+      when(
+        mockRepository.getAuthState(),
+      ).thenAnswer((_) async => expectedState);
 
       // Act
       final result = await useCase.execute();
@@ -87,9 +90,10 @@ void main() {
         isPinSetup: false,
         isLocked: false,
       );
-      
-      when(mockRepository.getAuthState())
-          .thenAnswer((_) async => expectedState);
+
+      when(
+        mockRepository.getAuthState(),
+      ).thenAnswer((_) async => expectedState);
 
       // Act
       final result = await useCase.execute();
@@ -100,8 +104,9 @@ void main() {
 
     test('должен вызвать repository.getAuthState ровно 1 раз', () async {
       // Arrange
-      when(mockRepository.getAuthState())
-          .thenAnswer((_) async => const AuthState(isAuthenticated: false, isPinSetup: true));
+      when(mockRepository.getAuthState()).thenAnswer(
+        (_) async => const AuthState(isAuthenticated: false, isPinSetup: true),
+      );
 
       // Act
       await useCase.execute();

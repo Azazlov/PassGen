@@ -23,8 +23,9 @@ void main() {
 
     test('должен вернуть success при правильном PIN', () async {
       // Arrange
-      when(mockRepository.verifyPin(testPin))
-          .thenAnswer((_) async => const Right(AuthResult.success));
+      when(
+        mockRepository.verifyPin(testPin),
+      ).thenAnswer((_) async => const Right(AuthResult.success));
 
       // Act
       final result = await useCase.execute(testPin);
@@ -37,8 +38,9 @@ void main() {
 
     test('должен вернуть wrongPin при неверном PIN', () async {
       // Arrange
-      when(mockRepository.verifyPin(testPin))
-          .thenAnswer((_) async => const Right(AuthResult.wrongPin));
+      when(
+        mockRepository.verifyPin(testPin),
+      ).thenAnswer((_) async => const Right(AuthResult.wrongPin));
 
       // Act
       final result = await useCase.execute(testPin);
@@ -51,8 +53,9 @@ void main() {
 
     test('должен вернуть locked после 5 неудачных попыток', () async {
       // Arrange
-      when(mockRepository.verifyPin(testPin))
-          .thenAnswer((_) async => const Right(AuthResult.locked));
+      when(
+        mockRepository.verifyPin(testPin),
+      ).thenAnswer((_) async => const Right(AuthResult.locked));
 
       // Act
       final result = await useCase.execute(testPin);
@@ -65,8 +68,9 @@ void main() {
 
     test('должен вызвать repository.verifyPin с правильным PIN', () async {
       // Arrange
-      when(mockRepository.verifyPin(testPin))
-          .thenAnswer((_) async => const Right(AuthResult.success));
+      when(
+        mockRepository.verifyPin(testPin),
+      ).thenAnswer((_) async => const Right(AuthResult.success));
 
       // Act
       await useCase.execute(testPin);
@@ -78,8 +82,9 @@ void main() {
 
     test('должен обработать пустой PIN', () async {
       // Arrange
-      when(mockRepository.verifyPin(''))
-          .thenAnswer((_) async => const Right(AuthResult.wrongPin));
+      when(
+        mockRepository.verifyPin(''),
+      ).thenAnswer((_) async => const Right(AuthResult.wrongPin));
 
       // Act
       final result = await useCase.execute('');

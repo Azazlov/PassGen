@@ -20,7 +20,7 @@ class PinInputWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
-    
+
     // Адаптивный размер ячеек в зависимости от ширины экрана
     final cellSize = screenWidth < 400 ? 35.0 : 50.0;
     final cellMargin = screenWidth < 400 ? 3.0 : 6.0;
@@ -54,9 +54,7 @@ class PinInputWidget extends StatelessWidget {
                 boxShadow: isLast && !isFilled
                     ? [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withOpacity(
-                            0.3,
-                          ),
+                          color: theme.colorScheme.primary.withOpacity(0.3),
                           blurRadius: 8,
                           spreadRadius: 2,
                         ),

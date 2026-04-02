@@ -39,8 +39,9 @@ void main() {
         ),
       ];
 
-      when(mockRepository.getPasswords())
-          .thenAnswer((_) async => Right(testPasswords));
+      when(
+        mockRepository.getPasswords(),
+      ).thenAnswer((_) async => Right(testPasswords));
 
       // Act
       final result = await useCase.execute();
@@ -53,8 +54,9 @@ void main() {
 
     test('должен вернуть пустой список, если хранилище пустое', () async {
       // Arrange
-      when(mockRepository.getPasswords())
-          .thenAnswer((_) async => const Right([]));
+      when(
+        mockRepository.getPasswords(),
+      ).thenAnswer((_) async => const Right([]));
 
       // Act
       final result = await useCase.execute();
@@ -68,8 +70,9 @@ void main() {
     test('должен вернуть StorageFailure при ошибке', () async {
       // Arrange
       const failure = StorageFailure(message: 'Ошибка получения паролей');
-      when(mockRepository.getPasswords())
-          .thenAnswer((_) async => const Left(failure));
+      when(
+        mockRepository.getPasswords(),
+      ).thenAnswer((_) async => const Left(failure));
 
       // Act
       final result = await useCase.execute();
@@ -82,8 +85,9 @@ void main() {
 
     test('должен вызвать repository.getPasswords()', () async {
       // Arrange
-      when(mockRepository.getPasswords())
-          .thenAnswer((_) async => const Right([]));
+      when(
+        mockRepository.getPasswords(),
+      ).thenAnswer((_) async => const Right([]));
 
       // Act
       await useCase.execute();

@@ -25,11 +25,15 @@ void main() {
       const testPassword = 'password123';
       const encryptedData = 'encrypted_base64_data';
 
-      when(mockRepository.encrypt(testMessage, testPassword))
-          .thenAnswer((_) async => const Right(encryptedData));
+      when(
+        mockRepository.encrypt(testMessage, testPassword),
+      ).thenAnswer((_) async => const Right(encryptedData));
 
       // Act
-      final result = await useCase.execute(message: testMessage, password: testPassword);
+      final result = await useCase.execute(
+        message: testMessage,
+        password: testPassword,
+      );
 
       // Assert
       expect(result, isA<Right>());
@@ -43,11 +47,15 @@ void main() {
       const testPassword = 'password123';
       const encryptedData = 'encrypted_empty_data';
 
-      when(mockRepository.encrypt(testMessage, testPassword))
-          .thenAnswer((_) async => const Right(encryptedData));
+      when(
+        mockRepository.encrypt(testMessage, testPassword),
+      ).thenAnswer((_) async => const Right(encryptedData));
 
       // Act
-      final result = await useCase.execute(message: testMessage, password: testPassword);
+      final result = await useCase.execute(
+        message: testMessage,
+        password: testPassword,
+      );
 
       // Assert
       expect(result, isA<Right>());
@@ -60,38 +68,48 @@ void main() {
       const testPassword = 'password';
       const failure = EncryptionFailure(message: 'Ошибка шифрования');
 
-      when(mockRepository.encrypt(testMessage, testPassword))
-          .thenAnswer((_) async => const Left(failure));
+      when(
+        mockRepository.encrypt(testMessage, testPassword),
+      ).thenAnswer((_) async => const Left(failure));
 
       // Act
-      final result = await useCase.execute(message: testMessage, password: testPassword);
+      final result = await useCase.execute(
+        message: testMessage,
+        password: testPassword,
+      );
 
       // Assert
       expect(result, isA<Left>());
       expect((result as Left).value, equals(failure));
     });
 
-    test('должен вызвать repository.encrypt с правильными параметрами', () async {
-      // Arrange
-      const testMessage = 'Test message';
-      const testPassword = 'secure_password';
-      when(mockRepository.encrypt(testMessage, testPassword))
-          .thenAnswer((_) async => const Right('encrypted'));
+    test(
+      'должен вызвать repository.encrypt с правильными параметрами',
+      () async {
+        // Arrange
+        const testMessage = 'Test message';
+        const testPassword = 'secure_password';
+        when(
+          mockRepository.encrypt(testMessage, testPassword),
+        ).thenAnswer((_) async => const Right('encrypted'));
 
-      // Act
-      await useCase.execute(message: testMessage, password: testPassword);
+        // Act
+        await useCase.execute(message: testMessage, password: testPassword);
 
-      // Assert
-      verify(mockRepository.encrypt(testMessage, testPassword)).called(1);
-      verifyNoMoreInteractions(mockRepository);
-    });
+        // Assert
+        verify(mockRepository.encrypt(testMessage, testPassword)).called(1);
+        verifyNoMoreInteractions(mockRepository);
+      },
+    );
 
     test('должен работать с разными сообщениями', () async {
       // Arrange
-      when(mockRepository.encrypt('msg1', 'pass1'))
-          .thenAnswer((_) async => const Right('enc1'));
-      when(mockRepository.encrypt('msg2', 'pass2'))
-          .thenAnswer((_) async => const Right('enc2'));
+      when(
+        mockRepository.encrypt('msg1', 'pass1'),
+      ).thenAnswer((_) async => const Right('enc1'));
+      when(
+        mockRepository.encrypt('msg2', 'pass2'),
+      ).thenAnswer((_) async => const Right('enc2'));
 
       // Act
       final result1 = await useCase.execute(message: 'msg1', password: 'pass1');

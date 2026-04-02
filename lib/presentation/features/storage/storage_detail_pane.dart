@@ -55,7 +55,9 @@ class StorageDetailPane extends StatelessWidget {
                     Text(
                       entry.login ?? 'Нет логина',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
                   ],
@@ -107,7 +109,8 @@ class StorageDetailPane extends StatelessWidget {
               children: [
                 Expanded(
                   child: Semantics(
-                    label: 'Пароль: ${entry.displayPassword ?? '(зашифровано)'}',
+                    label:
+                        'Пароль: ${entry.displayPassword ?? '(зашифровано)'}',
                     value: entry.displayPassword ?? '(зашифровано)',
                     child: Text(
                       entry.displayPassword ?? '(зашифровано)',
@@ -124,7 +127,11 @@ class StorageDetailPane extends StatelessWidget {
                   child: IconButton(
                     icon: const Icon(Icons.copy),
                     onPressed: () {
-                      Clipboard.setData(ClipboardData(text: entry.displayPassword ?? '(зашифровано)'));
+                      Clipboard.setData(
+                        ClipboardData(
+                          text: entry.displayPassword ?? '(зашифровано)',
+                        ),
+                      );
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Пароль скопирован')),
                       );
@@ -315,7 +322,7 @@ class StorageDetailPane extends StatelessWidget {
   ) {
     final serviceController = TextEditingController(text: entry.service);
     final loginController = TextEditingController(text: entry.login ?? '');
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -357,7 +364,9 @@ class StorageDetailPane extends StatelessWidget {
               // );
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Функция редактирования в разработке')),
+                const SnackBar(
+                  content: Text('Функция редактирования в разработке'),
+                ),
               );
             },
             child: const Text('Сохранить'),

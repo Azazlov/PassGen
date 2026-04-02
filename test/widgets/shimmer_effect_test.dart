@@ -11,12 +11,7 @@ void main() {
     testWidgets('renders container with correct dimensions', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: ShimmerEffect(
-              width: 200,
-              height: 100,
-            ),
-          ),
+          home: Scaffold(body: ShimmerEffect(width: 200, height: 100)),
         ),
       );
 
@@ -49,12 +44,7 @@ void main() {
     testWidgets('animates over time', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: ShimmerEffect(
-              width: 200,
-              height: 100,
-            ),
-          ),
+          home: Scaffold(body: ShimmerEffect(width: 200, height: 100)),
         ),
       );
 
@@ -76,12 +66,7 @@ void main() {
     testWidgets('renders correct number of items', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: ShimmerList(
-              itemCount: 5,
-              itemHeight: 120,
-            ),
-          ),
+          home: Scaffold(body: ShimmerList(itemCount: 5, itemHeight: 120)),
         ),
       );
 
@@ -91,12 +76,7 @@ void main() {
     testWidgets('renders with default values', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: ShimmerList(
-              itemCount: 3,
-              itemHeight: 100,
-            ),
-          ),
+          home: Scaffold(body: ShimmerList(itemCount: 3, itemHeight: 100)),
         ),
       );
 

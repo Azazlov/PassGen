@@ -77,33 +77,40 @@ void main() {
 
     test('должен вернуть ошибку, если не выбрана ни одна категория', () {
       // Arrange
-      const settings = PasswordGenerationSettings(
-        flags: 0,
-      );
+      const settings = PasswordGenerationSettings(flags: 0);
 
       // Act
       final result = useCase.execute(settings);
 
       // Assert
       expect(result, isA<Left>());
-      expect((result as Left).value.message, contains('хотя бы одну категорию'));
-    });
-
-    test('должен вернуть ошибку при allUnique с недостаточным количеством символов', () {
-      // Arrange
-      const settings = PasswordGenerationSettings(
-        lengthRange: [50, 60],
-        flags: 1, // только цифры (10 символов)
-        allUnique: true,
+      expect(
+        (result as Left).value.message,
+        contains('хотя бы одну категорию'),
       );
-
-      // Act
-      final result = useCase.execute(settings);
-
-      // Assert
-      expect(result, isA<Left>());
-      expect((result as Left).value.message, contains('уникальными символами'));
     });
+
+    test(
+      'должен вернуть ошибку при allUnique с недостаточным количеством символов',
+      () {
+        // Arrange
+        const settings = PasswordGenerationSettings(
+          lengthRange: [50, 60],
+          flags: 1, // только цифры (10 символов)
+          allUnique: true,
+        );
+
+        // Act
+        final result = useCase.execute(settings);
+
+        // Assert
+        expect(result, isA<Left>());
+        expect(
+          (result as Left).value.message,
+          contains('уникальными символами'),
+        );
+      },
+    );
 
     test('должен принять настройки с excludeSimilar', () {
       // Arrange

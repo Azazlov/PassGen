@@ -260,11 +260,7 @@ class AboutScreen extends StatelessWidget {
             Icons.notifications,
             'Система уведомлений',
           ),
-          _buildVersionFeature(
-            context,
-            Icons.refresh,
-            'Автообновление списка',
-          ),
+          _buildVersionFeature(context, Icons.refresh, 'Автообновление списка'),
           _buildVersionFeature(
             context,
             Icons.no_accounts,
@@ -404,11 +400,7 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatRow(
-    BuildContext context,
-    String label,
-    String value,
-  ) {
+  Widget _buildStatRow(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),

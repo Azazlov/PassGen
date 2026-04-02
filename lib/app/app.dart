@@ -103,7 +103,7 @@ class PasswordGeneratorApp extends StatelessWidget {
     final removePinUseCase = this.removePinUseCase!;
     final getAuthStateUseCase = this.getAuthStateUseCase!;
     final logEventUseCase = this.logEventUseCase!;
-    
+
     return MultiProvider(
       providers: [
         // Database Helper (должен быть первым!)
@@ -155,9 +155,8 @@ class PasswordGeneratorApp extends StatelessWidget {
         Provider(create: (context) => CategoryRepositoryImpl()),
         Provider(create: (context) => AppSettingsRepositoryImpl()),
         Provider(
-          create: (context) => PasswordHistoryRepositoryImpl(
-            context.read<DatabaseHelper>(),
-          ),
+          create: (context) =>
+              PasswordHistoryRepositoryImpl(context.read<DatabaseHelper>()),
         ),
         ChangeNotifierProvider(create: (context) => GlobalErrorHandler()),
 
@@ -216,14 +215,12 @@ class PasswordGeneratorApp extends StatelessWidget {
           ),
         ),
         Provider(
-          create: (context) => ExportPassgenUseCase(
-            context.read<PasswordDataRepositoryImpl>(),
-          ),
+          create: (context) =>
+              ExportPassgenUseCase(context.read<PasswordDataRepositoryImpl>()),
         ),
         Provider(
-          create: (context) => ImportPassgenUseCase(
-            context.read<PasswordDataRepositoryImpl>(),
-          ),
+          create: (context) =>
+              ImportPassgenUseCase(context.read<PasswordDataRepositoryImpl>()),
         ),
         Provider(
           create: (context) =>
@@ -470,7 +467,8 @@ class _TabScaffoldState extends State<TabScaffold> {
   }
 
   void _handleNavigationChange() {
-    if (_navigationService != null && _currentTab != _navigationService!.currentTab) {
+    if (_navigationService != null &&
+        _currentTab != _navigationService!.currentTab) {
       setState(() {
         _currentTab = _navigationService!.currentTab;
       });

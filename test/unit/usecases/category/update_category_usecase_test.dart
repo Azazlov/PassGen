@@ -36,7 +36,9 @@ void main() {
         createdAt: DateTime(2024, 1, 1),
       );
 
-      when(mockRepository.update(oldCategory)).thenAnswer((_) async => updatedCategory);
+      when(
+        mockRepository.update(oldCategory),
+      ).thenAnswer((_) async => updatedCategory);
 
       // Act
       final result = await useCase.execute(oldCategory);
@@ -78,7 +80,9 @@ void main() {
         createdAt: DateTime(2024, 1, 1),
       );
 
-      when(mockRepository.update(systemCategory)).thenAnswer((_) async => systemCategory);
+      when(
+        mockRepository.update(systemCategory),
+      ).thenAnswer((_) async => systemCategory);
 
       // Act
       final result = await useCase.execute(systemCategory);

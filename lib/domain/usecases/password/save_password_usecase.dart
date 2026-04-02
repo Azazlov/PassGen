@@ -8,10 +8,7 @@ import '../../repositories/password_history_repository.dart';
 /// Добавлена бизнес-логика валидации перед сохранением.
 /// Сохраняет предыдущую версию пароля в историю при обновлении.
 class SavePasswordUseCase {
-  const SavePasswordUseCase(
-    this.repository, [
-    this.historyRepository,
-  ]);
+  const SavePasswordUseCase(this.repository, [this.historyRepository]);
   final PasswordGeneratorRepository repository;
   final PasswordHistoryRepository? historyRepository;
 
@@ -42,8 +39,10 @@ class SavePasswordUseCase {
     }
 
     // Если это обновление существующего пароля и есть репозиторий истории
-    if (entryId != null && historyRepository != null &&
-        encryptedPassword != null && nonce != null) {
+    if (entryId != null &&
+        historyRepository != null &&
+        encryptedPassword != null &&
+        nonce != null) {
       // Сохраняем текущую версию в историю перед обновлением
       await historyRepository!.saveHistoryEntry(
         entryId: entryId,

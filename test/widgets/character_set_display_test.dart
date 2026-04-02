@@ -8,7 +8,9 @@ import 'package:pass_gen/presentation/widgets/character_set_display.dart';
 
 void main() {
   group('CharacterSetDisplay Widget Tests', () {
-    testWidgets('shows all character categories when all enabled', (tester) async {
+    testWidgets('shows all character categories when all enabled', (
+      tester,
+    ) async {
       const settings = PasswordGenerationSettings(
         useCustomLowercase: true,
         useCustomUppercase: true,
@@ -18,9 +20,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: CharacterSetDisplay(settings: settings),
-          ),
+          home: Scaffold(body: CharacterSetDisplay(settings: settings)),
         ),
       );
 
@@ -43,9 +43,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: CharacterSetDisplay(settings: settings),
-          ),
+          home: Scaffold(body: CharacterSetDisplay(settings: settings)),
         ),
       );
 
@@ -69,9 +67,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: CharacterSetDisplay(settings: settings),
-          ),
+          home: Scaffold(body: CharacterSetDisplay(settings: settings)),
         ),
       );
 
@@ -91,9 +87,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: CharacterSetDisplay(settings: settings),
-          ),
+          home: Scaffold(body: CharacterSetDisplay(settings: settings)),
         ),
       );
 
@@ -111,9 +105,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: CharacterSetDisplay(settings: settings),
-          ),
+          home: Scaffold(body: CharacterSetDisplay(settings: settings)),
         ),
       );
 
@@ -132,9 +124,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: CharacterSetDisplay(settings: settings),
-          ),
+          home: Scaffold(body: CharacterSetDisplay(settings: settings)),
         ),
       );
 
@@ -143,21 +133,15 @@ void main() {
     });
 
     testWidgets('displays monospace font for characters', (tester) async {
-      const settings = PasswordGenerationSettings(
-        useCustomDigits: true,
-      );
+      const settings = PasswordGenerationSettings(useCustomDigits: true);
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: CharacterSetDisplay(settings: settings),
-          ),
+          home: Scaffold(body: CharacterSetDisplay(settings: settings)),
         ),
       );
 
-      final textWidget = tester.widget<Text>(
-        find.text('0123456789'),
-      );
+      final textWidget = tester.widget<Text>(find.text('0123456789'));
       expect(textWidget.style?.fontFamily, equals('monospace'));
     });
   });

@@ -299,7 +299,7 @@ class PasswordGeneratorLocalDataSource {
   }
 
   /// Сохраняет пароль в хранилище
-  /// 
+  ///
   /// ШИФРОВАНИЕ: Пароль шифруется перед сохранением
   /// Возвращает результат с информацией о том, был ли пароль обновлён
   Future<Map<String, dynamic>> savePassword({
@@ -316,7 +316,7 @@ class PasswordGeneratorLocalDataSource {
       // ШИФРУЕМ пароль перед сохранением
       final encryptedData = await _encryptor.encrypt(
         message: utf8.encode(password),
-        password: utf8.encode(password),  // Мастер-пароль для шифрования
+        password: utf8.encode(password), // Мастер-пароль для шифрования
       );
 
       // encryptedData уже содержит Base64 строки

@@ -35,7 +35,9 @@ void main() {
         createdAt: DateTime(2024, 1, 1),
       );
 
-      when(mockRepository.create(newCategory)).thenAnswer((_) async => createdCategory);
+      when(
+        mockRepository.create(newCategory),
+      ).thenAnswer((_) async => createdCategory);
 
       // Act
       final result = await useCase.execute(newCategory);
@@ -62,7 +64,9 @@ void main() {
         createdAt: DateTime(2024, 1, 1),
       );
 
-      when(mockRepository.create(newCategory)).thenAnswer((_) async => createdCategory);
+      when(
+        mockRepository.create(newCategory),
+      ).thenAnswer((_) async => createdCategory);
 
       // Act
       final result = await useCase.execute(newCategory);
@@ -81,7 +85,9 @@ void main() {
         createdAt: DateTime(2024, 1, 1),
       );
 
-      when(mockRepository.create(systemCategory)).thenAnswer((_) async => systemCategory);
+      when(
+        mockRepository.create(systemCategory),
+      ).thenAnswer((_) async => systemCategory);
 
       // Act
       final result = await useCase.execute(systemCategory);
@@ -100,7 +106,9 @@ void main() {
         createdAt: DateTime(2024, 1, 1),
       );
 
-      when(mockRepository.create(newCategory)).thenAnswer((_) async => newCategory);
+      when(
+        mockRepository.create(newCategory),
+      ).thenAnswer((_) async => newCategory);
 
       // Act
       await useCase.execute(newCategory);

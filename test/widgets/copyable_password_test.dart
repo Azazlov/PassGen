@@ -12,10 +12,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyablePassword(
-              label: 'Пароль',
-              text: 'TestPassword123!',
-            ),
+            body: CopyablePassword(label: 'Пароль', text: 'TestPassword123!'),
           ),
         ),
       );
@@ -29,10 +26,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyablePassword(
-              label: 'Пароль',
-              text: '',
-            ),
+            body: CopyablePassword(label: 'Пароль', text: ''),
           ),
         ),
       );
@@ -45,10 +39,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyablePassword(
-              label: 'Пароль',
-              text: 'TestPassword123!',
-            ),
+            body: CopyablePassword(label: 'Пароль', text: 'TestPassword123!'),
           ),
         ),
       );
@@ -66,10 +57,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyablePassword(
-              label: 'Пароль',
-              text: 'TestPassword123!',
-            ),
+            body: CopyablePassword(label: 'Пароль', text: 'TestPassword123!'),
           ),
         ),
       );
@@ -81,10 +69,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: CopyablePassword(
-              label: 'Пароль',
-              text: 'TestPassword123!',
-            ),
+            body: CopyablePassword(label: 'Пароль', text: 'TestPassword123!'),
           ),
         ),
       );

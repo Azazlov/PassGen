@@ -16,10 +16,10 @@ class PasswordStrengthNotificationService {
   });
 
   final StorageRepository storageRepository;
-  
+
   /// Минимальный порог надёжности (0.0 - 1.0)
   final double minStrengthThreshold;
-  
+
   /// Максимальный возраст пароля в днях
   final int maxPasswordAgeDays;
 
@@ -30,7 +30,8 @@ class PasswordStrengthNotificationService {
     try {
       final result = await storageRepository.getPasswords();
       final passwords = result.fold(
-        (failure) => throw Exception('Ошибка получения паролей: ${failure.message}'),
+        (failure) =>
+            throw Exception('Ошибка получения паролей: ${failure.message}'),
         (passwords) => passwords,
       );
 
@@ -127,7 +128,8 @@ class PasswordStrengthNotificationService {
       return Notification.weakPassword(
         service: entry.service,
         entryId: entry.id!,
-        details: 'Надёжность: ${(normalizedStrength * 100).toInt()}% '
+        details:
+            'Надёжность: ${(normalizedStrength * 100).toInt()}% '
             '(минимум: ${(minStrengthThreshold * 100).toInt()}%)',
       );
     }
@@ -179,9 +181,11 @@ class PasswordStrengthNotificationService {
     if (key.isEmpty) return [];
 
     return allPasswords
-        .where((p) =>
-            p.id != entry.id &&
-            (p.encryptedPassword == key || p.password == key))
+        .where(
+          (p) =>
+              p.id != entry.id &&
+              (p.encryptedPassword == key || p.password == key),
+        )
         .toList();
   }
 

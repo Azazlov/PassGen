@@ -77,7 +77,9 @@ class PassgenFormat {
       final headerBytes = utf8.encode(magicHeader); // 10 байт
       final versionBytes = [formatVersion]; // 1 байт
       final flagsBytes = [flagsNone]; // 1 байт
-      final metadataLengthBytes = _intToBytes16(metadataBytes.length); // 2 байта
+      final metadataLengthBytes = _intToBytes16(
+        metadataBytes.length,
+      ); // 2 байта
       final pbkdf2NonceBytes = pbkdf2Nonce; // 32 байта для PBKDF2
       final chachaNonceBytes = secretBox.nonce; // 12 байт из secretBox
       final dataLengthBytes = _intToBytes(
@@ -144,7 +146,9 @@ class PassgenFormat {
       offset += 1;
 
       // METADATA_LENGTH (2 байта)
-      final metadataLength = _bytesToShort(allBytes.sublist(offset, offset + 2));
+      final metadataLength = _bytesToShort(
+        allBytes.sublist(offset, offset + 2),
+      );
       offset += 2;
 
       // METADATA (metadataLength байт)
@@ -165,7 +169,7 @@ class PassgenFormat {
       // NONCE (32 байта для PBKDF2 + 12 байт для ChaCha20)
       final pbkdf2Nonce = allBytes.sublist(offset, offset + 32);
       offset += 32;
-      
+
       final chachaNonce = allBytes.sublist(offset, offset + 12);
       offset += 12;
 
@@ -199,7 +203,11 @@ class PassgenFormat {
 
       // Дешифруем данные
       final algorithm = Chacha20.poly1305Aead();
-      final secretBox = SecretBox(cipherText, nonce: chachaNonce, mac: Mac(macBytes));
+      final secretBox = SecretBox(
+        cipherText,
+        nonce: chachaNonce,
+        mac: Mac(macBytes),
+      );
 
       final decryptedBytes = await algorithm.decrypt(
         secretBox,
@@ -219,10 +227,7 @@ class PassgenFormat {
 
   /// Преобразует int в 2 байта (little-endian)
   List<int> _intToBytes16(int value) {
-    return [
-      value & 0xFF,
-      (value >> 8) & 0xFF,
-    ];
+    return [value & 0xFF, (value >> 8) & 0xFF];
   }
 
   /// Преобразует 2 байта в int (little-endian)

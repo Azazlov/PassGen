@@ -117,11 +117,7 @@ class _CopyablePasswordState extends State<CopyablePassword> {
         content: Row(
           children: [
             // Иконка вместо Lottie анимации
-            const Icon(
-              Icons.check_circle,
-              color: Colors.green,
-              size: 24,
-            ),
+            const Icon(Icons.check_circle, color: Colors.green, size: 24),
             const SizedBox(width: 12),
             const Text('Пароль скопирован'),
           ],
@@ -153,7 +149,9 @@ class _CopyablePasswordState extends State<CopyablePassword> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Буфер обмена очищен (${widget.clipboardTimeoutSeconds} сек)'),
+            content: Text(
+              'Буфер обмена очищен (${widget.clipboardTimeoutSeconds} сек)',
+            ),
             duration: const Duration(seconds: 2),
             backgroundColor: Colors.orange,
           ),
@@ -167,7 +165,9 @@ class _CopyablePasswordState extends State<CopyablePassword> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.5),
+        ),
       ),
       child: Center(
         child: Text(

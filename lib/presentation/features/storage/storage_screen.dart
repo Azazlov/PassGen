@@ -63,7 +63,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<StorageController>().loadPasswords();
     });
-    
+
     // Подписываемся на изменения навигации
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _navigationService = context.read<NavigationService>();
@@ -258,7 +258,8 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                     IconButton(
                       icon: const Icon(Icons.copy),
                       onPressed: () {
-                        final passwordText = password.password ?? '(зашифровано)';
+                        final passwordText =
+                            password.password ?? '(зашифровано)';
                         Clipboard.setData(ClipboardData(text: passwordText));
 
                         // Автоочистка буфера обмена через 60 секунд
@@ -278,7 +279,9 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
 
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Пароль скопирован. Буфер будет очищен через 60 сек.'),
+                            content: Text(
+                              'Пароль скопирован. Буфер будет очищен через 60 сек.',
+                            ),
                           ),
                         );
                       },
@@ -317,7 +320,8 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             showAppDialog(
               context: context,
               title: 'Скопировано',
-              content: 'Пароль скопирован в буфер обмена. Буфер будет очищен через 60 сек.',
+              content:
+                  'Пароль скопирован в буфер обмена. Буфер будет очищен через 60 сек.',
             );
           },
           icon: Icons.copy,

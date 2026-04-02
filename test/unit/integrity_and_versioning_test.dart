@@ -42,15 +42,18 @@ void main() {
         expect(result.isValid, isTrue);
       });
 
-      test('verifyChecksum с неправильным checksum возвращает invalid', () async {
-        final result = await checker.verifyChecksum(
-          expectedChecksum: 'invalid_checksum',
-        );
+      test(
+        'verifyChecksum с неправильным checksum возвращает invalid',
+        () async {
+          final result = await checker.verifyChecksum(
+            expectedChecksum: 'invalid_checksum',
+          );
 
-        expect(result.isValid, isFalse);
-        expect(result.checkType, equals(CheckType.checksum));
-        expect(result.errorMessage, contains('Checksum mismatch'));
-      });
+          expect(result.isValid, isFalse);
+          expect(result.checkType, equals(CheckType.checksum));
+          expect(result.errorMessage, contains('Checksum mismatch'));
+        },
+      );
     });
 
     // ==================== TAMPERING TESTS ====================
@@ -82,10 +85,7 @@ void main() {
 
     group('Utility Tests', () {
       test('resetStoredChecksum выполняется без ошибок', () async {
-        expect(
-          () => IntegrityChecker.resetStoredChecksum(),
-          returnsNormally,
-        );
+        expect(() => IntegrityChecker.resetStoredChecksum(), returnsNormally);
       });
 
       test('getIntegrityInfo возвращает null если нет данных', () async {
@@ -158,12 +158,15 @@ void main() {
         expect(params.kdf, equals('Argon2id'));
       });
 
-      test('getParamsForVersion для неизвестной версии выбрасывает исключение', () {
-        expect(
-          () => EncryptionVersion.getParamsForVersion(99),
-          throwsA(isA<UnsupportedError>()),
-        );
-      });
+      test(
+        'getParamsForVersion для неизвестной версии выбрасывает исключение',
+        () {
+          expect(
+            () => EncryptionVersion.getParamsForVersion(99),
+            throwsA(isA<UnsupportedError>()),
+          );
+        },
+      );
 
       test('getCurrentParams возвращает параметры текущей версии', () {
         final params = EncryptionVersion.getCurrentParams();

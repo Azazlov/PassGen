@@ -21,12 +21,17 @@ void main() {
     test('должен вернуть список логов', () async {
       // Arrange
       final testLogs = [
-        SecurityLog(actionType: 'AUTH_SUCCESS', timestamp: DateTime(2024, 1, 1)),
+        SecurityLog(
+          actionType: 'AUTH_SUCCESS',
+          timestamp: DateTime(2024, 1, 1),
+        ),
         SecurityLog(actionType: 'PWD_CREATED', timestamp: DateTime(2024, 1, 2)),
         SecurityLog(actionType: 'DATA_EXPORT', timestamp: DateTime(2024, 1, 3)),
       ];
 
-      when(mockRepository.getLogs(limit: 1000)).thenAnswer((_) async => testLogs);
+      when(
+        mockRepository.getLogs(limit: 1000),
+      ).thenAnswer((_) async => testLogs);
 
       // Act
       final result = await useCase.execute();
@@ -52,7 +57,10 @@ void main() {
     test('должен вернуть логи с указанным лимитом', () async {
       // Arrange
       final testLogs = [
-        SecurityLog(actionType: 'AUTH_SUCCESS', timestamp: DateTime(2024, 1, 1)),
+        SecurityLog(
+          actionType: 'AUTH_SUCCESS',
+          timestamp: DateTime(2024, 1, 1),
+        ),
       ];
 
       when(mockRepository.getLogs(limit: 10)).thenAnswer((_) async => testLogs);
@@ -73,7 +81,9 @@ void main() {
         details: '{"service": "Gmail"}',
       );
 
-      when(mockRepository.getLogs(limit: 1000)).thenAnswer((_) async => [logWithDetails]);
+      when(
+        mockRepository.getLogs(limit: 1000),
+      ).thenAnswer((_) async => [logWithDetails]);
 
       // Act
       final result = await useCase.execute();

@@ -139,14 +139,17 @@ void main() {
         expect(bytes1, isNot(equals(bytes2)));
       });
 
-      test('generateSecureRandomBytes генерирует байты в диапазоне [0, 255]', () {
-        for (int i = 0; i < 100; i++) {
-          final bytes = CryptoUtils.generateSecureRandomBytes(100);
-          for (final byte in bytes) {
-            expect(byte, inInclusiveRange(0, 255));
+      test(
+        'generateSecureRandomBytes генерирует байты в диапазоне [0, 255]',
+        () {
+          for (int i = 0; i < 100; i++) {
+            final bytes = CryptoUtils.generateSecureRandomBytes(100);
+            for (final byte in bytes) {
+              expect(byte, inInclusiveRange(0, 255));
+            }
           }
-        }
-      });
+        },
+      );
 
       test('generateSecureNonce генерирует nonce правильной длины', () {
         final nonce = CryptoUtils.generateSecureNonce(length: 32);
@@ -241,10 +244,16 @@ void main() {
         final salt2Base64 = CryptoUtils.encodeBytesBase64(salt2);
 
         // Разные соли должны быть разными
-        expect(CryptoUtils.constantTimeEqualsBase64(salt1Base64, salt2Base64), isFalse);
+        expect(
+          CryptoUtils.constantTimeEqualsBase64(salt1Base64, salt2Base64),
+          isFalse,
+        );
 
         // Одинаковые должны совпадать
-        expect(CryptoUtils.constantTimeEqualsBase64(salt1Base64, salt1Base64), isTrue);
+        expect(
+          CryptoUtils.constantTimeEqualsBase64(salt1Base64, salt1Base64),
+          isTrue,
+        );
       });
     });
   });

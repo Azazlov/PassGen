@@ -24,15 +24,16 @@ void main() {
     test('должен успешно сгенерировать пароль', () async {
       // Arrange
       const settings = PasswordGenerationSettings();
-      
+
       const expectedPassword = PasswordResult(
         password: 'TestPass123',
         strength: 85.0,
         config: 'config_string',
       );
 
-      when(mockRepository.generatePassword(settings))
-          .thenAnswer((_) async => const Right(expectedPassword));
+      when(
+        mockRepository.generatePassword(settings),
+      ).thenAnswer((_) async => const Right(expectedPassword));
 
       // Act
       final result = await useCase.execute(settings);
@@ -46,9 +47,11 @@ void main() {
     test('должен вернуть ошибку при неудачной генерации', () async {
       // Arrange
       const settings = PasswordGenerationSettings();
-      
-      when(mockRepository.generatePassword(settings))
-          .thenAnswer((_) async => const Left(PasswordGenerationFailure(message: 'Ошибка генерации')));
+
+      when(mockRepository.generatePassword(settings)).thenAnswer(
+        (_) async =>
+            const Left(PasswordGenerationFailure(message: 'Ошибка генерации')),
+      );
 
       // Act
       final result = await useCase.execute(settings);
@@ -61,9 +64,12 @@ void main() {
     test('должен вызвать repository.generatePassword', () async {
       // Arrange
       const settings = PasswordGenerationSettings();
-      
-      when(mockRepository.generatePassword(settings))
-          .thenAnswer((_) async => const Right(PasswordResult(password: 'pass', strength: 50, config: '')));
+
+      when(mockRepository.generatePassword(settings)).thenAnswer(
+        (_) async => const Right(
+          PasswordResult(password: 'pass', strength: 50, config: ''),
+        ),
+      );
 
       // Act
       await useCase.execute(settings);
