@@ -9,7 +9,9 @@
       "Bash(flutter *)",
       "Bash(sed *)",
       "Bash(git checkout *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "WebSearch",
+      "Bash(taskkill *)"
     ]
   },
   "$version": 3

@@ -24,7 +24,11 @@ class AuthLocalDataSource {
   static const int lockoutDurationSeconds = 30;
   static const int minPinLength = 4;
   static const int maxPinLength = 8;
-  static const int pbkdf2Iterations = 100000; // Увеличено с 10,000 для безопасности (v0.5.1)
+  static const int pbkdf2Iterations = 10000; // Текущая версия итераций
+  static const int legacyPbkdf2Iterations = 10000; // Старая версия для миграции (v0.5.1)
+  
+  // Ключ для отслеживания версии итераций
+  static const String _sqlitePbkdf2IterationsKey = 'pbkdf2_iterations';
 
   Database? _database;
 
@@ -198,7 +202,13 @@ class AuthLocalDataSource {
     String storedSalt,
   ) async {
     try {
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: START');
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: storedHash = $storedHash');
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: storedSalt = $storedSalt');
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: pin = $pin');
+  
       final saltBytes = base64Decode(storedSalt);
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: saltBytes.length = ${saltBytes.length}');
 
       final pbkdf2 = Pbkdf2(
         macAlgorithm: Hmac.sha256(),
@@ -206,22 +216,37 @@ class AuthLocalDataSource {
         bits: 256,
       );
 
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: PBKDF2 created, iterations = $pbkdf2Iterations');
+
       final secretKey = await pbkdf2.deriveKeyFromPassword(
         password: pin,
         nonce: Uint8List.fromList(saltBytes),
       );
 
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: secretKey derived');
+
       final computedHashBytes = await secretKey.extractBytes();
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: computedHashBytes.length = ${computedHashBytes.length}');
+      
       final computedHash = base64Encode(computedHashBytes);
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: computedHash = $computedHash');
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: storedHash      = $storedHash');
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: hashes match = ${computedHash == storedHash}');
 
       // Constant-time сравнение хэшей (защита от timing attacks)
       final isValid = CryptoUtils.constantTimeEqualsBase64(computedHash, storedHash);
 
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: isValid = $isValid');
+
+  try{
       // Затирание ключа из памяти
       CryptoUtils.secureWipeKey(computedHashBytes);
+  } catch (_) {};
+  
 
       return isValid;
     } catch (e) {
+  debugPrint('[AuthLocalDataSource] _verifyPinHash: ERROR = $e');
       return false;
     }
   }

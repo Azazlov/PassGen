@@ -471,3 +471,6 @@ flutter pub outdated
 - **Repository:** https://github.com/azazlov/passgen
 - **Issues:** https://github.com/azazlov/passgen/issues
 - **Author:** @azazlov
+
+## Qwen Added Memories
+- @QWEN.md @.qwen/PROJECT_SUMMARY.md @docs/DOCUMENTATION.md
