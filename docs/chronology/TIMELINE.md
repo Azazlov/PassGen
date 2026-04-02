@@ -1,9 +1,9 @@
 # ⏱️ Временная шкала разработки PassGen
 
-**Проект:** PassGen — кроссплатформенный менеджер паролей  
-**Период разработки:** 5-10 марта 2026 г.  
-**Общая продолжительность:** 6 дней  
-**Финальная версия:** 0.5.0
+**Проект:** PassGen — кроссплатформенный менеджер паролей
+**Период разработки:** 5-10 марта 2026 г., 2 апреля 2026 г.
+**Общая продолжительность:** 6 дней + 1 день (bug fixes)
+**Финальная версия:** 0.5.1 (Stable)
 
 ---
 
@@ -63,6 +63,13 @@ gantt
     Презентация                :done, v05doc4, after v05doc3, 2h
     Bash скрипты               :done, v05bash, 2026-03-10 09:00, 2h
     GitHub Actions             :done, v05ci, after v05bash, 2h
+
+    section v0.5.1 — Критические исправления
+    Исправление PIN verification bug :done, v051bug1, 2026-04-02 10:00, 1h
+    Исправление provider error :done, v051bug2, after v051bug1, 30m
+    Исправление change PIN bug :done, v051bug3, after v051bug2, 1h
+    Тестирование               :done, v051test, after v051bug3, 1h
+    Документирование           :done, v051doc, after v051test, 1h
 ```
 
 ---
@@ -219,20 +226,65 @@ gantt
     title День 6: DevOps и архивирование (v0.5.0 — часть 2)
     dateFormat  YYYY-MM-DD HH:mm
     axisFormat  %H:%M
-    
+
     section Утро
     Bash скрипты сборки        :done, bash, 2026-03-10 09:00, 2h
     GitHub Actions CI          :done, ci, after bash, 2h
     GitHub Actions Build       :done, build, after ci, 1h
-    
+
     section День
     GitHub Actions Deploy      :done, deploy, 2026-03-10 13:00, 1h
     Архивирование документации :done, archive, after deploy, 2h
     Финальная проверка         :done, check, after archive, 1h
 ```
 
-**Итого за день:** ~9 часов  
+**Итого за день:** ~9 часов
 **Создано файлов:** ~12 (скрипты + workflow)
+
+---
+
+### 2 апреля 2026 (День 7) — Критические исправления
+
+```mermaid
+gantt
+    title День 7: Критические исправления (v0.5.1)
+    dateFormat  YYYY-MM-DD HH:mm
+    axisFormat  %H:%M
+
+    section Утро
+    Диагностика PIN verification bug :done, diag1, 2026-04-02 10:00, 30m
+    Исправление secureWipeKey error :done, fix1, after diag1, 30m
+    Тестирование входа по PIN    :done, test1, after fix1, 15m
+
+    section День
+    Диагностика provider error  :done, diag2, 2026-04-02 11:00, 15m
+    Добавление ChangePinUseCase :done, fix2, after diag2, 15m
+    Добавление RemovePinUseCase :done, fix3, after fix2, 15m
+    Тестирование Settings screen :done, test2, after fix3, 15m
+
+    section После обеда
+    Диагностика change PIN bug  :done, diag3, 2026-04-02 14:00, 30m
+    Исправление rotateEncryptionKeys :done, fix4, after diag3, 45m
+    Комплексное тестирование    :done, test3, after fix4, 30m
+    Документирование исправлений :done, doc, after test3, 1h
+```
+
+**Итого за день:** ~6 часов
+**Исправлено ошибок:** 3 критических (P0)
+**Затронутые файлы:**
+- `lib/data/datasources/auth_local_datasource.dart` (2 исправления)
+- `lib/app/app.dart` (1 исправление)
+- `docs/WORK_REPORT_AND_ROADMAP_2026_04_02.md` (новый документ)
+
+**Детали исправлений:**
+
+| Баг | Приоритет | Описание | Решение |
+|-----|-----------|----------|---------|
+| #1 | P0 | PIN verification failure | Try-catch wrapper для secureWipeKey() |
+| #2 | P1 | Settings provider error | Добавление missing providers |
+| #3 | P0 | Change PIN failure | Try-catch wrapper для secureWipeKey/Data() |
+
+**Общая корневая причина:** Все три бага произошли из-за того, что пакет `cryptography` возвращает неизменяемые `Uint8List` из `extractBytes()`, которые не могут быть изменены утилитой secure wipe.
 
 ---
 
@@ -246,7 +298,8 @@ gantt
 | 4 | 8 марта | v0.5.0 (часть 1) | ~18 | ~40 | ~2,300 |
 | 5 | 9 марта | — | ~8 | ~5 | ~500 |
 | 6 | 10 марта | v0.5.0 (часть 2) | ~9 | ~12 | ~200 |
-| **ИТОГО** | **5-10 марта** | **v0.1.0 - v0.5.0** | **~85** | **~152** | **~10,200** |
+| 7 | 2 апреля | v0.5.1 | ~6 | ~3 | ~150 |
+| **ИТОГО** | **5-10 марта, 2 апреля** | **v0.1.0 - v0.5.1** | **~91** | **~155** | **~10,350** |
 
 ---
 
@@ -263,6 +316,8 @@ gantt
 | 8 марта | 23:00 | Документация завершена | v0.5.0 ✅ |
 | 10 марта | 15:00 | DevOps завершён | v0.5.0 ✅ |
 | 10 марта | 17:00 | Проект готов к релизу | v0.5.0 🎉 |
+| 2 апреля | 16:00 | Критические баги исправлены | v0.5.1 ✅ |
+| 2 апреля | 17:00 | Релиз стабильной версии | v0.5.1 🎉 |
 
 ---
 
