@@ -60,13 +60,13 @@ class AuthLocalDataSource {
   Future<bool> isPinSetup() async {
   debugPrint('[AuthLocalDataSource] isPinSetup вызван');
   debugPrint('[AuthLocalDataSource] isPinSetup: _database = ${_database != null ? "инициализирована" : "NULL"}');
-    
+
     try {
       // Проверяем ТОЛЬКО SQLite
   debugPrint('[AuthLocalDataSource] isPinSetup: получение базы данных...');
       final db = await _db;
-  debugPrint('[AuthLocalDataSource] isPinSetup: база данных получена');
-      
+  debugPrint('[AuthLocalDataSource] isPinSetup: база данных получена, path = ${db.path}');
+
   debugPrint('[AuthLocalDataSource] isPinSetup: запрос к БД...');
       final result = await db.query(
         'auth_data',
@@ -75,11 +75,16 @@ class AuthLocalDataSource {
       );
   debugPrint('[AuthLocalDataSource] isPinSetup: результат = ${result.length} записей');
       
+      if (result.isNotEmpty) {
+  debugPrint('[AuthLocalDataSource] isPinSetup: запись найдена, value = ${result.first['value']}');
+      }
+
       final isSetup = result.isNotEmpty;
   debugPrint('[AuthLocalDataSource] isPinSetup: возвращает $isSetup');
       return isSetup;
-    } catch (_) {
-  debugPrint('[AuthLocalDataSource] isPinSetup: ОШИБКА, возвращает false');
+    } catch (e, stackTrace) {
+  debugPrint('[AuthLocalDataSource] isPinSetup: ОШИБКА = $e');
+  debugPrint('[AuthLocalDataSource] isPinSetup: stackTrace = $stackTrace');
       // Если ошибка - считаем что PIN не установлен
       return false;
     }
@@ -88,9 +93,13 @@ class AuthLocalDataSource {
   /// Сохраняет данные аутентификации в SQLite
   Future<void> _saveToSqlite(String key, String value) async {
     try {
+  debugPrint('[AuthLocalDataSource] _saveToSqlite: key = $key, value.length = ${value.length}');
       final db = await _db;
+  debugPrint('[AuthLocalDataSource] _saveToSqlite: db получен');
+      
       final now = DateTime.now().millisecondsSinceEpoch;
-      await db.insert(
+  debugPrint('[AuthLocalDataSource] _saveToSqlite: вставка в БД...');
+      final id = await db.insert(
         'auth_data',
         {
           'key': key,
@@ -99,7 +108,10 @@ class AuthLocalDataSource {
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-    } catch (_) {
+  debugPrint('[AuthLocalDataSource] _saveToSqlite: вставка завершена, rowId = $id');
+    } catch (e, stackTrace) {
+  debugPrint('[AuthLocalDataSource] _saveToSqlite: ОШИБКА = $e');
+  debugPrint('[AuthLocalDataSource] _saveToSqlite: stackTrace = $stackTrace');
       // Игнорируем ошибки сохранения
     }
   }
@@ -107,16 +119,30 @@ class AuthLocalDataSource {
   /// Читает данные аутентификации из SQLite
   Future<String?> _readFromSqlite(String key) async {
     try {
+  debugPrint('[AuthLocalDataSource] _readFromSqlite: key = $key');
       final db = await _db;
+  debugPrint('[AuthLocalDataSource] _readFromSqlite: db получен');
+      
+  debugPrint('[AuthLocalDataSource] _readFromSqlite: запрос к БД...');
       final result = await db.query(
         'auth_data',
         where: 'key = ?',
         whereArgs: [key],
       );
+  debugPrint('[AuthLocalDataSource] _readFromSqlite: результат = ${result.length} записей');
+      
+      if (result.isNotEmpty) {
+  debugPrint('[AuthLocalDataSource] _readFromSqlite: запись найдена, value = ${result.first['value']}');
+  debugPrint('[AuthLocalDataSource] _readFromSqlite: value type = ${result.first['value']?.runtimeType}');
+      } else {
+  debugPrint('[AuthLocalDataSource] _readFromSqlite: запись НЕ найдена');
+      }
 
       if (result.isEmpty) return null;
       return result.first['value'] as String?;
-    } catch (_) {
+    } catch (e, stackTrace) {
+  debugPrint('[AuthLocalDataSource] _readFromSqlite: ОШИБКА = $e');
+  debugPrint('[AuthLocalDataSource] _readFromSqlite: stackTrace = $stackTrace');
       return null;
     }
   }
@@ -289,11 +315,17 @@ class AuthLocalDataSource {
   debugPrint('[AuthLocalDataSource] setupPin: удаление lockout...');
       await _deleteFromSqlite(_sqliteLockoutTimestampKey);
   debugPrint('[AuthLocalDataSource] setupPin: lockout удалён');
-
+      
+      // Проверяем, что данные действительно сохранились
+  debugPrint('[AuthLocalDataSource] setupPin: проверка сохранения...');
+      final verifyHash = await _readFromSqlite(_sqlitePinHashKey);
+  debugPrint('[AuthLocalDataSource] setupPin: проверка hash = ${verifyHash != null ? "НАЙДЕН" : "NULL"}');
+      
   debugPrint('[AuthLocalDataSource] setupPin: УСПЕХ! PIN установлен');
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
   debugPrint('[AuthLocalDataSource] setupPin: ОШИБКА: $e');
+  debugPrint('[AuthLocalDataSource] setupPin: stackTrace: $stackTrace');
       if (e is ValidationFailure) rethrow;
       throw const StorageFailure(message: 'Ошибка установки PIN');
     }

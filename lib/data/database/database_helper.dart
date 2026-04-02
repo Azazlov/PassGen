@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'database_schema.dart';
@@ -25,7 +26,11 @@ class DatabaseHelper {
   /// Получение пути к базе данных
   Future<String> get _dbPath async {
     final dbDir = await getDatabasesPath();
-    return join(dbDir, 'passgen.db');
+    final path = join(dbDir, 'passgen.db');
+    debugPrint('[DatabaseHelper] Путь к базе данных: $path');
+    debugPrint('[DatabaseHelper] Директория баз данных: $dbDir');
+    debugPrint('[DatabaseHelper] Платформа: ${Platform.operatingSystem}');
+    return path;
   }
 
   /// Получение экземпляра базы данных

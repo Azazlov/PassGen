@@ -474,3 +474,4 @@ flutter pub outdated
 
 ## Qwen Added Memories
 - @QWEN.md @.qwen/PROJECT_SUMMARY.md @docs/DOCUMENTATION.md
+- @.qwen/ @docs/ @QWEN.md

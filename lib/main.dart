@@ -12,7 +12,6 @@ import 'domain/usecases/auth/change_pin_usecase.dart';
 import 'domain/usecases/auth/remove_pin_usecase.dart';
 import 'domain/usecases/auth/get_auth_state_usecase.dart';
 import 'domain/usecases/log/log_event_usecase.dart';
-import 'domain/repositories/auth_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +27,26 @@ void main() async {
   final dbHelper = DatabaseHelper();
   final db = await dbHelper.database;
   debugPrint('[MAIN] База данных инициализирована: ${db.path}');
+  
+  // Проверяем существование таблицы auth_data
+  debugPrint('[MAIN] Проверка существования таблицы auth_data...');
+  final tables = await db.rawQuery(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name='auth_data'",
+  );
+  
+  if (tables.isEmpty) {
+    debugPrint('[MAIN] Таблица auth_data не найдена, создаём...');
+    await db.execute('''
+      CREATE TABLE auth_data (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      )
+    ''');
+    debugPrint('[MAIN] Таблица auth_data создана');
+  } else {
+    debugPrint('[MAIN] Таблица auth_data существует');
+  }
 
   // Выполнение миграции из SharedPreferences
   final prefs = await SharedPreferences.getInstance();
