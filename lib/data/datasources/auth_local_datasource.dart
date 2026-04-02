@@ -224,21 +224,18 @@ class AuthLocalDataSource {
       final hashed = await _hashPin(pin);
 
       // Сохраняем ТОЛЬКО в SQLite (безопасное хранилище)
-      final db = await _db;
-      
+      await _db;
+
       await _saveToSqlite(_sqlitePinHashKey, hashed['hash']!);
-      
+
       await _saveToSqlite(_sqlitePinSaltKey, hashed['salt']!);
-      
+
       await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
-      
+
       await _deleteFromSqlite(_sqliteLockoutTimestampKey);
-      
-      // Проверяем, что данные действительно сохранились
-      final verifyHash = await _readFromSqlite(_sqlitePinHashKey);
-      
+
       return true;
-    } catch (e, stackTrace) {
+    } catch (e) {
       if (e is ValidationFailure) rethrow;
       throw const StorageFailure(message: 'Ошибка установки PIN');
     }
@@ -249,16 +246,13 @@ class AuthLocalDataSource {
   /// Чтение данных выполняется ТОЛЬКО из SQLite.
   /// SharedPreferences не используется для чтения чувствительных данных.
   Future<Map<String, dynamic>> verifyPin(String pin) async {
-    
     try {
       String? storedHash;
       String? storedSalt;
 
       // Читаем ТОЛЬКО из SQLite (безопасное хранилище)
-      final db = await _db;
-      
       storedHash = await _readFromSqlite(_sqlitePinHashKey);
-      
+
       storedSalt = await _readFromSqlite(_sqlitePinSaltKey);
 
       if (storedHash == null || storedSalt == null) {

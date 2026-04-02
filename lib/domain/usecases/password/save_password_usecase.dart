@@ -34,7 +34,7 @@ class SavePasswordUseCase {
     String? encryptedPassword,
     String? nonce,
     String? reason,
-  } {
+  }) async {
     // Валидация входных данных
     final validationFailure = _validate(service, password, config);
     if (validationFailure != null) {

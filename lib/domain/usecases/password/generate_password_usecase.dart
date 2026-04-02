@@ -13,7 +13,7 @@ class GeneratePasswordUseCase {
 
   Future<Either<PasswordGenerationFailure, PasswordResult>> execute(
     PasswordGenerationSettings settings,
-   {
+  ) {
     return repository.generatePassword(settings);
   }
 
@@ -38,3 +38,4 @@ class GeneratePasswordUseCase {
     );
   }
 }
+

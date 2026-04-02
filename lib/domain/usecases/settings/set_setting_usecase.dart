@@ -9,7 +9,7 @@ class SetSettingUseCase {
     String key,
     String value, {
     bool encrypted = false,
-  } {
+  }) async {
     await repository.setValue(key, value, encrypted: encrypted);
   }
 }
