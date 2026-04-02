@@ -6,7 +6,7 @@ class GetLogsUseCase {
   const GetLogsUseCase(this.repository);
   final SecurityLogRepository repository;
 
-  Future<List<SecurityLog>> execute({int limit = 1000}) async {
+  Future<List<SecurityLog>> execute({int limit = 1000} {
     return repository.getLogs(limit: limit);
   }
 }

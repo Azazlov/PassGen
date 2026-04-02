@@ -5,7 +5,7 @@ class RemoveSettingUseCase {
   const RemoveSettingUseCase(this.repository);
   final AppSettingsRepository repository;
 
-  Future<void> execute(String key) async {
+  Future<void> execute(String key {
     await repository.remove(key);
   }
 }

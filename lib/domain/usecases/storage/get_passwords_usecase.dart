@@ -8,7 +8,7 @@ class GetPasswordsUseCase {
   const GetPasswordsUseCase(this.repository);
   final StorageRepository repository;
 
-  Future<Either<StorageFailure, List<PasswordEntry>>> execute() async {
+  Future<Either<StorageFailure, List<PasswordEntry>>> execute( {
     return repository.getPasswords();
   }
 }

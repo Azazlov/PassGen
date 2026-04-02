@@ -10,7 +10,7 @@ class DecryptMessageUseCase {
   Future<Either<EncryptionFailure, String>> execute({
     required String encryptedData,
     required String password,
-  }) async {
+  } {
     return repository.decrypt(encryptedData, password);
   }
 }

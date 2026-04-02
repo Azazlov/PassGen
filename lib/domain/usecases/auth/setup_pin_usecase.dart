@@ -4,10 +4,10 @@ import '../../repositories/auth_repository.dart';
 
 /// Use case для установки PIN
 class SetupPinUseCase {
-  SetupPinUseCase(this.repository);
+  const SetupPinUseCase(this.repository);
   final AuthRepository repository;
 
-  Future<Either<AuthFailure, bool>> execute(String pin){
+  Future<Either<AuthFailure, bool>> execute(String pin) {
     return repository.setupPin(pin);
   }
 }

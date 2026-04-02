@@ -5,7 +5,7 @@ class GetSettingUseCase {
   const GetSettingUseCase(this.repository);
   final AppSettingsRepository repository;
 
-  Future<String?> execute(String key) async {
+  Future<String?> execute(String key {
     return repository.getValue(key);
   }
 }

@@ -7,7 +7,7 @@ class ExportPassgenUseCase {
   const ExportPassgenUseCase(this.repository);
   final PasswordDataRepository repository;
 
-  Future<Either<StorageFailure, String>> execute(String masterPassword) async {
+  Future<Either<StorageFailure, String>> execute(String masterPassword {
     return repository.exportToPassgen(masterPassword);
   }
 }

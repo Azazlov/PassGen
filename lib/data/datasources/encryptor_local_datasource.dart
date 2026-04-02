@@ -30,7 +30,7 @@ class EncryptorLocalDataSource {
   Future<SecretKey> _deriveKey({
     required List<int> password,
     List<int>? nonce,
-  }) async {
+  }) {
     final pbkdf2 = Pbkdf2(
       macAlgorithm: Hmac.sha256(),
       iterations: 10000,

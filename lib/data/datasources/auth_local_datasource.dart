@@ -1,12 +1,10 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/crypto_utils.dart';
-import '../database/database_helper.dart';
 import 'encryptor_local_datasource.dart';
 
 /// Источник данных для аутентификации
@@ -24,25 +22,18 @@ class AuthLocalDataSource {
   static const int lockoutDurationSeconds = 30;
   static const int minPinLength = 4;
   static const int maxPinLength = 8;
-  static const int pbkdf2Iterations = 10000; // Текущая версия итераций
-  static const int legacyPbkdf2Iterations = 10000; // Старая версия для миграции (v0.5.1)
-  
-  // Ключ для отслеживания версии итераций
-  static const String _sqlitePbkdf2IterationsKey = 'pbkdf2_iterations';
+  static const int pbkdf2Iterations = 10000;
 
-  Database? _database;
+  final Database? _database;
 
   /// Конструктор с готовой базой данных
-  AuthLocalDataSource({Database? database}) : _database = database;
+  const AuthLocalDataSource({Database? database}) : _database = database;
 
   /// Получает базу данных
   Future<Database> get _db async {
-  debugPrint('[AuthLocalDataSource] _db вызван, _database = ${_database != null ? "инициализирована" : "NULL"}');
     if (_database != null) {
-  debugPrint('[AuthLocalDataSource] _db возвращает существующую базу');
       return _database!;
     }
-  debugPrint('[AuthLocalDataSource] _db выбрасывает ошибку - база не инициализирована');
     throw const StorageFailure(message: 'База данных не инициализирована');
   }
 
@@ -58,34 +49,16 @@ class AuthLocalDataSource {
   ///
   /// Проверка выполняется ТОЛЬКО в SQLite.
   Future<bool> isPinSetup() async {
-  debugPrint('[AuthLocalDataSource] isPinSetup вызван');
-  debugPrint('[AuthLocalDataSource] isPinSetup: _database = ${_database != null ? "инициализирована" : "NULL"}');
-
     try {
-      // Проверяем ТОЛЬКО SQLite
-  debugPrint('[AuthLocalDataSource] isPinSetup: получение базы данных...');
       final db = await _db;
-  debugPrint('[AuthLocalDataSource] isPinSetup: база данных получена, path = ${db.path}');
-
-  debugPrint('[AuthLocalDataSource] isPinSetup: запрос к БД...');
       final result = await db.query(
         'auth_data',
         where: 'key = ?',
         whereArgs: [_sqlitePinHashKey],
       );
-  debugPrint('[AuthLocalDataSource] isPinSetup: результат = ${result.length} записей');
-      
-      if (result.isNotEmpty) {
-  debugPrint('[AuthLocalDataSource] isPinSetup: запись найдена, value = ${result.first['value']}');
-      }
 
-      final isSetup = result.isNotEmpty;
-  debugPrint('[AuthLocalDataSource] isPinSetup: возвращает $isSetup');
-      return isSetup;
-    } catch (e, stackTrace) {
-  debugPrint('[AuthLocalDataSource] isPinSetup: ОШИБКА = $e');
-  debugPrint('[AuthLocalDataSource] isPinSetup: stackTrace = $stackTrace');
-      // Если ошибка - считаем что PIN не установлен
+      return result.isNotEmpty;
+    } catch (_) {
       return false;
     }
   }
@@ -93,13 +66,9 @@ class AuthLocalDataSource {
   /// Сохраняет данные аутентификации в SQLite
   Future<void> _saveToSqlite(String key, String value) async {
     try {
-  debugPrint('[AuthLocalDataSource] _saveToSqlite: key = $key, value.length = ${value.length}');
       final db = await _db;
-  debugPrint('[AuthLocalDataSource] _saveToSqlite: db получен');
-      
       final now = DateTime.now().millisecondsSinceEpoch;
-  debugPrint('[AuthLocalDataSource] _saveToSqlite: вставка в БД...');
-      final id = await db.insert(
+      await db.insert(
         'auth_data',
         {
           'key': key,
@@ -108,10 +77,7 @@ class AuthLocalDataSource {
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-  debugPrint('[AuthLocalDataSource] _saveToSqlite: вставка завершена, rowId = $id');
-    } catch (e, stackTrace) {
-  debugPrint('[AuthLocalDataSource] _saveToSqlite: ОШИБКА = $e');
-  debugPrint('[AuthLocalDataSource] _saveToSqlite: stackTrace = $stackTrace');
+    } catch (_) {
       // Игнорируем ошибки сохранения
     }
   }
@@ -119,30 +85,16 @@ class AuthLocalDataSource {
   /// Читает данные аутентификации из SQLite
   Future<String?> _readFromSqlite(String key) async {
     try {
-  debugPrint('[AuthLocalDataSource] _readFromSqlite: key = $key');
       final db = await _db;
-  debugPrint('[AuthLocalDataSource] _readFromSqlite: db получен');
-      
-  debugPrint('[AuthLocalDataSource] _readFromSqlite: запрос к БД...');
       final result = await db.query(
         'auth_data',
         where: 'key = ?',
         whereArgs: [key],
       );
-  debugPrint('[AuthLocalDataSource] _readFromSqlite: результат = ${result.length} записей');
-      
-      if (result.isNotEmpty) {
-  debugPrint('[AuthLocalDataSource] _readFromSqlite: запись найдена, value = ${result.first['value']}');
-  debugPrint('[AuthLocalDataSource] _readFromSqlite: value type = ${result.first['value']?.runtimeType}');
-      } else {
-  debugPrint('[AuthLocalDataSource] _readFromSqlite: запись НЕ найдена');
-      }
 
       if (result.isEmpty) return null;
       return result.first['value'] as String?;
-    } catch (e, stackTrace) {
-  debugPrint('[AuthLocalDataSource] _readFromSqlite: ОШИБКА = $e');
-  debugPrint('[AuthLocalDataSource] _readFromSqlite: stackTrace = $stackTrace');
+    } catch (_) {
       return null;
     }
   }
@@ -228,13 +180,7 @@ class AuthLocalDataSource {
     String storedSalt,
   ) async {
     try {
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: START');
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: storedHash = $storedHash');
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: storedSalt = $storedSalt');
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: pin = $pin');
-  
       final saltBytes = base64Decode(storedSalt);
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: saltBytes.length = ${saltBytes.length}');
 
       final pbkdf2 = Pbkdf2(
         macAlgorithm: Hmac.sha256(),
@@ -242,37 +188,24 @@ class AuthLocalDataSource {
         bits: 256,
       );
 
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: PBKDF2 created, iterations = $pbkdf2Iterations');
-
       final secretKey = await pbkdf2.deriveKeyFromPassword(
         password: pin,
         nonce: Uint8List.fromList(saltBytes),
       );
 
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: secretKey derived');
-
       final computedHashBytes = await secretKey.extractBytes();
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: computedHashBytes.length = ${computedHashBytes.length}');
-      
       final computedHash = base64Encode(computedHashBytes);
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: computedHash = $computedHash');
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: storedHash      = $storedHash');
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: hashes match = ${computedHash == storedHash}');
 
       // Constant-time сравнение хэшей (защита от timing attacks)
       final isValid = CryptoUtils.constantTimeEqualsBase64(computedHash, storedHash);
 
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: isValid = $isValid');
-
-  try{
-      // Затирание ключа из памяти
-      CryptoUtils.secureWipeKey(computedHashBytes);
-  } catch (_) {};
-  
+      try {
+        // Затирание ключа из памяти
+        CryptoUtils.secureWipeKey(computedHashBytes);
+      } catch (_) {}
 
       return isValid;
     } catch (e) {
-  debugPrint('[AuthLocalDataSource] _verifyPinHash: ERROR = $e');
       return false;
     }
   }
@@ -282,50 +215,30 @@ class AuthLocalDataSource {
   /// Хранение данных выполняется ТОЛЬКО в SQLite для безопасности.
   /// SharedPreferences не используется для хранения чувствительных данных.
   Future<bool> setupPin(String pin) async {
-  debugPrint('[AuthLocalDataSource] setupPin вызван, PIN длина: ${pin.length}');
-  debugPrint('[AuthLocalDataSource] setupPin: _database = ${_database != null ? "инициализирована" : "NULL"}');
     
     try {
       if (!isValidPinFormat(pin)) {
-  debugPrint('[AuthLocalDataSource] setupPin: неверный формат PIN');
         throw const ValidationFailure(message: 'PIN должен содержать 4-8 цифр');
       }
 
-  debugPrint('[AuthLocalDataSource] setupPin: хэширование PIN...');
       final hashed = await _hashPin(pin);
-  debugPrint('[AuthLocalDataSource] setupPin: PIN захэширован');
 
       // Сохраняем ТОЛЬКО в SQLite (безопасное хранилище)
-  debugPrint('[AuthLocalDataSource] setupPin: получение базы данных...');
       final db = await _db;
-  debugPrint('[AuthLocalDataSource] setupPin: база данных получена');
       
-  debugPrint('[AuthLocalDataSource] setupPin: сохранение hash...');
       await _saveToSqlite(_sqlitePinHashKey, hashed['hash']!);
-  debugPrint('[AuthLocalDataSource] setupPin: hash сохранён');
       
-  debugPrint('[AuthLocalDataSource] setupPin: сохранение salt...');
       await _saveToSqlite(_sqlitePinSaltKey, hashed['salt']!);
-  debugPrint('[AuthLocalDataSource] setupPin: salt сохранён');
       
-  debugPrint('[AuthLocalDataSource] setupPin: сброс попыток...');
       await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
-  debugPrint('[AuthLocalDataSource] setupPin: попытки сброшены');
       
-  debugPrint('[AuthLocalDataSource] setupPin: удаление lockout...');
       await _deleteFromSqlite(_sqliteLockoutTimestampKey);
-  debugPrint('[AuthLocalDataSource] setupPin: lockout удалён');
       
       // Проверяем, что данные действительно сохранились
-  debugPrint('[AuthLocalDataSource] setupPin: проверка сохранения...');
       final verifyHash = await _readFromSqlite(_sqlitePinHashKey);
-  debugPrint('[AuthLocalDataSource] setupPin: проверка hash = ${verifyHash != null ? "НАЙДЕН" : "NULL"}');
       
-  debugPrint('[AuthLocalDataSource] setupPin: УСПЕХ! PIN установлен');
       return true;
     } catch (e, stackTrace) {
-  debugPrint('[AuthLocalDataSource] setupPin: ОШИБКА: $e');
-  debugPrint('[AuthLocalDataSource] setupPin: stackTrace: $stackTrace');
       if (e is ValidationFailure) rethrow;
       throw const StorageFailure(message: 'Ошибка установки PIN');
     }
@@ -336,28 +249,19 @@ class AuthLocalDataSource {
   /// Чтение данных выполняется ТОЛЬКО из SQLite.
   /// SharedPreferences не используется для чтения чувствительных данных.
   Future<Map<String, dynamic>> verifyPin(String pin) async {
-  debugPrint('[AuthLocalDataSource] verifyPin вызван, PIN длина: ${pin.length}');
-  debugPrint('[AuthLocalDataSource] verifyPin: _database = ${_database != null ? "инициализирована" : "NULL"}');
     
     try {
       String? storedHash;
       String? storedSalt;
 
       // Читаем ТОЛЬКО из SQLite (безопасное хранилище)
-  debugPrint('[AuthLocalDataSource] verifyPin: получение базы данных...');
       final db = await _db;
-  debugPrint('[AuthLocalDataSource] verifyPin: база данных получена');
       
-  debugPrint('[AuthLocalDataSource] verifyPin: чтение hash...');
       storedHash = await _readFromSqlite(_sqlitePinHashKey);
-  debugPrint('[AuthLocalDataSource] verifyPin: hash = ${storedHash != null ? "найден" : "NULL"}');
       
-  debugPrint('[AuthLocalDataSource] verifyPin: чтение salt...');
       storedSalt = await _readFromSqlite(_sqlitePinSaltKey);
-  debugPrint('[AuthLocalDataSource] verifyPin: salt = ${storedSalt != null ? "найден" : "NULL"}');
 
       if (storedHash == null || storedSalt == null) {
-  debugPrint('[AuthLocalDataSource] verifyPin: PIN НЕ УСТАНОВЛЕН (hash или salt = null)');
         return {'result': 'notSetup', 'isLocked': false};
       }
 
@@ -407,45 +311,32 @@ class AuthLocalDataSource {
   /// 6. Сохранение нового PIN
   /// 7. Затирание старых ключей
   Future<bool> changePin(String oldPin, String newPin, {Database? database}) async {
-  debugPrint('[AuthLocalDataSource] changePin вызван, oldPin длина: ${oldPin.length}, newPin длина: ${newPin.length}');
     try {
       if (!isValidPinFormat(newPin)) {
-  debugPrint('[AuthLocalDataSource] changePin: неверный формат нового PIN');
         throw const ValidationFailure(message: 'PIN должен содержать 4-8 цифр');
       }
 
       // Проверяем старый PIN
-  debugPrint('[AuthLocalDataSource] changePin: проверка старого PIN...');
       final verifyResult = await verifyPin(oldPin);
-  debugPrint('[AuthLocalDataSource] changePin: verifyResult = $verifyResult');
       
       if (verifyResult['result'] != 'success') {
-  debugPrint('[AuthLocalDataSource] changePin: неверный старый PIN');
         throw const AuthFailure(
           message: 'Неверный старый PIN',
           type: AuthFailureType.wrongPin,
         );
       }
-  debugPrint('[AuthLocalDataSource] changePin: старый PIN подтверждён');
 
       // Получаем базу данных для работы с паролями
-  debugPrint('[AuthLocalDataSource] changePin: получение БД...');
       final db = await _db;
-  debugPrint('[AuthLocalDataSource] changePin: БД получена');
 
       // Выполняем ротацию ключей
-  debugPrint('[AuthLocalDataSource] changePin: выполнение ротации ключей...');
       await _rotateEncryptionKeys(oldPin, newPin, db);
-  debugPrint('[AuthLocalDataSource] changePin: ротация ключей завершена');
 
       // Устанавливаем новый PIN
-  debugPrint('[AuthLocalDataSource] changePin: установка нового PIN...');
       final setupResult = await setupPin(newPin);
-  debugPrint('[AuthLocalDataSource] changePin: новый PIN установлен = $setupResult');
       
       return setupResult;
     } catch (e) {
-  debugPrint('[AuthLocalDataSource] changePin: ОШИБКА = $e');
       if (e is ValidationFailure || e is AuthFailure) rethrow;
       throw const StorageFailure(message: 'Ошибка смены PIN');
     }
