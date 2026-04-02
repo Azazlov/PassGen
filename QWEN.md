@@ -4,9 +4,21 @@
 
 **PassGen** is a cross-platform password manager built with Flutter for Windows, Linux, and Android. It provides password generation, secure storage, and management using modern cryptographic methods (ChaCha20-Poly1305, PBKDF2) with a local SQLite database.
 
-**Current Version:** 0.5.0 (Release Ready)  
-**Last Updated:** March 10, 2026  
+**Current Version:** 0.5.2 (Release Ready)
+**Last Updated:** April 2, 2026
 **Security Score:** 98/100
+
+### Что нового в версии 0.5.2
+
+| Функция | Описание |
+|---------|----------|
+| **История паролей** | Таблица `password_history` для отслеживания изменений |
+| **Система уведомлений** | Уведомления о слабых/старых паролях, дубликатах |
+| **Автообновление** | Обновление списка при импорте и переключении вкладок |
+| **Импорт без дубликатов** | Проверка по service + login при импорте |
+| **Исправлен .passgen** | Корректное использование ChaCha20 nonce (12 байт) |
+| **macOS entitlements** | Разрешения на доступ к файлам |
+| **Исправлена БД на macOS** | Автоматическое создание таблицы `auth_data` при отсутствии |
 
 ### Key Features
 
