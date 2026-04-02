@@ -375,29 +375,45 @@ class AuthLocalDataSource {
   /// 6. Сохранение нового PIN
   /// 7. Затирание старых ключей
   Future<bool> changePin(String oldPin, String newPin, {Database? database}) async {
+  debugPrint('[AuthLocalDataSource] changePin вызван, oldPin длина: ${oldPin.length}, newPin длина: ${newPin.length}');
     try {
       if (!isValidPinFormat(newPin)) {
+  debugPrint('[AuthLocalDataSource] changePin: неверный формат нового PIN');
         throw const ValidationFailure(message: 'PIN должен содержать 4-8 цифр');
       }
 
       // Проверяем старый PIN
+  debugPrint('[AuthLocalDataSource] changePin: проверка старого PIN...');
       final verifyResult = await verifyPin(oldPin);
+  debugPrint('[AuthLocalDataSource] changePin: verifyResult = $verifyResult');
+      
       if (verifyResult['result'] != 'success') {
+  debugPrint('[AuthLocalDataSource] changePin: неверный старый PIN');
         throw const AuthFailure(
           message: 'Неверный старый PIN',
           type: AuthFailureType.wrongPin,
         );
       }
+  debugPrint('[AuthLocalDataSource] changePin: старый PIN подтверждён');
 
       // Получаем базу данных для работы с паролями
+  debugPrint('[AuthLocalDataSource] changePin: получение БД...');
       final db = await _db;
+  debugPrint('[AuthLocalDataSource] changePin: БД получена');
 
       // Выполняем ротацию ключей
+  debugPrint('[AuthLocalDataSource] changePin: выполнение ротации ключей...');
       await _rotateEncryptionKeys(oldPin, newPin, db);
+  debugPrint('[AuthLocalDataSource] changePin: ротация ключей завершена');
 
       // Устанавливаем новый PIN
-      return await setupPin(newPin);
+  debugPrint('[AuthLocalDataSource] changePin: установка нового PIN...');
+      final setupResult = await setupPin(newPin);
+  debugPrint('[AuthLocalDataSource] changePin: новый PIN установлен = $setupResult');
+      
+      return setupResult;
     } catch (e) {
+  debugPrint('[AuthLocalDataSource] changePin: ОШИБКА = $e');
       if (e is ValidationFailure || e is AuthFailure) rethrow;
       throw const StorageFailure(message: 'Ошибка смены PIN');
     }
@@ -502,12 +518,19 @@ class AuthLocalDataSource {
       );
 
       // 8. Затираем расшифрованный пароль
-      CryptoUtils.secureWipeData(decryptedPassword);
+      try {
+        CryptoUtils.secureWipeData(decryptedPassword);
+      } catch (_) {}
     }
 
-    // 9. Затираем все ключи после использования
-    CryptoUtils.secureWipeKey(oldKeyBytes);
-    CryptoUtils.secureWipeKey(newKeyBytes);
+    // 9. Затираем все ключи после использования (с обработкой ошибок)
+    try {
+      CryptoUtils.secureWipeKey(oldKeyBytes);
+    } catch (_) {}
+    
+    try {
+      CryptoUtils.secureWipeKey(newKeyBytes);
+    } catch (_) {}
   }
 
   /// Расшифровывает пароль
