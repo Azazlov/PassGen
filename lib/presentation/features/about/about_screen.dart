@@ -58,7 +58,7 @@ class AboutScreen extends StatelessWidget {
               Text(
                 'Последнее обновление: 1 апреля 2026',
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               const SizedBox(height: 24),
@@ -298,7 +298,7 @@ class AboutScreen extends StatelessWidget {
           Icon(
             icon,
             size: 16,
-            color: theme.colorScheme.primary.withOpacity(0.7),
+            color: theme.colorScheme.primary.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -379,7 +379,7 @@ class AboutScreen extends StatelessWidget {
             Icon(
               Icons.arrow_forward_ios,
               size: 16,
-              color: theme.colorScheme.primary.withOpacity(0.7),
+              color: theme.colorScheme.primary.withValues(alpha: 0.7),
             ),
           ],
         ),

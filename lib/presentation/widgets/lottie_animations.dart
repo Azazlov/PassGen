@@ -57,7 +57,7 @@ class LottieStrengthPulse extends StatelessWidget {
       child: CircularProgressIndicator(
         value: strength,
         strokeWidth: 3,
-        backgroundColor: Colors.grey.withOpacity(0.3),
+        backgroundColor: Colors.grey.withValues(alpha: 0.3),
         valueColor: AlwaysStoppedAnimation<Color>(
           _getColorForStrength(strength),
         ),

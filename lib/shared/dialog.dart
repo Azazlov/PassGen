@@ -26,7 +26,7 @@ void showDialogWindow2(
   function1,
   text2,
   function2,
-) async {
+) {
   showCupertinoDialog(
     context: context,
     builder: (_) => CupertinoAlertDialog(

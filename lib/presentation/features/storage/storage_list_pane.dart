@@ -206,7 +206,7 @@ class StorageEmptyListState extends StatelessWidget {
           Icon(
             Icons.archive,
             size: 64,
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -219,7 +219,7 @@ class StorageEmptyListState extends StatelessWidget {
           Text(
             'Создайте первый пароль прямо сейчас',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -251,7 +251,7 @@ class StorageFilterEmptyState extends StatelessWidget {
             Icon(
               hasActiveFilter ? Icons.filter_alt_off : Icons.search_off,
               size: 64,
-              color: theme.colorScheme.onSurface.withOpacity(0.3),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 16),
             Text(
@@ -265,7 +265,7 @@ class StorageFilterEmptyState extends StatelessWidget {
               Text(
                 'Измените параметры фильтра или сбросьте его',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -282,7 +282,7 @@ class StorageFilterEmptyState extends StatelessWidget {
               Text(
                 'Попробуйте другой поисковый запрос',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 textAlign: TextAlign.center,
               ),

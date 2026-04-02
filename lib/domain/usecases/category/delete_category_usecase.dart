@@ -5,7 +5,7 @@ class DeleteCategoryUseCase {
   const DeleteCategoryUseCase(this.repository);
   final CategoryRepository repository;
 
-  Future<void> execute(int id {
+  Future<void> execute(int id) {
     return repository.delete(id);
   }
 }

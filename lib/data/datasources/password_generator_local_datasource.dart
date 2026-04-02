@@ -268,7 +268,7 @@ class PasswordGeneratorLocalDataSource {
   Future<String> createEncryptedConfig({
     required String passwordConfig,
     required String masterPassword,
-  }) async {
+  }) {
     final messageBytes = utf8.encode(passwordConfig);
     final passwordBytes = utf8.encode(masterPassword);
 

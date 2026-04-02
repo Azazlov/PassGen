@@ -79,7 +79,7 @@ class GeneratorController extends ChangeNotifier {
 
   Color get strengthColor {
     final colorIndex = strengthConfigs[_strength]!.colorIndex;
-    return strengthColors[colorIndex]!;
+    return strengthColors[colorIndex];
   }
 
   // Переключатели обязательности символов

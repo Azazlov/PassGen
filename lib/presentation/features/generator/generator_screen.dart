@@ -8,7 +8,6 @@ import '../../../domain/usecases/generator/validate_generator_settings_usecase.d
 import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
-import '../../../presentation/widgets/app_button.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import '../../../presentation/widgets/app_switch.dart';
 import '../../../presentation/widgets/app_text_field.dart';

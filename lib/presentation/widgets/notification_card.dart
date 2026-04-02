@@ -65,7 +65,7 @@ class NotificationCard extends StatelessWidget {
                           onPressed: onDismiss,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
-                          color: theme.colorScheme.onSurface.withOpacity(0.5),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                     ],
                   ),
@@ -74,7 +74,7 @@ class NotificationCard extends StatelessWidget {
                   Text(
                     notification.message,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.8),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -100,7 +100,7 @@ class NotificationCard extends StatelessWidget {
       case app_entities.NotificationType.weakPassword:
         return {
           'backgroundColor': theme.colorScheme.errorContainer,
-          'iconBackgroundColor': theme.colorScheme.error.withOpacity(0.1),
+          'iconBackgroundColor': theme.colorScheme.error.withValues(alpha: 0.1),
           'iconColor': theme.colorScheme.error,
           'titleColor': theme.colorScheme.onErrorContainer,
         };
@@ -109,7 +109,7 @@ class NotificationCard extends StatelessWidget {
         return {
           'backgroundColor': theme.colorScheme.warningContainer ?? 
                             theme.colorScheme.errorContainer,
-          'iconBackgroundColor': theme.colorScheme.error.withOpacity(0.1),
+          'iconBackgroundColor': theme.colorScheme.error.withValues(alpha: 0.1),
           'iconColor': theme.colorScheme.error,
           'titleColor': theme.colorScheme.onErrorContainer,
         };
@@ -117,7 +117,7 @@ class NotificationCard extends StatelessWidget {
       case app_entities.NotificationType.oldPassword:
         return {
           'backgroundColor': theme.colorScheme.tertiaryContainer,
-          'iconBackgroundColor': theme.colorScheme.tertiary.withOpacity(0.1),
+          'iconBackgroundColor': theme.colorScheme.tertiary.withValues(alpha: 0.1),
           'iconColor': theme.colorScheme.tertiary,
           'titleColor': theme.colorScheme.onTertiaryContainer,
         };
@@ -125,7 +125,7 @@ class NotificationCard extends StatelessWidget {
       case app_entities.NotificationType.success:
         return {
           'backgroundColor': theme.colorScheme.primaryContainer,
-          'iconBackgroundColor': theme.colorScheme.primary.withOpacity(0.1),
+          'iconBackgroundColor': theme.colorScheme.primary.withValues(alpha: 0.1),
           'iconColor': theme.colorScheme.primary,
           'titleColor': theme.colorScheme.onPrimaryContainer,
         };
@@ -133,7 +133,7 @@ class NotificationCard extends StatelessWidget {
       case app_entities.NotificationType.error:
         return {
           'backgroundColor': theme.colorScheme.errorContainer,
-          'iconBackgroundColor': theme.colorScheme.error.withOpacity(0.1),
+          'iconBackgroundColor': theme.colorScheme.error.withValues(alpha: 0.1),
           'iconColor': theme.colorScheme.error,
           'titleColor': theme.colorScheme.onErrorContainer,
         };
@@ -141,7 +141,7 @@ class NotificationCard extends StatelessWidget {
       case app_entities.NotificationType.securityWarning:
         return {
           'backgroundColor': theme.colorScheme.errorContainer,
-          'iconBackgroundColor': theme.colorScheme.error.withOpacity(0.1),
+          'iconBackgroundColor': theme.colorScheme.error.withValues(alpha: 0.1),
           'iconColor': theme.colorScheme.error,
           'titleColor': theme.colorScheme.onErrorContainer,
         };

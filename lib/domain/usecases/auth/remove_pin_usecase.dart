@@ -7,7 +7,7 @@ class RemovePinUseCase {
   const RemovePinUseCase(this.repository);
   final AuthRepository repository;
 
-  Future<Either<AuthFailure, bool>> execute(String pin {
+  Future<Either<AuthFailure, bool>> execute(String pin) {
     return repository.removePin(pin);
   }
 }

@@ -8,7 +8,7 @@ class LogEventUseCase {
   Future<void> execute(
     String actionType, {
     Map<String, dynamic>? details,
-  } {
+  }) async {
     await repository.logEvent(actionType, details: details);
   }
 }

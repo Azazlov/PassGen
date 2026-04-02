@@ -58,7 +58,7 @@ class StorageLocalDataSource {
   }
 
   /// Очищает всё хранилище
-  Future<bool> clearStorage(String key) async {
+  Future<bool> clearStorage(String key) {
     return removeConfigs(key);
   }
 

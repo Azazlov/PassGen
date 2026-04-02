@@ -133,7 +133,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<bool> checkLockoutExpired() async {
+  Future<bool> checkLockoutExpired() {
     return dataSource.checkLockoutExpired();
   }
 }

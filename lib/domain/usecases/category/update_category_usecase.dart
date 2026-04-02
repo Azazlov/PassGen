@@ -6,7 +6,7 @@ class UpdateCategoryUseCase {
   const UpdateCategoryUseCase(this.repository);
   final CategoryRepository repository;
 
-  Future<Category> execute(Category category {
+  Future<Category> execute(Category category) {
     return repository.update(category);
   }
 }

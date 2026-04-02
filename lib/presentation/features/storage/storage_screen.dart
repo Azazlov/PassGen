@@ -219,7 +219,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                 Text(
                   '${controller.currentIndex + 1} / ${controller.passwordsCount}',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -406,20 +406,20 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
           Icon(
             Icons.folder_open,
             size: 80,
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 24),
           Text(
             'Хранилище пусто',
             style: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Сгенерируйте пароль и сохраните его в хранилище',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.4),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
             textAlign: TextAlign.center,
           ),
@@ -445,7 +445,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
           Icon(
             Icons.filter_alt_off,
             size: 80,
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 24),
           Text(
@@ -455,7 +455,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
                 ? 'В этой категории нет паролей'
                 : 'Поиск не дал результатов',
             style: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -485,7 +485,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             Text(
               'Выбрана категория:',
               style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
 
@@ -542,7 +542,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
           Text(
             'Или выберите другую категорию:',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             textAlign: TextAlign.center,
           ),

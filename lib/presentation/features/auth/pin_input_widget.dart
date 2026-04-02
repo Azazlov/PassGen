@@ -47,7 +47,7 @@ class PinInputWidget extends StatelessWidget {
                   color: isError
                       ? theme.colorScheme.error
                       : isLast && !isFilled
-                      ? theme.colorScheme.primary.withOpacity(0.5)
+                      ? theme.colorScheme.primary.withValues(alpha: 0.5)
                       : Colors.transparent,
                   width: 2,
                 ),

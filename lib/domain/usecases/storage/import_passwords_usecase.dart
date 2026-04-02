@@ -7,7 +7,7 @@ class ImportPasswordsUseCase {
   const ImportPasswordsUseCase(this.repository);
   final PasswordDataRepository repository;
 
-  Future<Either<StorageFailure, bool>> execute(String jsonString {
+  Future<Either<StorageFailure, bool>> execute(String jsonString) {
     return repository.importFromJson(jsonString);
   }
 }

@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/entities/category.dart';
-import '../../../domain/usecases/category/create_category_usecase.dart';
-import '../../../domain/usecases/category/delete_category_usecase.dart';
-import '../../../domain/usecases/category/get_categories_usecase.dart';
-import '../../../domain/usecases/category/update_category_usecase.dart';
 import '../../widgets/app_text_field.dart';
 import 'categories_controller.dart';
 

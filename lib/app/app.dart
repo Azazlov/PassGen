@@ -53,7 +53,6 @@ import '../../presentation/features/about/about_screen.dart';
 import '../../presentation/features/auth/auth_controller.dart';
 import '../../presentation/features/auth/auth_screen.dart';
 import '../../presentation/features/categories/categories_controller.dart';
-import '../../presentation/features/categories/categories_screen.dart';
 import '../../presentation/features/encryptor/encryptor_controller.dart';
 import '../../presentation/features/encryptor/encryptor_screen.dart';
 // Controllers
@@ -333,12 +332,12 @@ class PasswordGeneratorApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<AuthController>(
           create: (context) => AuthController(
-            setupPinUseCase: setupPinUseCase!,
-            verifyPinUseCase: verifyPinUseCase!,
-            changePinUseCase: changePinUseCase!,
-            removePinUseCase: removePinUseCase!,
-            getAuthStateUseCase: getAuthStateUseCase!,
-            logEventUseCase: logEventUseCase!,
+            setupPinUseCase: setupPinUseCase,
+            verifyPinUseCase: verifyPinUseCase,
+            changePinUseCase: changePinUseCase,
+            removePinUseCase: removePinUseCase,
+            getAuthStateUseCase: getAuthStateUseCase,
+            logEventUseCase: logEventUseCase,
           ),
         ),
       ],
@@ -504,7 +503,7 @@ class _TabScaffoldState extends State<TabScaffold> {
       onTap: _onTabTapped,
       backgroundColor: theme.colorScheme.surface,
       selectedItemColor: theme.colorScheme.primary,
-      unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
+      unselectedItemColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
       showUnselectedLabels: true,
       type: BottomNavigationBarType.fixed,
       enableFeedback: true,
@@ -533,12 +532,12 @@ class _TabScaffoldState extends State<TabScaffold> {
         size: isDesktop ? 28 : 24,
       ),
       unselectedIconTheme: IconThemeData(
-        color: theme.colorScheme.onSurface.withOpacity(0.6),
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
         size: isDesktop ? 28 : 24,
       ),
       selectedLabelTextStyle: theme.textTheme.labelLarge!,
       unselectedLabelTextStyle: theme.textTheme.labelLarge!.copyWith(
-        color: theme.colorScheme.onSurface.withOpacity(0.6),
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
       ),
       labelType: isDesktop
           ? NavigationRailLabelType.all

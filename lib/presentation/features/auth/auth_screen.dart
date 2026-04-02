@@ -217,7 +217,7 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
               Text(
                 'Придумайте PIN-код из 4-8 цифр',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -337,7 +337,7 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
               Text(
                 'Осталось попыток: ${controller.authState.remainingAttempts ?? 5}',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
 
@@ -442,7 +442,7 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
           Text(
             'В целях безопасности ввод заблокирован',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),

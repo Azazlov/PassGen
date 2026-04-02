@@ -7,7 +7,7 @@ class DeletePasswordUseCase {
   const DeletePasswordUseCase(this.repository);
   final StorageRepository repository;
 
-  Future<Either<StorageFailure, bool>> execute(int index {
+  Future<Either<StorageFailure, bool>> execute(int index) {
     return repository.removePasswordAt(index);
   }
 }
