@@ -3,10 +3,14 @@ import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/crypto_utils.dart';
+import '../../../../core/utils/encryption_versioning.dart';
 
 /// Локальный источник данных для шифрования/дешифрования
 class EncryptorLocalDataSource {
   late final Chacha20 _algorithm = Chacha20.poly1305Aead();
+  
+  // Centralized PBKDF2 parameters (используем текущую версию)
+  static int get _pbkdf2Iterations => EncryptionParams.v2().iterations;
 
   /// Генерирует случайные байты
   List<int> generateRandomBytes({
@@ -14,13 +18,16 @@ class EncryptorLocalDataSource {
     List<int> range = const [0, 255],
   }) {
     final random = Random.secure();
+    // range[1] включительно, поэтому +1
     return List.generate(
       length,
-      (_) => random.nextInt(range[1] - range[0]) + range[0],
+      (_) => random.nextInt(range[1] - range[0] + 1) + range[0],
     );
   }
 
   /// Генерирует случайное число
+  ///
+  /// [min] включительно, [max] исключительно
   int generateRandomInt({int min = 0, int max = 100}) {
     final random = Random.secure();
     return random.nextInt(max - min) + min;
@@ -33,7 +40,7 @@ class EncryptorLocalDataSource {
   }) {
     final pbkdf2 = Pbkdf2(
       macAlgorithm: Hmac.sha256(),
-      iterations: 10000,
+      iterations: _pbkdf2Iterations,
       bits: 256,
     );
 

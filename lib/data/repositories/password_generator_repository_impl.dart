@@ -146,6 +146,7 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
     required String service,
     required String password,
     required String config,
+    String? masterPassword,
     int? categoryId,
     String? login,
   }) async {
@@ -155,6 +156,7 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
         service: service,
         password: password,
         config: config,
+        masterPassword: masterPassword,
         categoryId: categoryId,
         login: login,
       );

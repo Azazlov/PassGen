@@ -48,5 +48,5 @@ enum AppTab {
   final String label;
 
   static AppTab fromIndex(int index) =>
-      values[index.clamp(0, values.length - 1)];
+      values[index.clamp(0, values.length - 1).toInt()];
 }

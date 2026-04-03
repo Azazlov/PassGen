@@ -13,7 +13,8 @@
       "WebSearch",
       "Bash(taskkill *)",
       "mcp__dart__dart_format",
-      "mcp__dart__dart_fix"
+      "mcp__dart__dart_fix",
+      "Bash(timeout *)"
     ]
   },
   "$version": 3

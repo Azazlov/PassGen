@@ -27,6 +27,40 @@ class CryptoUtils {
     return base64Decode(encoded);
   }
 
+  // ==================== URL-SAFE BASE64 ====================
+
+  /// Кодирует байты в URL-safe Base64 (RFC 4648)
+  ///
+  /// Заменяет '+' на '-' и '/' на '_' для безопасного использования в URL
+  /// Удаляет символы заполнения '='
+  static String encodeBytesBase64Url(List<int> bytes) {
+    return base64UrlEncode(bytes).replaceAll('=', '');
+  }
+
+  /// Декодирует байты из URL-safe Base64
+  ///
+  /// Автоматически восстанавливает padding при необходимости
+  static List<int> decodeBytesBase64Url(String encoded) {
+    // Восстанавливаем padding
+    final padded = encoded.padRight(
+      encoded.length + (4 - encoded.length % 4) % 4,
+      '=',
+    );
+    // Заменяем URL-safe символы обратно на стандартные
+    final normalized = padded.replaceAll('-', '+').replaceAll('_', '/');
+    return base64Decode(normalized);
+  }
+
+  /// Кодирует строку в URL-safe Base64
+  static String encodeBase64Url(String text) {
+    return encodeBytesBase64Url(utf8.encode(text));
+  }
+
+  /// Декодирует строку из URL-safe Base64
+  static String decodeBase64Url(String encoded) {
+    return utf8.decode(decodeBytesBase64Url(encoded));
+  }
+
   // ==================== БЕЗОПАСНОЕ ЗАТИРАНИЕ ====================
 
   /// Безопасно затирает чувствительные данные из памяти
@@ -96,22 +130,20 @@ class CryptoUtils {
   /// [b] - второй массив
   /// Возвращает `true` если массивы идентичны
   static bool constantTimeEquals(List<int> a, List<int> b) {
-    // Разная длина → сразу false (но всё равно выполняем сравнение для constant-time)
-    if (a.length != b.length) {
-      // Фиктическое сравнение для поддержания постоянного времени
-      for (int i = 0; i < a.length; i++) {
-        // Пустой цикл для timing attack protection
-      }
-      for (int i = 0; i < b.length; i++) {
-        // Пустой цикл для timing attack protection
-      }
-      return false;
-    }
-
-    // Сравниваем все байты, накапливая различия
+    // Используем максимальную длину для constant-time сравнения
+    final maxLen = a.length > b.length ? a.length : b.length;
+    
     int result = 0;
-    for (int i = 0; i < a.length; i++) {
-      result |= a[i] ^ b[i];
+    for (int i = 0; i < maxLen; i++) {
+      // Безопасный доступ: используем 0 для выходящих за границы индексов
+      final byteA = i < a.length ? a[i] : 0;
+      final byteB = i < b.length ? b[i] : 0;
+      result |= byteA ^ byteB;
+    }
+    
+    // Если длины разные, результат всегда false
+    if (a.length != b.length) {
+      return false;
     }
 
     return result == 0;

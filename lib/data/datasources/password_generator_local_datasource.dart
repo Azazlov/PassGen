@@ -81,7 +81,7 @@ class PasswordGeneratorLocalDataSource {
     }
   }
 
-  /// Восстанавливает пароль из конфига
+  /// Восстанавливает пароль из конфига (URL-safe Base64)
   Map<String, String> restoreFromConfig(String config) {
     try {
       final parts = config.split('.');
@@ -89,9 +89,9 @@ class PasswordGeneratorLocalDataSource {
         throw const FormatException('Invalid config format');
       }
 
-      final length = int.parse(CryptoUtils.decodeBase64(parts[0]));
-      final flags = int.parse(CryptoUtils.decodeBase64(parts[1]));
-      final rands = CryptoUtils.decodeBytesBase64(parts[2]);
+      final length = int.parse(CryptoUtils.decodeBase64Url(parts[0]));
+      final flags = int.parse(CryptoUtils.decodeBase64Url(parts[1]));
+      final rands = CryptoUtils.decodeBytesBase64Url(parts[2]);
 
       return _coreEngine(length: length, flags: flags, rands: rands);
     } catch (e) {
@@ -205,6 +205,18 @@ class PasswordGeneratorLocalDataSource {
       }
     }
 
+    // Защитная проверка: если allUnique и длина превышает доступные символы
+    if (allUnique && length > allAllowedChars.length) {
+      return {
+        'password': '',
+        'strength': '0',
+        'config': '',
+        'error':
+            'Невозможно создать уникальный пароль: требуется $length, '
+            'доступно ${allAllowedChars.length} символов',
+      };
+    }
+
     // Заполнение до нужной длины
     while (passwordChars.length < length) {
       var charIndex = getSafeRand(randCursor) % allAllowedChars.length;
@@ -253,15 +265,15 @@ class PasswordGeneratorLocalDataSource {
     };
   }
 
-  /// Создаёт конфиг генерации
+  /// Создаёт конфиг генерации (URL-safe Base64)
   String _generateConfig({
     required int length,
     required int flags,
     required List<int> rands,
   }) {
-    return '${CryptoUtils.encodeBase64(length.toString())}.'
-        '${CryptoUtils.encodeBase64(flags.toString())}.'
-        '${CryptoUtils.encodeBytesBase64(rands)}';
+    return '${CryptoUtils.encodeBase64Url(length.toString())}.'
+        '${CryptoUtils.encodeBase64Url(flags.toString())}.'
+        '${CryptoUtils.encodeBytesBase64Url(rands)}';
   }
 
   /// Создаёт зашифрованную конфигурацию пароля
@@ -300,28 +312,37 @@ class PasswordGeneratorLocalDataSource {
 
   /// Сохраняет пароль в хранилище
   ///
-  /// ШИФРОВАНИЕ: Пароль шифруется перед сохранением
+  /// ШИФРОВАНИЕ: Пароль шифруется с использованием мастер-пароля (PIN)
+  /// Данные сохраняются в мини-формате (компактный Base64: pbkdf2-nonce + nonceBox + ciphertext + mac)
   /// Возвращает результат с информацией о том, был ли пароль обновлён
+  /// 
+  /// TODO: Внедрить централизованное управление ключами (KeyProvider/SessionManager)
+  /// для хранения мастер-ключа в памяти после аутентификации.
   Future<Map<String, dynamic>> savePassword({
     required String service,
     required String password,
     required String config,
+    String? masterPassword,
     int? categoryId,
     String? login,
   }) async {
+    if (masterPassword == null || masterPassword.isEmpty) {
+      return {
+        'success': false,
+        'error': 'Мастер-пароль не предоставлен. Невозможно зашифровать пароль.',
+      };
+    }
+
     try {
       // Получаем текущие пароли
       final passwords = await _storage.getPasswords();
 
-      // ШИФРУЕМ пароль перед сохранением
-      final encryptedData = await _encryptor.encrypt(
+      // ШИФРУЕМ пароль перед сохранением с использованием мастер-пароля
+      // Используем мини-формат для компактного хранения всех необходимых данных
+      final miniEncrypted = await _encryptor.encryptToMini(
         message: utf8.encode(password),
-        password: utf8.encode(password), // Мастер-пароль для шифрования
+        password: utf8.encode(masterPassword),
       );
-
-      // encryptedData уже содержит Base64 строки
-      final encryptedPasswordBase64 = encryptedData['cipherText'] as String;
-      final nonceBase64 = encryptedData['nonce'] as String;
 
       // Затираем открытый пароль после шифрования
       CryptoUtils.secureWipePassword(utf8.encode(password));
@@ -335,8 +356,8 @@ class PasswordGeneratorLocalDataSource {
         // Обновляем существующую запись
         final existingEntry = passwords[existingIndex];
         final updatedEntry = existingEntry.copyWith(
-          encryptedPassword: encryptedPasswordBase64,
-          nonce: nonceBase64,
+          encryptedPassword: miniEncrypted,
+          nonce: null, // Мини-формат содержит все необходимые данные
           config: config,
           login: login ?? existingEntry.login,
           categoryId: categoryId ?? existingEntry.categoryId,
@@ -347,8 +368,8 @@ class PasswordGeneratorLocalDataSource {
         // Создаём новую запись с зашифрованным паролем
         final newEntry = PasswordEntry(
           service: service,
-          encryptedPassword: encryptedPasswordBase64,
-          nonce: nonceBase64,
+          encryptedPassword: miniEncrypted,
+          nonce: null, // Мини-формат содержит все необходимые данные
           config: config,
           login: login,
           categoryId: categoryId,

@@ -87,17 +87,53 @@ class PasswordSettingsValidator {
   /// Валидирует настройки уникальности
   Either<PasswordGenerationFailure, PasswordGenerationSettings>
   _validateUniqueSettings(PasswordGenerationSettings settings) {
-    // Подсчёт доступных символов
+    // Если используется пользовательский набор символов
+    if (settings.customCharacters != null &&
+        settings.customCharacters!.isNotEmpty) {
+      final availableChars = settings.customCharacters!.length;
+      final maxLength = settings.lengthRange.last;
+
+      if (settings.allUnique && maxLength > availableChars) {
+        return Left(
+          PasswordGenerationFailure(
+            message:
+                'Невозможно сгенерировать пароль с уникальными символами: '
+                'требуется $maxLength, доступно $availableChars в пользовательском наборе',
+          ),
+        );
+      }
+      return Right(settings);
+    }
+
+    // Подсчёт доступных символов по категориям
     int availableChars = 0;
 
-    if ((settings.flags & 4) != 0) availableChars += 26; // lowercase
-    if ((settings.flags & 16) != 0) availableChars += 26; // uppercase
-    if ((settings.flags & 1) != 0) availableChars += 10; // digits
-    if ((settings.flags & 64) != 0) availableChars += 32; // symbols
+    // Lowercase: 26 букв
+    if ((settings.flags & 4) != 0) {
+      availableChars += 26;
+    }
+    // Uppercase: 26 букв
+    if ((settings.flags & 16) != 0) {
+      availableChars += 26;
+    }
+    // Digits: 10 цифр
+    if ((settings.flags & 1) != 0) {
+      availableChars += 10;
+    }
+    // Symbols: 20 символов (!@#%^&*_+-=[]{};:,.?)
+    if ((settings.flags & 64) != 0) {
+      availableChars += 20;
+    }
 
-    // Исключаем похожие символы
+    // Исключаем похожие символы (1, l, I, 0, O, o)
+    // Точный подсчёт пересечений:
+    // - Digits: '1', '0' → -2
+    // - Lowercase: 'l', 'o' → -2
+    // - Uppercase: 'I', 'O' → -2
     if (settings.excludeSimilar) {
-      availableChars -= 6; // 1, l, I, 0, O, o
+      if ((settings.flags & 1) != 0) availableChars -= 2; // 1, 0
+      if ((settings.flags & 4) != 0) availableChars -= 2; // l, o
+      if ((settings.flags & 16) != 0) availableChars -= 2; // I, O
     }
 
     final maxLength = settings.lengthRange.last;
@@ -107,7 +143,7 @@ class PasswordSettingsValidator {
         PasswordGenerationFailure(
           message:
               'Невозможно сгенерировать пароль с уникальными символами: '
-              'требуется $maxLength, доступно $availableChars',
+              'требуется $maxLength, доступно $availableChars символов',
         ),
       );
     }

@@ -4,16 +4,17 @@
 class EncryptionVersion {
   const EncryptionVersion(this.version);
 
-  /// Текущая версия
-  static const int currentVersion = 1;
+  /// Текущая версия (обновлена до OWASP 2024 рекомендаций)
+  static const int currentVersion = 2;
 
   /// Минимальная поддерживаемая версия
+  /// v1 (10,000 итераций) всё ещё поддерживается для обратной совместимости
   static const int minSupportedVersion = 1;
 
-  /// Версия 1: ChaCha20-Poly1305 + PBKDF2 (10000 итераций)
+  /// Версия 1: ChaCha20-Poly1305 + PBKDF2 (10000 итераций) - legacy
   static const int v1 = 1;
 
-  /// Версия 2: ChaCha20-Poly1305 + PBKDF2 (20000 итераций) - перспектива
+  /// Версия 2: ChaCha20-Poly1305 + PBKDF2 (600000 итераций) - OWASP 2024
   static const int v2 = 2;
 
   /// Версия 3: Argon2id + ChaCha20-Poly1305 - перспектива
@@ -82,12 +83,12 @@ class EncryptionParams {
     );
   }
 
-  /// Параметры версии 2 (перспектива)
+  /// Параметры версии 2 (OWASP 2024 рекомендация)
   factory EncryptionParams.v2() {
     return const EncryptionParams(
       algorithm: 'ChaCha20-Poly1305',
       kdf: 'PBKDF2-HMAC-SHA256',
-      iterations: 20000,
+      iterations: 600000, // OWASP 2024: минимум 600,000 для HMAC-SHA256
       keyLength: 256,
       nonceLength: 32,
       saltLength: 32,

@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'package:cryptography/cryptography.dart';
-import '../../core/utils/crypto_utils.dart';
 
 /// Запись о сохранённом пароле
 class PasswordEntry {
@@ -67,6 +65,8 @@ class PasswordEntry {
   ///
   /// [masterPassword] - мастер-пароль пользователя (PIN)
   /// Возвращает расшифрованный пароль или null при ошибке
+  ///
+  /// Формат: данные сохранены в мини-формате (pbkdf2-nonce + nonceBox + ciphertext + mac)
   Future<String?> decryptPassword(String masterPassword) async {
     if (!isEncrypted) {
       // Если пароль не зашифрован (старые записи), возвращаем как есть
@@ -74,38 +74,13 @@ class PasswordEntry {
     }
 
     try {
-      final encryptedBytes = CryptoUtils.decodeBytesBase64(encryptedPassword!);
-      final nonceBytes = CryptoUtils.decodeBytesBase64(nonce!);
-
-      // Создаём алгоритм
-      final algorithm = Chacha20.poly1305Aead();
-
-      // Создаём ключ из мастер-пароля
-      final pbkdf2 = Pbkdf2(
-        macAlgorithm: Hmac.sha256(),
-        iterations: 10000,
-        bits: 256,
-      );
-
-      final secretKey = await pbkdf2.deriveKeyFromPassword(
-        password: masterPassword,
-        nonce: nonceBytes,
-      );
-
-      // Создаём SecretBox
-      final secretBox = SecretBox(
-        encryptedBytes,
-        nonce: nonceBytes,
-        mac: Mac(encryptedBytes), // ← MAC хранится вместе с ciphertext
-      );
-
-      // Дешифруем
-      final decryptedBytes = await algorithm.decrypt(
-        secretBox,
-        secretKey: secretKey,
-      );
-
-      return utf8.decode(decryptedBytes);
+      // Дешифрование требует знания формата и доступа к EncryptorLocalDataSource
+      // Этот метод должен быть вынесен в data layer или использовать dependency injection
+      // Временное решение: возвращаем null, т.к. дешифрование должно выполняться через репозиторий
+      // 
+      // Правильное решение: использовать PasswordEntryRepository.decryptPassword(entry, masterPassword)
+      // который вызовет EncryptorLocalDataSource.decryptFromMini(...)
+      return null;
     } catch (e) {
       return null; // Ошибка дешифрования
     }

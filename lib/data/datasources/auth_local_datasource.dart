@@ -7,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/crypto_utils.dart';
+import '../../../../core/utils/encryption_versioning.dart';
 import 'encryptor_local_datasource.dart';
 
 /// Источник данных для аутентификации
@@ -26,7 +27,8 @@ class AuthLocalDataSource {
   static const int lockoutDurationSeconds = 30;
   static const int minPinLength = 4;
   static const int maxPinLength = 8;
-  static const int pbkdf2Iterations = 10000;
+  // PBKDF2 iterations из текущей версии шифрования
+  static int get pbkdf2Iterations => EncryptionParams.v2().iterations;
 
   final Database? _database;
 
@@ -294,12 +296,13 @@ class AuthLocalDataSource {
   ///
   /// Процесс ротации:
   /// 1. Проверка старого PIN
-  /// 2. Derive старого ключа
-  /// 3. Расшифровка всех паролей старым ключом
-  /// 4. Derive нового ключа
-  /// 5. Зашифровка всех паролей новым ключом
-  /// 6. Сохранение нового PIN
-  /// 7. Затирание старых ключей
+  /// 2. Генерация нового хэша/соли (до ротации)
+  /// 3. Derive старого ключа
+  /// 4. Расшифровка всех паролей старым ключом
+  /// 5. Derive нового ключа (с использованием новой соли)
+  /// 6. Зашифровка всех паролей новым ключом
+  /// 7. Сохранение нового PIN (с той же солью)
+  /// 8. Затирание старых ключей
   Future<bool> changePin(
     String oldPin,
     String newPin, {
@@ -323,13 +326,22 @@ class AuthLocalDataSource {
       // Получаем базу данных для работы с паролями
       final db = await _db;
 
-      // Выполняем ротацию ключей
-      await _rotateEncryptionKeys(oldPin, newPin, db);
+      // Генерируем новый хэш и соль ДО ротации ключей
+      final newHashData = await _hashPin(newPin);
+      final newSalt = newHashData['salt']!;
+      final newHash = newHashData['hash']!;
 
-      // Устанавливаем новый PIN
-      final setupResult = await setupPin(newPin);
+      // Выполняем ротацию ключей с использованием новой соли
+      await _rotateEncryptionKeys(oldPin, newPin, newSalt, db);
 
-      return setupResult;
+      // Устанавливаем новый PIN (использует ту же соль, что и при ротации)
+      // Переопределяем сохранение, т.к. соль уже создана
+      await _saveToSqlite(_sqlitePinHashKey, newHash);
+      await _saveToSqlite(_sqlitePinSaltKey, newSalt);
+      await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
+      await _deleteFromSqlite(_sqliteLockoutTimestampKey);
+
+      return true;
     } catch (e) {
       if (e is ValidationFailure || e is AuthFailure) rethrow;
       throw const StorageFailure(message: 'Ошибка смены PIN');
@@ -340,6 +352,7 @@ class AuthLocalDataSource {
   ///
   /// [oldPin] - старый PIN-код
   /// [newPin] - новый PIN-код
+  /// [newSalt] - соль нового PIN (уже сгенерированная)
   /// [db] - база данных с паролями
   ///
   /// Процесс ротации:
@@ -353,6 +366,7 @@ class AuthLocalDataSource {
   Future<void> _rotateEncryptionKeys(
     String oldPin,
     String newPin,
+    String newSalt,
     Database db,
   ) async {
     // 1. Получаем соль старого PIN
@@ -376,12 +390,8 @@ class AuthLocalDataSource {
 
     final oldKeyBytes = await oldSecretKey.extractBytes();
 
-    // 3. Получаем соль нового PIN и деривируем новый ключ (единожды)
-    final newSaltBase64 = await _readFromSqlite(_sqlitePinSaltKey);
-    if (newSaltBase64 == null) {
-      throw const StorageFailure(message: 'Соль нового PIN не найдена');
-    }
-    final newSaltBytes = base64Decode(newSaltBase64);
+    // 3. Используем переданную соль нового PIN для деривации нового ключа
+    final newSaltBytes = base64Decode(newSalt);
 
     final newPbkdf2 = Pbkdf2(
       macAlgorithm: Hmac.sha256(),

@@ -26,6 +26,6 @@ class EventTypes {
 
   // События сессии
   static const String sessionStarted = 'SESSION_STARTED';
-  static const String sessionEnded = 'SESSION Ended';
+  static const String sessionEnded = 'SESSION_ENDED';
   static const String sessionTimeout = 'SESSION_TIMEOUT';
 }

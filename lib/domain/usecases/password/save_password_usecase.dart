@@ -25,6 +25,7 @@ class SavePasswordUseCase {
     required String service,
     required String password,
     required String config,
+    String? masterPassword,
     int? categoryId,
     String? login,
     int? entryId,
@@ -60,6 +61,7 @@ class SavePasswordUseCase {
       service: service,
       password: password,
       config: config,
+      masterPassword: masterPassword,
       categoryId: categoryId,
       login: login,
     );

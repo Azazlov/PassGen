@@ -34,10 +34,13 @@ abstract class PasswordGeneratorRepository {
 
   /// Сохраняет пароль в хранилище
   /// Возвращает Map с результатом: {'success': bool, 'updated': bool, 'error': String?}
+  /// 
+  /// TODO: Внедрить централизованное управление ключами
   Future<Either<PasswordGenerationFailure, Map<String, dynamic>>> savePassword({
     required String service,
     required String password,
     required String config,
+    String? masterPassword,
     int? categoryId,
     String? login,
   });
