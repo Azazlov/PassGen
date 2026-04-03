@@ -21,27 +21,7 @@ enum NotificationType {
 
 /// Уведомление для пользователя
 class Notification {
-  const Notification({
-    required this.id,
-    required this.type,
-    required this.title,
-    required this.message,
-    this.entryId,
-    this.service,
-    this.isRead = false,
-    required this.createdAt,
-    this.actionUrl,
-  });
-
-  final String id;
-  final NotificationType type;
-  final String title;
-  final String message;
-  final int? entryId; // Связь с записью пароля (если применимо)
-  final String? service; // Название сервиса (если применимо)
-  final bool isRead;
-  final DateTime createdAt;
-  final String? actionUrl; // URL для действия (если применимо)
+  // URL для действия (если применимо)
 
   /// Создаёт уведомление о слабом пароле
   factory Notification.weakPassword({
@@ -138,6 +118,42 @@ class Notification {
     );
   }
 
+  /// Создаёт уведомление из JSON
+  factory Notification.fromJson(Map<String, dynamic> json) {
+    return Notification(
+      id: json['id'] as String,
+      type: NotificationType.values[json['type'] as int],
+      title: json['title'] as String,
+      message: json['message'] as String,
+      entryId: json['entry_id'] as int?,
+      service: json['service'] as String?,
+      isRead: (json['is_read'] as int?) == 1,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      actionUrl: json['action_url'] as String?,
+    );
+  }
+  const Notification({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.message,
+    this.entryId,
+    this.service,
+    this.isRead = false,
+    required this.createdAt,
+    this.actionUrl,
+  });
+
+  final String id;
+  final NotificationType type;
+  final String title;
+  final String message;
+  final int? entryId; // Связь с записью пароля (если применимо)
+  final String? service; // Название сервиса (если применимо)
+  final bool isRead;
+  final DateTime createdAt;
+  final String? actionUrl;
+
   /// Создаёт копию уведомления с обновлёнными данными
   Notification copyWith({
     String? id,
@@ -176,21 +192,6 @@ class Notification {
       'created_at': createdAt.toIso8601String(),
       if (actionUrl != null) 'action_url': actionUrl,
     };
-  }
-
-  /// Создаёт уведомление из JSON
-  factory Notification.fromJson(Map<String, dynamic> json) {
-    return Notification(
-      id: json['id'] as String,
-      type: NotificationType.values[json['type'] as int],
-      title: json['title'] as String,
-      message: json['message'] as String,
-      entryId: json['entry_id'] as int?,
-      service: json['service'] as String?,
-      isRead: (json['is_read'] as int?) == 1,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      actionUrl: json['action_url'] as String?,
-    );
   }
 
   @override

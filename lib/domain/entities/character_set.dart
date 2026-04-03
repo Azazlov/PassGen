@@ -1,5 +1,13 @@
 /// Набор символов для генерации пароля
 class CharacterSet {
+  const CharacterSet({
+    required this.label,
+    required this.subtitle,
+    required this.characters,
+    required this.count,
+    required this.isEnabled,
+  });
+
   /// Метка набора (например, "Строчные", "Цифры")
   final String label;
 
@@ -14,14 +22,6 @@ class CharacterSet {
 
   /// Включён ли набор
   final bool isEnabled;
-
-  const CharacterSet({
-    required this.label,
-    required this.subtitle,
-    required this.characters,
-    required this.count,
-    required this.isEnabled,
-  });
 
   /// Исключить похожие символы (l, 1, I, O, 0)
   CharacterSet excludeSimilar() {

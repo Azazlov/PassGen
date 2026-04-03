@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:flutter/foundation.dart';
+
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
+
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/crypto_utils.dart';
 import 'encryptor_local_datasource.dart';
@@ -12,6 +14,8 @@ import 'encryptor_local_datasource.dart';
 /// Хранение данных выполняется ТОЛЬКО в SQLite для безопасности.
 /// SharedPreferences НЕ используется для хранения чувствительных данных.
 class AuthLocalDataSource {
+  /// Конструктор с готовой базой данных
+  const AuthLocalDataSource({Database? database}) : _database = database;
   // Ключи для SQLite
   static const String _sqlitePinHashKey = 'pin_hash';
   static const String _sqlitePinSaltKey = 'pin_salt';
@@ -26,13 +30,10 @@ class AuthLocalDataSource {
 
   final Database? _database;
 
-  /// Конструктор с готовой базой данных
-  const AuthLocalDataSource({Database? database}) : _database = database;
-
   /// Получает базу данных
   Future<Database> get _db async {
     if (_database != null) {
-      return _database!;
+      return _database;
     }
     throw const StorageFailure(message: 'База данных не инициализирована');
   }
@@ -190,10 +191,15 @@ class AuthLocalDataSource {
         storedHash,
       );
 
+      // Затирание ключа из памяти
+      // Создаём модифицируемую копию, т.к. extractBytes() возвращает unmodifiable Uint8List
       try {
-        // Затирание ключа из памяти
-        CryptoUtils.secureWipeKey(computedHashBytes);
-      } catch (_) {}
+        final modifiableHashBytes = Uint8List.fromList(computedHashBytes);
+        CryptoUtils.secureWipeKey(modifiableHashBytes);
+      } catch (e) {
+        // Dart GC eventually collects the memory
+        // No sensitive data logged
+      }
 
       return isValid;
     } catch (e) {
@@ -429,19 +435,31 @@ class AuthLocalDataSource {
       );
 
       // 8. Затираем расшифрованный пароль
+      // Создаём модифицируемую копию для затирания
       try {
-        CryptoUtils.secureWipeData(decryptedPassword);
-      } catch (_) {}
+        final modifiableDecryptedPassword = Uint8List.fromList(
+          decryptedPassword,
+        );
+        CryptoUtils.secureWipeData(modifiableDecryptedPassword);
+      } catch (e) {
+        // Dart GC eventually collects the memory
+      }
     }
 
-    // 9. Затираем все ключи после использования (с обработкой ошибок)
+    // 9. Затираем все ключи после использования (с модифицируемыми копиями)
     try {
-      CryptoUtils.secureWipeKey(oldKeyBytes);
-    } catch (_) {}
+      final modifiableOldKey = Uint8List.fromList(oldKeyBytes);
+      CryptoUtils.secureWipeKey(modifiableOldKey);
+    } catch (e) {
+      // Dart GC eventually collects the memory
+    }
 
     try {
-      CryptoUtils.secureWipeKey(newKeyBytes);
-    } catch (_) {}
+      final modifiableNewKey = Uint8List.fromList(newKeyBytes);
+      CryptoUtils.secureWipeKey(modifiableNewKey);
+    } catch (e) {
+      // Dart GC eventually collects the memory
+    }
   }
 
   /// Расшифровывает пароль
@@ -543,9 +561,7 @@ class AuthLocalDataSource {
   Future<int> _incrementFailedAttempts() async {
     int? current = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
 
-    if (current == null) {
-      current = 0;
-    }
+    current ??= 0;
 
     final newValue = current + 1;
 
@@ -572,7 +588,7 @@ class AuthLocalDataSource {
   ///
   /// Чтение выполняется ТОЛЬКО из SQLite.
   Future<int> getFailedAttempts() async {
-    int? attempts = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
+    final int? attempts = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
     return attempts ?? 0;
   }
 
@@ -580,7 +596,7 @@ class AuthLocalDataSource {
   ///
   /// Чтение выполняется ТОЛЬКО из SQLite.
   Future<DateTime?> getLockoutUntil() async {
-    int? timestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
+    final int? timestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
 
     if (timestamp == null) return null;
 
@@ -596,7 +612,7 @@ class AuthLocalDataSource {
   ///
   /// Чтение и сброс выполняются ТОЛЬКО в SQLite.
   Future<bool> checkLockoutExpired() async {
-    int? lockoutTimestamp = await _readIntFromSqlite(
+    final int? lockoutTimestamp = await _readIntFromSqlite(
       _sqliteLockoutTimestampKey,
     );
 

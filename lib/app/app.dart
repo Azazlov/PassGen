@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/database/database_helper.dart';
 import '../../data/datasources/auth_local_datasource.dart';
 // Data sources
 import '../../data/datasources/encryptor_local_datasource.dart';
 import '../../data/datasources/password_generator_local_datasource.dart';
 import '../../data/datasources/storage_local_datasource.dart';
-import '../../data/database/database_helper.dart';
 import '../../data/formats/passgen_format.dart';
 import '../../data/repositories/app_settings_repository_impl.dart';
 import '../../data/repositories/auth_repository_impl.dart';
@@ -119,7 +119,7 @@ class PasswordGeneratorApp extends StatelessWidget {
         // Data Sources (singletons)
         Provider(create: (_) => EncryptorLocalDataSource()),
         Provider(create: (_) => StorageLocalDataSource()),
-        Provider(create: (_) => AuthLocalDataSource()),
+        Provider(create: (_) => const AuthLocalDataSource()),
         Provider(
           create: (context) => PasswordGeneratorLocalDataSource(
             context.read<EncryptorLocalDataSource>(),

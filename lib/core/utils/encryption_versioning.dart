@@ -2,6 +2,8 @@
 ///
 /// Используется для обратной совместимости при обновлении алгоритмов
 class EncryptionVersion {
+  const EncryptionVersion(this.version);
+
   /// Текущая версия
   static const int currentVersion = 1;
 
@@ -18,8 +20,6 @@ class EncryptionVersion {
   static const int v3 = 3;
 
   final int version;
-
-  const EncryptionVersion(this.version);
 
   /// Проверяет, поддерживается ли версия
   static bool isSupported(int version) {
@@ -59,27 +59,6 @@ class EncryptionVersion {
 
 /// Параметры шифрования для версии
 class EncryptionParams {
-  /// Алгоритм шифрования
-  final String algorithm;
-
-  /// Алгоритм деривации ключа
-  final String kdf;
-
-  /// Количество итераций KDF
-  final int iterations;
-
-  /// Длина ключа (биты)
-  final int keyLength;
-
-  /// Длина nonce (байты)
-  final int nonceLength;
-
-  /// Длина соли (байты)
-  final int saltLength;
-
-  /// Длина MAC (байты)
-  final int macLength;
-
   const EncryptionParams({
     required this.algorithm,
     required this.kdf,
@@ -129,6 +108,27 @@ class EncryptionParams {
     );
   }
 
+  /// Алгоритм шифрования
+  final String algorithm;
+
+  /// Алгоритм деривации ключа
+  final String kdf;
+
+  /// Количество итераций KDF
+  final int iterations;
+
+  /// Длина ключа (биты)
+  final int keyLength;
+
+  /// Длина nonce (байты)
+  final int nonceLength;
+
+  /// Длина соли (байты)
+  final int saltLength;
+
+  /// Длина MAC (байты)
+  final int macLength;
+
   /// Сравнивает параметры с другими
   bool isCompatibleWith(EncryptionParams other) {
     // Совместимость по алгоритму шифрования
@@ -143,18 +143,6 @@ class EncryptionParams {
 
 /// Метаданные шифрования для файла/записи
 class EncryptionMetadata {
-  /// Версия алгоритма
-  final int version;
-
-  /// Timestamp создания
-  final DateTime timestamp;
-
-  /// Идентификатор ключа (для ротации)
-  final String? keyId;
-
-  /// Дополнительные флаги
-  final Map<String, dynamic> extra;
-
   const EncryptionMetadata({
     required this.version,
     required this.timestamp,
@@ -171,6 +159,30 @@ class EncryptionMetadata {
     );
   }
 
+  /// Десериализует из JSON
+  factory EncryptionMetadata.fromJson(Map<String, dynamic> json) {
+    return EncryptionMetadata(
+      version: json['version'] as int,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      keyId: json['keyId'] as String?,
+      extra: json['extra'] != null
+          ? Map<String, dynamic>.from(json['extra'])
+          : {},
+    );
+  }
+
+  /// Версия алгоритма
+  final int version;
+
+  /// Timestamp создания
+  final DateTime timestamp;
+
+  /// Идентификатор ключа (для ротации)
+  final String? keyId;
+
+  /// Дополнительные флаги
+  final Map<String, dynamic> extra;
+
   /// Проверяет совместимость версии
   bool get isCompatible => EncryptionVersion.isSupported(version);
 
@@ -185,18 +197,6 @@ class EncryptionMetadata {
       'keyId': keyId,
       if (extra.isNotEmpty) 'extra': extra,
     };
-  }
-
-  /// Десериализует из JSON
-  factory EncryptionMetadata.fromJson(Map<String, dynamic> json) {
-    return EncryptionMetadata(
-      version: json['version'] as int,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      keyId: json['keyId'] as String?,
-      extra: json['extra'] != null
-          ? Map<String, dynamic>.from(json['extra'])
-          : {},
-    );
   }
 
   @override

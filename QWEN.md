@@ -487,3 +487,7 @@ flutter pub outdated
 ## Qwen Added Memories
 - @QWEN.md @.qwen/PROJECT_SUMMARY.md @docs/DOCUMENTATION.md
 - @.qwen/ @docs/ @QWEN.md
+
+## Additions
+ - After any code modification, always run the test suite before considering the task complete. If tests don't exist, create them for the modified modules.
+ - Verify documentation matches actual implementation before marking documentation tasks complete (check if code uses SQLite vs SharedPreferences, actual dependencies, etc.).

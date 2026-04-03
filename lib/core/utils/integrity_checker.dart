@@ -5,10 +5,6 @@ import 'package:path_provider/path_provider.dart';
 
 /// Результат проверки целостности
 class IntegrityResult {
-  final bool isValid;
-  final String? errorMessage;
-  final CheckType checkType;
-
   const IntegrityResult({
     required this.isValid,
     this.errorMessage,
@@ -26,6 +22,9 @@ class IntegrityResult {
       checkType: checkType,
     );
   }
+  final bool isValid;
+  final String? errorMessage;
+  final CheckType checkType;
 }
 
 /// Тип проверки целостности
@@ -42,11 +41,10 @@ enum CheckType {
 /// - Несанкционированных изменений кода
 /// - Подделки приложения
 class IntegrityChecker {
+  IntegrityChecker({String? storedChecksum}) : _storedChecksum = storedChecksum;
   static const String _integrityDataFile = '.integrity_check';
 
   final String? _storedChecksum;
-
-  IntegrityChecker({String? storedChecksum}) : _storedChecksum = storedChecksum;
 
   // ==================== CHECKSUM ПРОВЕРКА ====================
 

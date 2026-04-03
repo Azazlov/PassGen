@@ -1,24 +1,25 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
+
 import '../../../../core/errors/failures.dart';
 import '../../../../domain/entities/password_entry.dart';
 import '../../../../domain/repositories/password_data_repository.dart';
 import '../datasources/storage_local_datasource.dart';
 import '../formats/passgen_format.dart';
-import 'dart:convert';
 
 /// Реализация репозитория импорта/экспорта паролей
 class PasswordDataRepositoryImpl implements PasswordDataRepository {
+  const PasswordDataRepositoryImpl(this.dataSource, this.passgenFormat);
   final StorageLocalDataSource dataSource;
   final PassgenFormat passgenFormat;
-
-  const PasswordDataRepositoryImpl(this.dataSource, this.passgenFormat);
 
   @override
   Future<Either<StorageFailure, String>> exportToJson() async {
     try {
       final passwords = await dataSource.getPasswords();
       if (passwords.isEmpty) {
-        return Left(StorageFailure(message: 'Нет паролей для экспорта'));
+        return const Left(StorageFailure(message: 'Нет паролей для экспорта'));
       }
 
       final jsonList = passwords.map((p) => p.toJson()).toList();
@@ -39,7 +40,7 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
     try {
       final passwords = await dataSource.getPasswords();
       if (passwords.isEmpty) {
-        return Left(StorageFailure(message: 'Нет паролей для экспорта'));
+        return const Left(StorageFailure(message: 'Нет паролей для экспорта'));
       }
 
       final data = passwords.map((p) => p.toJson()).toList();
@@ -61,7 +62,7 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
     try {
       final decoded = jsonDecode(jsonString);
       if (decoded == null || decoded is! List) {
-        return Left(StorageFailure(message: 'Неверный формат JSON'));
+        return const Left(StorageFailure(message: 'Неверный формат JSON'));
       }
 
       final importedPasswords = decoded
@@ -100,7 +101,7 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
       }
 
       await dataSource.savePasswords(existing);
-      return Right(true);
+      return const Right(true);
     } catch (e) {
       if (e is StorageFailure) {
         return Left(e);
@@ -156,7 +157,7 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
       }
 
       await dataSource.savePasswords(existing);
-      return Right(true);
+      return const Right(true);
     } catch (e) {
       if (e is StorageFailure) {
         return Left(e);

@@ -107,17 +107,17 @@ void main() {
       });
 
       test('constantTimeEqualsBase64 сравнивает Base64 строки', () {
-        final a = 'AQIDBA=='; // [1, 2, 3, 4]
-        final b = 'AQIDBA=='; // [1, 2, 3, 4]
-        final c = 'AQIDBQ=='; // [1, 2, 3, 5]
+        const a = 'AQIDBA=='; // [1, 2, 3, 4]
+        const b = 'AQIDBA=='; // [1, 2, 3, 4]
+        const c = 'AQIDBQ=='; // [1, 2, 3, 5]
 
         expect(CryptoUtils.constantTimeEqualsBase64(a, b), isTrue);
         expect(CryptoUtils.constantTimeEqualsBase64(a, c), isFalse);
       });
 
       test('constantTimeEqualsBase64 работает с пустыми строками', () {
-        final a = '';
-        final b = '';
+        const a = '';
+        const b = '';
 
         expect(CryptoUtils.constantTimeEqualsBase64(a, b), isTrue);
       });
@@ -191,7 +191,7 @@ void main() {
       });
 
       test('encodeBase64 и decodeBase64 работают корректно', () {
-        final original = 'Hello, World!';
+        const original = 'Hello, World!';
 
         final encoded = CryptoUtils.encodeBase64(original);
         final decoded = CryptoUtils.decodeBase64(encoded);

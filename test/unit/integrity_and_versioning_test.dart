@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pass_gen/core/utils/integrity_checker.dart';
 import 'package:pass_gen/core/utils/encryption_versioning.dart';
+import 'package:pass_gen/core/utils/integrity_checker.dart';
 
 void main() {
   group('IntegrityChecker Tests', () {
@@ -85,7 +85,7 @@ void main() {
 
     group('Utility Tests', () {
       test('resetStoredChecksum выполняется без ошибок', () async {
-        expect(() => IntegrityChecker.resetStoredChecksum(), returnsNormally);
+        expect(IntegrityChecker.resetStoredChecksum, returnsNormally);
       });
 
       test('getIntegrityInfo возвращает null если нет данных', () async {

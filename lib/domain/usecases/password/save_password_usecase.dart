@@ -56,7 +56,7 @@ class SavePasswordUseCase {
     }
 
     // Сохранение в репозиторий
-    return await repository.savePassword(
+    return repository.savePassword(
       service: service,
       password: password,
       config: config,
@@ -73,21 +73,21 @@ class SavePasswordUseCase {
   ) {
     // Проверка длины пароля
     if (password.length < 4) {
-      return PasswordGenerationFailure(
+      return const PasswordGenerationFailure(
         message: 'Пароль слишком короткий (минимум 4 символа)',
       );
     }
 
     // Проверка названия сервиса
     if (service.trim().isEmpty) {
-      return PasswordGenerationFailure(
+      return const PasswordGenerationFailure(
         message: 'Название сервиса не может быть пустым',
       );
     }
 
     // Проверка конфигурации
     if (config.isEmpty) {
-      return PasswordGenerationFailure(
+      return const PasswordGenerationFailure(
         message: 'Конфигурация пароля не может быть пустой',
       );
     }

@@ -114,12 +114,12 @@ class _CopyablePasswordState extends State<CopyablePassword> {
     // Показываем уведомление
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
+        content: const Row(
           children: [
             // Иконка вместо Lottie анимации
-            const Icon(Icons.check_circle, color: Colors.green, size: 24),
-            const SizedBox(width: 12),
-            const Text('Пароль скопирован'),
+            Icon(Icons.check_circle, color: Colors.green, size: 24),
+            SizedBox(width: 12),
+            Text('Пароль скопирован'),
           ],
         ),
         behavior: SnackBarBehavior.floating,

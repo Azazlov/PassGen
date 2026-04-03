@@ -134,7 +134,6 @@ class StorageLocalDataSource {
 
       // Объединяем пароли, избегая дубликатов по service + login (v0.5.1)
       final mergedPasswords = List<PasswordEntry>.from(currentPasswords);
-      int duplicateCount = 0;
 
       for (final newPassword in newPasswords) {
         final existingIndex = mergedPasswords.indexWhere(
@@ -145,16 +144,10 @@ class StorageLocalDataSource {
         if (existingIndex != -1) {
           // Обновляем существующий (v0.5.1)
           mergedPasswords[existingIndex] = newPassword;
-          duplicateCount++;
         } else {
           // Добавляем новый
           mergedPasswords.add(newPassword);
         }
-      }
-
-      // Логируем количество обновлённых дубликатов
-      if (duplicateCount > 0) {
-        print('Импорт: обновлено $duplicateCount дубликатов');
       }
 
       return await savePasswords(mergedPasswords);
@@ -163,9 +156,8 @@ class StorageLocalDataSource {
       if (originalPasswords != null) {
         try {
           await savePasswords(originalPasswords);
-          print('Импорт: выполнен rollback после ошибки');
-        } catch (rollbackError) {
-          print('Импорт: ошибка rollback: $rollbackError');
+        } catch (_) {
+          // Rollback failed, but don't mask the original error
         }
       }
       throw StorageFailure(message: 'Ошибка импорта паролей: $e');
