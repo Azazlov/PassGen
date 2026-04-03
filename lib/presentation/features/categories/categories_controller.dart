@@ -63,7 +63,7 @@ class CategoriesController extends ChangeNotifier {
         isSystem: false,
         createdAt: DateTime.now(),
       );
-      final result = await _createCategoryUseCase.execute(category);
+      await _createCategoryUseCase.execute(category);
 
       // Немедленно обновляем список после создания
       _categories = await _getCategoriesUseCase.execute();

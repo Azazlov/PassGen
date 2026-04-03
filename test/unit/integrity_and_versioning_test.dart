@@ -71,7 +71,7 @@ void main() {
         final results = await checker.fullIntegrityCheck();
 
         expect(results.length, greaterThan(0));
-        expect(results.every((r) => r is IntegrityResult), isTrue);
+        expect(results.every((r) => r.isValid), isTrue);
       });
 
       test('isIntegrityValid возвращает bool', () async {
@@ -85,7 +85,7 @@ void main() {
 
     group('Utility Tests', () {
       test('resetStoredChecksum выполняется без ошибок', () async {
-        expect(IntegrityChecker.resetStoredChecksum, returnsNormally);
+        await IntegrityChecker.resetStoredChecksum();
       });
 
       test('getIntegrityInfo возвращает null если нет данных', () async {

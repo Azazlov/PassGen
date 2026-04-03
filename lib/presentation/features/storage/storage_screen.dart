@@ -3,12 +3,10 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../core/constants/event_types.dart';
 import '../../../core/services/navigation_service.dart';
 import '../../../domain/entities/category.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
@@ -19,7 +17,6 @@ import '../../../domain/usecases/storage/export_passwords_usecase.dart';
 import '../../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../../domain/usecases/storage/import_passgen_usecase.dart';
 import '../../../domain/usecases/storage/import_passwords_usecase.dart';
-import '../../../presentation/widgets/app_button.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import '../../../presentation/widgets/shimmer_effect.dart';
 import 'storage_adaptive_layout.dart';
@@ -138,222 +135,6 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
               )
             : const StorageAdaptiveLayout(),
       ),
-    );
-  }
-
-  Widget _buildContent(StorageController controller, ThemeData theme) {
-    // Если хранилище совсем пустое (нет паролей вообще)
-    if (controller.allPasswords.isEmpty) {
-      return _buildEmptyState(theme);
-    }
-
-    // Если фильтры не вернули результатов
-    if (controller.isEmpty) {
-      return _buildFilteredEmptyState(theme, controller);
-    }
-
-    final password = controller.currentPassword;
-    if (password == null) {
-      return _buildEmptyState(theme);
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Поиск
-        TextField(
-          decoration: InputDecoration(
-            hintText: 'Поиск по сервису...',
-            prefixIcon: const Icon(Icons.search),
-            border: const OutlineInputBorder(),
-            filled: true,
-            fillColor: theme.colorScheme.surfaceContainerHighest,
-          ),
-          onChanged: (value) => controller.setSearchQuery(value),
-        ),
-
-        const SizedBox(height: 16),
-
-        // Фильтр категорий
-        _buildCategoryFilter(controller, theme),
-
-        const SizedBox(height: 24),
-
-        // Навигация между паролями
-        _buildNavigation(controller, theme),
-
-        const SizedBox(height: 32),
-
-        // Карточка сервиса
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                // Иконка категории (используем заглушку, т.к. category не загружен)
-                FutureBuilder<List<Category>>(
-                  future: context.read<GetCategoriesUseCase>().execute(),
-                  builder: (context, snapshot) {
-                    final categories = snapshot.data ?? [];
-                    final category = password.categoryId != null
-                        ? categories.cast<Category?>().firstWhere(
-                            (c) => c?.id == password.categoryId,
-                            orElse: () => null,
-                          )
-                        : null;
-                    return Text(
-                      category?.icon ?? '📁',
-                      style: const TextStyle(fontSize: 48),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  password.service,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${controller.currentIndex + 1} / ${controller.passwordsCount}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // Отображение пароля
-        Card(
-          color: theme.colorScheme.primaryContainer,
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Пароль',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        password.password ?? '(зашифровано)',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontFamily: 'monospace',
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.copy),
-                      onPressed: () {
-                        final passwordText =
-                            password.password ?? '(зашифровано)';
-                        Clipboard.setData(ClipboardData(text: passwordText));
-
-                        // Автоочистка буфера обмена через 60 секунд
-                        Future.delayed(const Duration(seconds: 60), () {
-                          Clipboard.setData(const ClipboardData(text: ''));
-                        });
-
-                        // Логирование просмотра пароля (PWD_ACCESSED)
-                        context.read<LogEventUseCase>().execute(
-                          EventTypes.pwdAccessed,
-                          details: {
-                            'service': password.service,
-                            'login': password.login,
-                            'category_id': password.categoryId,
-                          },
-                        );
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Пароль скопирован. Буфер будет очищен через 60 сек.',
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // Кнопка копирования
-        AppButton(
-          label: 'Скопировать пароль',
-          onPressed: () {
-            final passwordText = password.password ?? '(зашифровано)';
-            Clipboard.setData(ClipboardData(text: passwordText));
-
-            // Автоочистка буфера обмена через 60 секунд
-            Future.delayed(const Duration(seconds: 60), () {
-              Clipboard.setData(const ClipboardData(text: ''));
-            });
-
-            // Логирование просмотра пароля (PWD_ACCESSED)
-            context.read<LogEventUseCase>().execute(
-              EventTypes.pwdAccessed,
-              details: {
-                'service': password.service,
-                'login': password.login,
-                'category_id': password.categoryId,
-              },
-            );
-
-            showAppDialog(
-              context: context,
-              title: 'Скопировано',
-              content:
-                  'Пароль скопирован в буфер обмена. Буфер будет очищен через 60 сек.',
-            );
-          },
-          icon: Icons.copy,
-        ),
-
-        const SizedBox(height: 16),
-
-        // Ошибка
-        if (controller.error != null)
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.errorContainer,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    controller.error!,
-                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: controller.clearError,
-                  color: theme.colorScheme.onErrorContainer,
-                ),
-              ],
-            ),
-          ),
-      ],
     );
   }
 
@@ -678,7 +459,11 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             final file = File('${directory.path}/passwords_export.json');
             await file.writeAsString(jsonString);
 
-            await Share.shareXFiles([XFile(file.path)]);
+            await SharePlus.instance.share(
+              ShareParams(
+                files: [XFile(file.path)],
+              ),
+            );
           } catch (e) {
             if (context.mounted) {
               showAppDialog(
@@ -774,7 +559,11 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             final file = File('${directory.path}/passwords_export.passgen');
             await file.writeAsString(base64Data);
 
-            await Share.shareXFiles([XFile(file.path)]);
+            await SharePlus.instance.share(
+              ShareParams(
+                files: [XFile(file.path)],
+              ),
+            );
 
             if (context.mounted) {
               showAppDialog(

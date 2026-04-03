@@ -87,8 +87,8 @@ class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
                                 ? 'Зашифруйте сообщение паролем'
                                 : 'Расшифруйте сообщение паролем',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.6,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
                               ),
                             ),
                           ),

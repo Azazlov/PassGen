@@ -12,7 +12,8 @@
       "Bash(python3 *)",
       "WebSearch",
       "Bash(taskkill *)",
-      "mcp__dart__dart_format"
+      "mcp__dart__dart_format",
+      "mcp__dart__dart_fix"
     ]
   },
   "$version": 3

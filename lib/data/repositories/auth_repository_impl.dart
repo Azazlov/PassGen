@@ -12,7 +12,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalDataSource dataSource;
 
   @override
-  Future<bool> isPinSetup() async {
+  Future<bool> isPinSetup() {
     return dataSource.isPinSetup();
   }
 

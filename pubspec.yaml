@@ -20,80 +20,35 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # === UI/UX ===
-  # Иконки Cupertino для iOS
-  cupertino_icons: ^1.0.8
-  
-  # Google Fonts для типографики (Material 3)
-  google_fonts: ^6.3.2
-  
-  # Анимации Lottie
-  lottie: ^3.0.0
-  
-  # Индикатор надёжности пароля
-  password_strength: ^0.2.0
-  zxcvbn: ^1.0.0
-
-  # === State Management ===
-  # Provider для управления состоянием (Clean Architecture)
-  provider: ^6.1.1
-
-  # === Data & Security ===
-  # Криптография (PBKDF2, ChaCha20-Poly1305)
   cryptography: ^2.7.0
   crypto: ^3.0.6
-  
-  # Генерация UUID
-  uuid: ^4.5.1
-  
-  # Функциональное программирование (Either, Option)
+  cupertino_icons: ^1.0.8
   dartz: ^0.10.1
-
-  # === Database ===
-  # SQLite для локального хранения
-  sqflite: ^2.4.2
-  sqflite_common_ffi: ^2.4.0+2  # Для Desktop (Linux/Windows)
-  path: ^1.9.0
-
-  # === Storage ===
-  # SharedPreferences для настроек
-  shared_preferences: ^2.5.3
-
-  # === File Operations ===
-  # Выбор файлов для импорта/экспорта
   file_picker: ^10.3.2
-  
-  # Доступ к файловой системе
-  path_provider: ^2.1.5
-
-  # === Sharing & Export ===
-  # Публикация файлов (экспорт паролей)
-  share_plus: ^12.0.0
-  
-  # Открытие ссылок (документация, репозиторий)
-  url_launcher: ^6.2.4
-
-  # === Platform Support ===
-  # Требуется для работы на всех платформах
   flutter_web_plugins:
     sdk: flutter
+  google_fonts: ^6.3.2
+  lottie: ^3.0.0
+  password_strength: ^0.2.0
+  path: ^1.9.0
+  path_provider: ^2.1.5
+  provider: ^6.1.1
+  share_plus: ^12.0.0
+  shared_preferences: ^2.5.3
+  sqflite: ^2.4.2
+  sqflite_common_ffi: ^2.4.0+2
+  url_launcher: ^6.2.4
+  uuid: ^4.5.1
+  zxcvbn: ^1.0.0
 
 dev_dependencies:
+  build_runner: ^2.4.9
+  code_builder: ^4.10.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
-
-  # === Linting ===
-  # Рекомендуемые правила для Flutter
-  flutter_lints: ^6.0.0
-
-  # === Code Generation ===
-  # Генерация иконок приложения
-  flutter_launcher_icons: ^0.13.1
-  
-  # Генерация моков для тестов
   mockito: ^5.4.4
-  code_builder: ^4.10.0
-  build_runner: ^2.4.9
 
 # Конфигурация flutter_launcher_icons
 flutter_launcher_icons:

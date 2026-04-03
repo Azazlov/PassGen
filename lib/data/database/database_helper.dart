@@ -228,7 +228,7 @@ class DatabaseHelper {
   /// Выполнение транзакции
   Future<T?> transaction<T>(Future<T?> Function(Transaction txn) action) {
     return database.then(
-      (db) => db.transaction((txn) async {
+      (db) => db.transaction((txn) {
         return action(txn);
       }),
     );
