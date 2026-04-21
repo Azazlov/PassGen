@@ -125,14 +125,10 @@ project_context/
 - `project_context/diploma_assistant/reports/`
 - `project_context/scripts/`
 - `project_context/temp/`
-- `project_context/frontend_engineer/docs/`
 
 ### Дубликаты (5)
-- `project_context/agents_context/common/user_guide.md` → оставлен `tech-docs-writer/user_guide.md`
-- `project_context/agents_context/common/faq.md` → оставлен `tech-docs-writer/faq.md`
 - `project_context/tech-docs-writer/technical/architecture.md` → дубль `DEVELOPER.md`
-- `project_context/frontend_engineer/CURRENT_PROGRESS.md` → дубль `product-manager-tracker/progress/`
-- `project_context/qa_engineer/UNIT_TESTS_REPORT.md` → удалено (актуальные тесты: `test/`)
+ - `DEVELOPER.md` / `README.MD` → единая “истина” по архитектуре/запуску/сборке
 
 ### Устаревшие отчёты об этапах (5)
 - `STAGE_1_COMPLETE.md` → заменён `FINAL_REPORT.md`
@@ -196,9 +192,7 @@ project_context/
 
 ### Отчёты агентов (13 файлов)
 Внутренние отчёты:
-- `frontend_engineer/reports/*.md` (4 файла)
-- `data_security_specialist/reports/*` (перенесено в `project_context/.archive/reports/`)
-- `devops_engineer/*` (перенесено в `project_context/.archive/reports/`)
+- отчёты и рабочие материалы перенесены в `project_context/.archive/`
 
 **П путь:** `project_context/.archive/reports/`
 

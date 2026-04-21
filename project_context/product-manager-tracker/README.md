@@ -25,8 +25,7 @@ project_context/product-manager-tracker/
 - **Код-ревью**: `reviews/CODE_REVIEW_REPORT.md`
 - **Аудит безопасности**: `reviews/DATA_SECURITY_AUDIT.md`
 
-## Примечание о “старой” структуре
+## Источник истины
 
-Ранее в проекте использовалась папка `agents_context/` и набор “роль‑ориентированных” директорий (`qa_engineer/`, `devops_engineer/`, `data_security_specialist/`).
-Сейчас навигация и “истина” по проекту — через `project_context/AGENTS.md` и документы в этой директории.
+Навигация и “истина” по проекту — через `project_context/AGENTS.md` и документы в этой директории.
 

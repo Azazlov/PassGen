@@ -249,7 +249,7 @@ debugPrint('  All passwords: ${_allPasswords.length}, Filtered: ${_passwords.len
 
 #### ✅ Проблема 8: Нет документации по экстренной ротации ключей
 
-**Файлы:** `project_context/data_security_specialist/security/key_management.md`
+**Файлы:** `project_context/security-data-flow-analyzer/security/key_management.md`
 
 **Что сделано:**
 - Документация уже содержит раздел 6 "РОТАЦИЯ КЛЮЧЕЙ"
