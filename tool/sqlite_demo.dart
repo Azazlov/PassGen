@@ -1,20 +1,18 @@
-import 'dart:async';
-
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-// Симуляция твоих данных из других модулей
+// Симуляция данных из других модулей
 class MockData {
   static const String config = 'NTEy.NTE1.Ynl0ZXM='; // Пример твоего генератора
   static const String encryptedSecret = 'base64_encrypted_blob_here';
 }
 
-class StorageTest {
+class StorageDemo {
   late Database db;
 
-  // 1. Инициализация и создание 7 таблиц (Дипломный минимум)
+  // Инициализация и создание 7 таблиц (демо для диплома)
   Future<void> init() async {
     db = await openDatabase(
-      inMemoryDatabasePath, // База в оперативной памяти для тестов
+      inMemoryDatabasePath, // База в оперативной памяти для демо
       version: 1,
       onCreate: (db, version) async {
         await db.execute(
@@ -44,31 +42,25 @@ class StorageTest {
     );
   }
 
-  // 2. Логика записи (Пример: сохранение нового пароля)
   Future<void> savePassword(String title, String categoryName) async {
-    // Сначала создаем категорию
     final int catId = await db.insert('categories', {'name': categoryName});
 
-    // Создаем основную запись
     final int pId = await db.insert('passwords', {
       'category_id': catId,
       'title': title,
     });
 
-    // Записываем конфиг генератора (из твоего модуля)
     await db.insert('generator_configs', {
       'password_id': pId,
       'config': MockData.config,
     });
 
-    // Записываем зашифрованные данные (из твоего модуля Encrypted)
     await db.insert('encrypted_data', {
       'password_id': pId,
       'cipher_text': MockData.encryptedSecret,
       'nonce': 'random_nonce_here',
     });
 
-    // Логируем событие
     await db.insert('security_events', {
       'event': 'Created password: $title',
       'timestamp': DateTime.now().toString(),
@@ -77,11 +69,9 @@ class StorageTest {
     print("💾 Данные для '$title' успешно распределены по таблицам.");
   }
 
-  // 3. Логика чтения (Сборка данных обратно)
   Future<void> readAndPrint() async {
     print('\n--- 📝 ОТЧЕТ ПО БАЗЕ ДАННЫХ ---');
 
-    // Делаем JOIN, чтобы показать связь таблиц (красиво для диплома)
     final List<Map<String, dynamic>> result = await db.rawQuery('''
       SELECT p.title, c.name as category, g.config, e.cipher_text
       FROM passwords p
@@ -90,28 +80,30 @@ class StorageTest {
       JOIN encrypted_data e ON e.password_id = p.id
     ''');
 
-    for (var row in result) {
+    for (final row in result) {
       print("Запись: ${row['title']} | Категория: ${row['category']}");
       print("  └─ Конфиг генератора: ${row['config']}");
       print("  └─ Шифрованные байты: ${row['cipher_text']}");
     }
 
-    // Проверяем логи
-    final List<Map<String, dynamic>> logs = await db.query('security_events');
+    final logs = await db.query('security_events');
     print('--- 🛡️ ЛОГИ БЕЗОПАСНОСТИ: ${logs.length} записей ---');
   }
+
+  Future<void> close() => db.close();
 }
 
-void main() async {
-  // Важно для sqflite в тестах/приложении
-  // databaseFactory = databaseFactoryFfi; // Если запускаешь чисто на ПК (нужен sqflite_common_ffi)
+Future<void> main() async {
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
-  final storage = StorageTest();
+
+  final storage = StorageDemo();
   await storage.init();
 
   await storage.savePassword('VK.com', 'Social');
   await storage.savePassword('Work Email', 'Job');
-
   await storage.readAndPrint();
+
+  await storage.close();
 }
+
