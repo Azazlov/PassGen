@@ -7,12 +7,6 @@ class GetAuthStateUseCase {
   final AuthRepository repository;
 
   Future<AuthState> execute() async {
-    final isPinSetup = await repository.isPinSetup();
-
-    return AuthState(
-      isPinSetup: isPinSetup,
-      isAuthenticated: false,
-      isLocked: false,
-    );
+    return repository.getAuthState();
   }
 }

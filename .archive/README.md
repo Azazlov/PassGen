@@ -15,8 +15,8 @@
 |------|--------------------------|-------------------|
 | `ARCHITECTURE.md` | `/ARCHITECTURE.md` | Заменено на [DEVELOPER.md](../DEVELOPER.md) |
 | `structure.md` | `/structure.md` | Заменено на [DEVELOPER.md](../DEVELOPER.md) |
-| `architecture.md` | `technical_writer/technical/` | Заменено на [DEVELOPER.md](../../DEVELOPER.md) |
-| `database.md` | `technical_writer/technical/` | Заменено на [DEVELOPER.md](../../DEVELOPER.md) |
+| `architecture.md` | `tech-docs-writer/technical/` | Заменено на [DEVELOPER.md](../../DEVELOPER.md) |
+| `database.md` | `tech-docs-writer/technical/` | Заменено на [DEVELOPER.md](../../DEVELOPER.md) |
 | `diagrams_plan.md` | `diagrams/` | План выполнен, диаграммы в [DEVELOPER.md](../../DEVELOPER.md) |
 
 ---
@@ -28,13 +28,13 @@
 - **[README.MD](../README.MD)** — Основная документация проекта
 
 ### Проектная
-- **[CURRENT_PROGRESS.md](../project_context/agents_context/progress/CURRENT_PROGRESS.md)** — Текущий прогресс
-- **[passgen.tz.md](../project_context/agents_context/planning/passgen.tz.md)** — Техническое задание
-- **[FINAL_REPORT.md](../project_context/agents_context/stages/FINAL_REPORT.md)** — Финальный отчёт
+- **[CURRENT_PROGRESS.md](../project_context/product-manager-tracker/progress/CURRENT_PROGRESS.md)** — Текущий прогресс
+- **[passgen.tz.md](../project_context/product-manager-tracker/planning/passgen.tz.md)** — Техническое задание
+- **[FINAL_REPORT.md](../project_context/product-manager-tracker/stages/FINAL_REPORT.md)** — Финальный отчёт
 
 ### Безопасность
-- **[security_fix_report_2026-03-10.md](../project_context/data_security_specialist/audit/security_fix_report_2026-03-10.md)** — Устранение уязвимостей
-- **[security_audit_report.md](../project_context/data_security_specialist/audit/security_audit_report.md)** — Аудит безопасности
+- **[security_fix_report_2026-03-10.md](../project_context/security-data-flow-analyzer/audit/security_fix_report_2026-03-10.md)** — Устранение уязвимостей
+- **[security_audit_report.md](../project_context/security-data-flow-analyzer/audit/security_audit_report.md)** — Аудит безопасности
 
 ---
 

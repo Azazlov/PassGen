@@ -682,7 +682,7 @@ class EncryptedEntry {
 flutter test
 
 # Конкретный тест
-flutter test tests/sqlite_test.dart
+flutter test test/widgets/copyable_password_test.dart
 
 # С покрытием
 flutter test --coverage
@@ -691,12 +691,10 @@ flutter test --coverage
 ### Структура тестов
 
 ```
-tests/
-├── sqlite_test.dart           # Тесты базы данных
-├── generator_test.dart        # Тесты генератора
-├── encryptor_test.dart        # Тесты шифрования
-├── auth_test.dart             # Тесты аутентификации
-└── import_export_test.dart    # Тесты импорта/экспорта
+test/
+├── unit/                      # Unit-тесты
+├── usecases/                  # UseCase-тесты
+└── widgets/                   # Widget-тесты
 ```
 
 ### Пример теста
@@ -1090,38 +1088,32 @@ MultiProvider(
 
 | Документ | Описание | Статус |
 |----------|----------|--------|
-| [CURRENT_PROGRESS.md](project_context/agents_context/progress/CURRENT_PROGRESS.md) | Текущий прогресс проекта | ✅ Актуально |
-| [FINAL_REPORT.md](project_context/agents_context/stages/FINAL_REPORT.md) | Финальный отчёт о завершении | ✅ Актуально |
-| [STAGE_1-13_COMPLETE.md](project_context/agents_context/stages/) | Отчёты по этапам 1-13 | ✅ Актуально |
+| [CURRENT_PROGRESS.md](project_context/product-manager-tracker/progress/CURRENT_PROGRESS.md) | Текущий прогресс проекта | ✅ Актуально |
+| [FINAL_REPORT.md](project_context/product-manager-tracker/stages/FINAL_REPORT.md) | Финальный отчёт о завершении | ✅ Актуально |
 
 ### E.2 Безопасность
 
 | Документ | Описание | Статус |
 |----------|----------|--------|
-| [security_fix_report_2026-03-10.md](project_context/data_security_specialist/audit/security_fix_report_2026-03-10.md) | Устранение 15 уязвимостей | ✅ Актуально |
-| [security_audit_report.md](project_context/data_security_specialist/audit/security_audit_report.md) | Полный аудит безопасности | ✅ Актуально |
-| [security_policy.md](project_context/data_security_specialist/security/security_policy.md) | Политика безопасности | ✅ Актуально |
-| [key_management.md](project_context/data_security_specialist/security/key_management.md) | Управление ключами | ✅ Актуально |
-| [threat_model.md](project_context/data_security_specialist/security/threat_model.md) | Модель угроз | ✅ Актуально |
-| [chacha20_specs.md](project_context/data_security_specialist/encryption/chacha20_specs.md) | Спецификация ChaCha20 | ✅ Актуально |
-| [pbkdf2_specs.md](project_context/data_security_specialist/encryption/pbkdf2_specs.md) | Спецификация PBKDF2 | ✅ Актуально |
+| [security_fix_report_2026-03-10.md](project_context/security-data-flow-analyzer/audit/security_fix_report_2026-03-10.md) | Отчёт об исправлениях | ✅ Актуально |
+| [security_audit_report.md](project_context/security-data-flow-analyzer/audit/security_audit_report.md) | Полный аудит безопасности | ✅ Актуально |
+| [security_policy.md](project_context/security-data-flow-analyzer/security/security_policy.md) | Политика безопасности | ✅ Актуально |
+| [key_management.md](project_context/security-data-flow-analyzer/security/key_management.md) | Управление ключами | ✅ Актуально |
+| [threat_model.md](project_context/security-data-flow-analyzer/security/threat_model.md) | Модель угроз | ✅ Актуально |
+| [chacha20_specs.md](project_context/security-data-flow-analyzer/encryption/chacha20_specs.md) | Спецификация ChaCha20 | ✅ Актуально |
+| [nonce_management.md](project_context/security-data-flow-analyzer/encryption/nonce_management.md) | Управление nonce | ✅ Актуально |
 
 ### E.3 Тестирование
 
 | Документ | Описание | Статус |
 |----------|----------|--------|
-| [UNIT_TESTS_COMPLETE.md](project_context/qa_engineer/UNIT_TESTS_COMPLETE.md) | Unit-тесты завершены (33/33) | ✅ Актуально |
-| [UNIT_TESTS_REPORT.md](project_context/qa_engineer/UNIT_TESTS_REPORT.md) | Отчёт о тестировании | ✅ Актуально |
-| [QA_PLAN_PHASE_10.md](project_context/qa_engineer/QA_PLAN_PHASE_10.md) | План тестирования Phase 10 | ✅ Актуально |
+| `test/` | Unit/Widget тесты | ✅ Актуально |
 
 ### E.4 Сборка и развёртывание
 
 | Документ | Описание | Статус |
 |----------|----------|--------|
-| [BUILD_AND_DEPLOY_STRATEGY.md](project_context/devops_engineer/docs/BUILD_AND_DEPLOY_STRATEGY.md) | Стратегия сборки | ✅ Актуально |
-| [cicd_setup.md](project_context/devops_engineer/docs/cicd_setup.md) | Настройка CI/CD | ✅ Актуально |
-| [developer_guide.md](project_context/devops_engineer/docs/developer_guide.md) | Руководство разработчика | ✅ Актуально |
-| [sentry_integration.md](project_context/devops_engineer/monitoring/sentry_integration.md) | Интеграция Sentry | ⏳ План |
+| Раздел “Сборка и развёртывание” | Инструкции по сборке | ✅ Актуально |
 
 ### E.5 UI/UX улучшения
 
@@ -1135,19 +1127,14 @@ MultiProvider(
 
 | Документ | Описание | Статус |
 |----------|----------|--------|
-| [passgen.tz.md](project_context/agents_context/planning/passgen.tz.md) | Техническое задание | ✅ Актуально |
-| [BUG_FIX_PLAN_v0.5.1.md](project_context/agents_context/planning/BUG_FIX_PLAN_v0.5.1.md) | План исправлений | ⏳ План |
-| [IMPROVEMENT_PLAN_v0.6.0.md](project_context/agents_context/planning/IMPROVEMENT_PLAN_v0.6.0.md) | План улучшений v0.6.0 | ⏳ План |
+| [passgen.tz.md](project_context/product-manager-tracker/planning/passgen.tz.md) | Техническое задание | ✅ Актуально |
 
 ### E.7 Код-ревью и аудит
 
 | Документ | Описание | Статус |
 |----------|----------|--------|
-| [CODE_REVIEW_REPORT.md](project_context/agents_context/reviews/CODE_REVIEW_REPORT.md) | Код-ревью по ТЗ | ✅ Актуально |
-| [CODE_AUDIT_2026-03-08.md](project_context/agents_context/reviews/CODE_AUDIT_2026-03-08.md) | Полный аудит кода | ✅ Актуально |
-| [CLEAN_ARCHITECTURE_AUDIT_2026-03-08.md](project_context/agents_context/reviews/CLEAN_ARCHITECTURE_AUDIT_2026-03-08.md) | Аудит Clean Architecture | ✅ Актуально |
-| [SOLID_AUDIT_2026-03-08.md](project_context/agents_context/reviews/SOLID_AUDIT_2026-03-08.md) | Аудит SOLID | ✅ Актуально |
-| [DATA_SECURITY_AUDIT.md](project_context/agents_context/reviews/DATA_SECURITY_AUDIT.md) | Аудит безопасности | ✅ Актуально |
+| [CODE_REVIEW_REPORT.md](project_context/product-manager-tracker/reviews/CODE_REVIEW_REPORT.md) | Код-ревью по ТЗ | ✅ Актуально |
+| [DATA_SECURITY_AUDIT.md](project_context/product-manager-tracker/reviews/DATA_SECURITY_AUDIT.md) | Аудит безопасности | ✅ Актуально |
 
 ---
 

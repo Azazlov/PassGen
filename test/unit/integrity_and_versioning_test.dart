@@ -101,8 +101,8 @@ void main() {
     // ==================== VERSION TESTS ====================
 
     group('EncryptionVersion Tests', () {
-      test('currentVersion равен 1', () {
-        expect(EncryptionVersion.currentVersion, equals(1));
+      test('currentVersion равен 2', () {
+        expect(EncryptionVersion.currentVersion, equals(2));
       });
 
       test('minSupportedVersion равен 1', () {
@@ -149,7 +149,7 @@ void main() {
       test('getParamsForVersion для v2 возвращает увеличенные итерации', () {
         final params = EncryptionVersion.getParamsForVersion(2);
 
-        expect(params.iterations, equals(20000));
+        expect(params.iterations, equals(600000));
       });
 
       test('getParamsForVersion для v3 возвращает Argon2', () {
@@ -197,7 +197,7 @@ void main() {
       test('v2 параметры имеют увеличенные итерации', () {
         final params = EncryptionParams.v2();
 
-        expect(params.iterations, equals(20000));
+        expect(params.iterations, equals(600000));
       });
 
       test('v3 параметры используют Argon2', () {
@@ -258,7 +258,7 @@ void main() {
         final metadata = EncryptionMetadata.current();
         final params = metadata.params;
 
-        expect(params.iterations, equals(10000));
+        expect(params.iterations, equals(600000));
       });
 
       test('toJson сериализует метаданные', () {
@@ -300,7 +300,7 @@ void main() {
         final metadata = EncryptionMetadata.current();
         final str = metadata.toString();
 
-        expect(str.contains('v1'), isTrue);
+        expect(str.contains('v2'), isTrue);
         expect(str.contains('ChaCha20-Poly1305'), isTrue);
       });
     });

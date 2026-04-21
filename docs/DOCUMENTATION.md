@@ -13,10 +13,10 @@
 |----------|------|-------|
 | **Техническое задание** | `project_context/product-manager-tracker/planning/passgen.tz.md` | task-planner |
 | **Текущий прогресс** | `project_context/product-manager-tracker/progress/CURRENT_PROGRESS.md` | product-manager-tracker |
-| **Финальный отчёт** | `product-manager-tracker/stages/FINAL_REPORT.md` | product-manager-tracker |
-| **Код-ревью** | `product-manager-tracker/reviews/CODE_REVIEW_REPORT.md` | expert-code-reviewer |
+| **Финальный отчёт** | `project_context/product-manager-tracker/stages/FINAL_REPORT.md` | product-manager-tracker |
+| **Код-ревью** | `project_context/product-manager-tracker/reviews/CODE_REVIEW_REPORT.md` | expert-code-reviewer |
 | **Аудит безопасности** | `project_context/security-data-flow-analyzer/audit/security_audit_report.md` | security-data-flow-analyzer |
-| **Отчёт о тестах** | `tests/` | — |
+| **Тесты** | `test/` | — |
 | **Презентация** | `project_context/tech-docs-writer/presentation/slides.md` | tech-docs-writer |
 | **Хронология** | `docs/DEVELOPMENT_CHRONOLOGY.md` | — |
 
@@ -26,13 +26,13 @@
 | **README** | `README.MD` | Основная документация |
 | **DEVELOPER** | `DEVELOPER.md` | Документация разработчика |
 | **Архитектура БД** | `project_context/diagrams/DB.mermaid` | Схема базы данных |
-| **Changelog** | `project_context/technical_writer/CHANGELOG.md` | История версий |
+| **Changelog** | `project_context/tech-docs-writer/CHANGELOG.md` | История версий |
 
 ### Для пользователей
 | Документ | Путь | Назначение |
 |----------|------|------------|
-| **Руководство** | `project_context/technical_writer/user_guide.md` | Как пользоваться |
-| **FAQ** | `project_context/technical_writer/faq.md` | Вопросы и ответы |
+| **Руководство** | `project_context/tech-docs-writer/user_guide.md` | Как пользоваться |
+| **FAQ** | `project_context/tech-docs-writer/faq.md` | Вопросы и ответы |
 
 ---
 
@@ -128,11 +128,11 @@ project_context/
 - `project_context/frontend_engineer/docs/`
 
 ### Дубликаты (5)
-- `project_context/agents_context/common/user_guide.md` → оставлен `technical_writer/user_guide.md`
-- `project_context/agents_context/common/faq.md` → оставлен `technical_writer/faq.md`
-- `project_context/technical_writer/technical/architecture.md` → дубль `DEVELOPER.md`
-- `project_context/frontend_engineer/CURRENT_PROGRESS.md` → дубль `agents_context/progress/`
-- `project_context/qa_engineer/UNIT_TESTS_REPORT.md` → дубль `UNIT_TESTS_COMPLETE.md`
+- `project_context/agents_context/common/user_guide.md` → оставлен `tech-docs-writer/user_guide.md`
+- `project_context/agents_context/common/faq.md` → оставлен `tech-docs-writer/faq.md`
+- `project_context/tech-docs-writer/technical/architecture.md` → дубль `DEVELOPER.md`
+- `project_context/frontend_engineer/CURRENT_PROGRESS.md` → дубль `product-manager-tracker/progress/`
+- `project_context/qa_engineer/UNIT_TESTS_REPORT.md` → удалено (актуальные тесты: `test/`)
 
 ### Устаревшие отчёты об этапах (5)
 - `STAGE_1_COMPLETE.md` → заменён `FINAL_REPORT.md`
@@ -197,13 +197,8 @@ project_context/
 ### Отчёты агентов (13 файлов)
 Внутренние отчёты:
 - `frontend_engineer/reports/*.md` (4 файла)
-- `data_security_specialist/reports/SPRINT_*.md` (2 файла)
-- `data_security_specialist/reports/CRITICAL_FIX_ENCRYPTION.md`
-- `data_security_specialist/reports/FIX_COMPLETE_PASSWORD_ENCRYPTION.md`
-- `data_security_specialist/reports/IMPROVEMENT_COMPLETE.md`
-- `devops_engineer/DOCUMENTATION_REQUEST.md`
-- `devops_engineer/DOCUMENTATION_RESPONSE.md`
-- `devops_engineer/docs/TASK_PLAN_BUILD.md`
+- `data_security_specialist/reports/*` (перенесено в `project_context/.archive/reports/`)
+- `devops_engineer/*` (перенесено в `project_context/.archive/reports/`)
 
 **П путь:** `project_context/.archive/reports/`
 
@@ -217,9 +212,9 @@ project_context/
 1. `project_context/product-manager-tracker/planning/passgen.tz.md` — Требования к проекту
 
 #### Прогресс и отчёты
-2. `product_context/product-manager-tracker/progress/CURRENT_PROGRESS.md` — Текущий статус (100%)
-3. `product_context/product-manager-tracker/stages/FINAL_REPORT.md` — Финальный отчёт
-4. `product_context/product-manager-tracker/reviews/CODE_REVIEW_REPORT.md` — Код-ревью
+2. `project_context/product-manager-tracker/progress/CURRENT_PROGRESS.md` — Текущий статус
+3. `project_context/product-manager-tracker/stages/FINAL_REPORT.md` — Финальный отчёт
+4. `project_context/product-manager-tracker/reviews/CODE_REVIEW_REPORT.md` — Код-ревью
 
 #### Безопасность
 5. `project_context/security-data-flow-analyzer/audit/security_audit_report.md` — Аудит
@@ -255,15 +250,15 @@ project_context/
 
 ```bash
 # Для диплома
-code project_context/agents_context/planning/passgen.tz.md
-code project_context/agents_context/progress/CURRENT_PROGRESS.md
-code project_context/agents_context/stages/FINAL_REPORT.md
+code project_context/product-manager-tracker/planning/passgen.tz.md
+code project_context/product-manager-tracker/progress/CURRENT_PROGRESS.md
+code project_context/product-manager-tracker/stages/FINAL_REPORT.md
 
 # Для безопасности
-code project_context/data_security_specialist/audit/
+code project_context/security-data-flow-analyzer/audit/
 
 # Для презентации
-code project_context/technical_writer/presentation/slides.md
+code project_context/tech-docs-writer/presentation/slides.md
 
 # Для хронологии
 code docs/DEVELOPMENT_CHRONOLOGY.md

@@ -327,10 +327,10 @@ graph TD
 
 | Документ | Путь | Использование |
 |----------|------|---------------|
-| **ТЗ** | `agents_context/planning/passgen.tz.md` | Глава 1, п. 1.1 |
-| **Прогресс** | `agents_context/progress/CURRENT_PROGRESS.md` | Глава 3, п. 3.3 |
-| **Отчёты этапов** | `agents_context/stages/STAGE_*.md` | Глава 3 |
-| **Аудит безопасности** | `data_security_specialist/audit/*.md` | Глава 2, п. 2.4 |
+| **ТЗ** | `product-manager-tracker/planning/passgen.tz.md` | Глава 1, п. 1.1 |
+| **Прогресс** | `product-manager-tracker/progress/CURRENT_PROGRESS.md` | Глава 3, п. 3.3 |
+| **Финальный отчёт** | `product-manager-tracker/stages/FINAL_REPORT.md` | Глава 3 |
+| **Аудит безопасности** | `security-data-flow-analyzer/audit/security_audit_report.md` | Глава 2, п. 2.4 |
 | **Документация** | `README.MD`, `DEVELOPER.md` | Приложения |
 | **Хронология** | `docs/DEVELOPMENT_CHRONOLOGY.md` | Введение, Глава 3 |
 

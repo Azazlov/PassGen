@@ -336,7 +336,7 @@ CREATE TABLE app_settings (
 flutter test
 
 # Запустить конкретный тест
-flutter test tests/sqlite_test.dart
+flutter test test/widgets/copyable_password_test.dart
 ```
 
 ---
@@ -402,22 +402,21 @@ flutter build apk
 - **[DEVELOPER.md](DEVELOPER.md)** — Полная документация разработчика (архитектура, API, БД, криптография, тестирование, сборка)
 
 ### Проектная документация (актуальная)
-- **[passgen.tz.md](project_context/agents_context/planning/passgen.tz.md)** — Техническое задание
-- **[CURRENT_PROGRESS.md](project_context/agents_context/progress/CURRENT_PROGRESS.md)** — Текущий прогресс (100%)
-- **[FINAL_REPORT.md](project_context/agents_context/stages/FINAL_REPORT.md)** — Финальный отчёт
-- **[CODE_REVIEW_REPORT.md](project_context/agents_context/reviews/CODE_REVIEW_REPORT.md)** — Код-ревью по ТЗ
+- **[passgen.tz.md](project_context/product-manager-tracker/planning/passgen.tz.md)** — Техническое задание
+- **[CURRENT_PROGRESS.md](project_context/product-manager-tracker/progress/CURRENT_PROGRESS.md)** — Текущий прогресс
+- **[FINAL_REPORT.md](project_context/product-manager-tracker/stages/FINAL_REPORT.md)** — Финальный отчёт
+- **[CODE_REVIEW_REPORT.md](project_context/product-manager-tracker/reviews/CODE_REVIEW_REPORT.md)** — Код-ревью по ТЗ
 
 ### Безопасность
-- **[security_fix_report_2026-03-10.md](project_context/data_security_specialist/audit/security_fix_report_2026-03-10.md)** — Устранение 15 уязвимостей
-- **[security_audit_report.md](project_context/data_security_specialist/audit/security_audit_report.md)** — Полный аудит безопасности
-- **[security_policy.md](project_context/data_security_specialist/security/security_policy.md)** — Политика безопасности
+- **[security_fix_report_2026-03-10.md](project_context/security-data-flow-analyzer/audit/security_fix_report_2026-03-10.md)** — Отчёт об исправлениях
+- **[security_audit_report.md](project_context/security-data-flow-analyzer/audit/security_audit_report.md)** — Полный аудит безопасности
+- **[security_policy.md](project_context/security-data-flow-analyzer/security/security_policy.md)** — Политика безопасности
 
 ### Тестирование
-- **[UNIT_TESTS_COMPLETE.md](project_context/qa_engineer/UNIT_TESTS_COMPLETE.md)** — Unit-тесты (33/33 пройдено)
-- **[UNIT_TESTS_REPORT.md](project_context/qa_engineer/UNIT_TESTS_REPORT.md)** — Отчёт о тестировании
+- **Unit/Widget тесты** находятся в `test/` (запуск: `flutter test`)
 
 ### Сборка и развёртывание
-- **[BUILD_AND_DEPLOY_STRATEGY.md](project_context/devops_engineer/docs/BUILD_AND_DEPLOY_STRATEGY.md)** — Стратегия сборки
+- Сборка описана в **[DEVELOPER.md](DEVELOPER.md)** (раздел “Сборка и развёртывание”)
 
 ### Устаревшая документация (в архиве)
 - [ARCHITECTURE.md](.archive/ARCHITECTURE.md) — Устарело, см. [DEVELOPER.md](DEVELOPER.md)

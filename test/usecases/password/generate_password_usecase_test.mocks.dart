@@ -144,6 +144,7 @@ class MockPasswordGeneratorRepository extends _i1.Mock
     required String? service,
     required String? password,
     required String? config,
+    String? masterPassword,
     int? categoryId,
     String? login,
   }) =>
@@ -152,6 +153,7 @@ class MockPasswordGeneratorRepository extends _i1.Mock
               #service: service,
               #password: password,
               #config: config,
+              #masterPassword: masterPassword,
               #categoryId: categoryId,
               #login: login,
             }),
@@ -171,6 +173,7 @@ class MockPasswordGeneratorRepository extends _i1.Mock
                       #service: service,
                       #password: password,
                       #config: config,
+                      #masterPassword: masterPassword,
                       #categoryId: categoryId,
                       #login: login,
                     }),

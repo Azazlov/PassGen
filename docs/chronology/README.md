@@ -205,16 +205,16 @@ docs/chronology/
 - [README.MD](../../README.MD) — Основная документация проекта
 
 ### Проектная документация
-- [Техническое задание](../../project_context/agents_context/planning/passgen.tz.md)
-- [Текущий прогресс](../../project_context/agents_context/progress/CURRENT_PROGRESS.md)
-- [Финальный отчёт](../../project_context/agents_context/stages/FINAL_REPORT.md)
+- [Техническое задание](../../project_context/product-manager-tracker/planning/passgen.tz.md)
+- [Текущий прогресс](../../project_context/product-manager-tracker/progress/CURRENT_PROGRESS.md)
+- [Финальный отчёт](../../project_context/product-manager-tracker/stages/FINAL_REPORT.md)
 
 ### Техническая документация
-- [Архитектура](../../project_context/technical_writer/technical/architecture.md)
-- [База данных](../../project_context/technical_writer/technical/database.md)
-- [Руководство пользователя](../../project_context/technical_writer/user_guide.md)
-- [FAQ](../../project_context/technical_writer/faq.md)
-- [Презентация](../../project_context/technical_writer/presentation/slides.md)
+- [Архитектура](../../DEVELOPER.md)
+- [База данных](../../project_context/tech-docs-writer/technical/database.md)
+- [Руководство пользователя](../../project_context/tech-docs-writer/user_guide.md)
+- [FAQ](../../project_context/tech-docs-writer/faq.md)
+- [Презентация](../../project_context/tech-docs-writer/presentation/slides.md)
 
 ---
 

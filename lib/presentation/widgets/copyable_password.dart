@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +29,14 @@ class CopyablePassword extends StatefulWidget {
 }
 
 class _CopyablePasswordState extends State<CopyablePassword> {
+  Timer? _clipboardClearTimer;
+
+  @override
+  void dispose() {
+    _clipboardClearTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -142,7 +152,8 @@ class _CopyablePasswordState extends State<CopyablePassword> {
     );
 
     // Очищаем буфер через настраиваемое время (v0.5.1)
-    Future.delayed(Duration(seconds: widget.clipboardTimeoutSeconds), () {
+    _clipboardClearTimer?.cancel();
+    _clipboardClearTimer = Timer(Duration(seconds: widget.clipboardTimeoutSeconds), () {
       Clipboard.setData(const ClipboardData(text: ''));
 
       // Показываем уведомление об очистке, если виджет ещё в дереве

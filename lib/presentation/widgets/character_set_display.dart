@@ -41,6 +41,33 @@ class CharacterSetDisplay extends StatelessWidget {
             ...categories.map(
               (category) => _CharacterCategoryWidget(category: category),
             ),
+            if (settings.excludeSimilar) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Исключены',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  _excludedSimilarDisplay,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontFamily: 'monospace',
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             // Итого
             Container(
@@ -157,7 +184,7 @@ class CharacterSetDisplay extends StatelessWidget {
   }
 
   String _excludeSimilar(String chars) {
-    final similar = {'l', '1', 'I', 'O', '0'};
+    final similar = {'l', 'o', '1', 'I', 'O', '0'};
     return chars.split('').where((c) => !similar.contains(c)).join();
   }
 
@@ -165,7 +192,8 @@ class CharacterSetDisplay extends StatelessWidget {
   static const String _lowercase = 'abcdefghijklmnopqrstuvwxyz';
   static const String _uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   static const String _digits = '0123456789';
-  static const String _symbols = '!@#\$%^&*()_+-=[]{}|;:,.<>?';
+  static const String _symbols = '!@#\$%^&*()_+-=[]{}|;';
+  static const String _excludedSimilarDisplay = '1lI0Oo';
 }
 
 class _CharacterCategoryWidget extends StatelessWidget {

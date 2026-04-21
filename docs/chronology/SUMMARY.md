@@ -346,7 +346,7 @@ pie
 
 - [DEVELOPER.md](../DEVELOPER.md) — Документация разработчика
 - [DEVELOPMENT_CHRONOLOGY.md](../DEVELOPMENT_CHRONOLOGY.md) — Хронология разработки
-- [passgen.tz.md](../../project_context/agents_context/planning/passgen.tz.md) — Техническое задание
+- [passgen.tz.md](../../project_context/product-manager-tracker/planning/passgen.tz.md) — Техническое задание
 
 ---
 

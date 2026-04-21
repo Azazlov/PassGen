@@ -112,14 +112,14 @@ class PasswordGeneratorApp extends StatelessWidget {
         // Сервис навигации
         ChangeNotifierProvider(create: (_) => NavigationService()),
 
-        // Auth Repository - передаём готовый экземпляр
+        // Auth data source / repository - передаём готовые экземпляры (создаются в main.dart)
+        Provider<AuthLocalDataSource>.value(value: authDataSource!),
         Provider<AuthRepositoryImpl>.value(value: authRepository!),
         Provider(create: (context) => SecurityLogRepositoryImpl()),
 
         // Data Sources (singletons)
         Provider(create: (_) => EncryptorLocalDataSource()),
         Provider(create: (_) => StorageLocalDataSource()),
-        Provider(create: (_) => const AuthLocalDataSource()),
         Provider(
           create: (context) => PasswordGeneratorLocalDataSource(
             context.read<EncryptorLocalDataSource>(),
