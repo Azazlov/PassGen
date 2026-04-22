@@ -122,7 +122,7 @@ graph TD
 ## Этап 1: Сбор материалов
 - [ ] Изучить ТЗ (passgen.tz.md)
 - [ ] Изучить отчёты по этапам (STAGE_*.md)
-- [ ] Изучить документацию (README.MD, DEVELOPER.md)
+- [ ] Изучить документацию (README.MD, docs/DEVELOPER.md)
 - [ ] Собрать метрики проекта
 - [ ] Собрать диаграммы
 
@@ -331,17 +331,17 @@ graph TD
 | **Прогресс** | `product-manager-tracker/progress/CURRENT_PROGRESS.md` | Глава 3, п. 3.3 |
 | **Финальный отчёт** | `product-manager-tracker/stages/FINAL_REPORT.md` | Глава 3 |
 | **Аудит безопасности** | `security-data-flow-analyzer/audit/security_audit_report.md` | Глава 2, п. 2.4 |
-| **Документация** | `README.MD`, `DEVELOPER.md` | Приложения |
+| **Документация** | `README.MD`, `docs/DEVELOPER.md` | Приложения |
 | **Хронология** | `docs/DEVELOPMENT_CHRONOLOGY.md` | Введение, Глава 3 |
 
 ### 7.2 Диаграммы и схемы
 
 | Диаграмма | Путь | Использование |
 |-----------|------|---------------|
-| **Архитектура** | `DEVELOPER.md` | Глава 2, п. 2.1 |
-| **База данных** | `DEVELOPER.md` | Глава 2, п. 2.2 |
-| **Последовательности** | `DEVELOPER.md` | Глава 3 |
-| **Use Case** | `DEVELOPER.md` | Глава 1, п. 1.3 |
+| **Архитектура** | `docs/DEVELOPER.md` | Глава 2, п. 2.1 |
+| **База данных** | `docs/DEVELOPER.md` | Глава 2, п. 2.2 |
+| **Последовательности** | `docs/DEVELOPER.md` | Глава 3 |
+| **Use Case** | `docs/DEVELOPER.md` | Глава 1, п. 1.3 |
 
 ---
 

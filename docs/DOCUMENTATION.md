@@ -24,7 +24,7 @@
 | Документ | Путь | Назначение |
 |----------|------|------------|
 | **README** | `README.MD` | Основная документация |
-| **DEVELOPER** | `DEVELOPER.md` | Документация разработчика |
+| **DEVELOPER** | `docs/DEVELOPER.md` | Документация разработчика |
 | **Архитектура БД** | `project_context/diagrams/DB.mermaid` | Схема базы данных |
 | **Changelog** | `project_context/tech-docs-writer/CHANGELOG.md` | История версий |
 
@@ -127,8 +127,8 @@ project_context/
 - `project_context/temp/`
 
 ### Дубликаты (5)
-- `project_context/tech-docs-writer/technical/architecture.md` → дубль `DEVELOPER.md`
- - `DEVELOPER.md` / `README.MD` → единая “истина” по архитектуре/запуску/сборке
+- `project_context/tech-docs-writer/technical/architecture.md` → дубль `docs/DEVELOPER.md`
+ - `docs/DEVELOPER.md` / `README.MD` → единая “истина” по архитектуре/запуску/сборке
 
 ### Устаревшие отчёты об этапах (5)
 - `STAGE_1_COMPLETE.md` → заменён `FINAL_REPORT.md`
@@ -234,7 +234,7 @@ project_context/
 
 #### Основная документация
 19. `README.MD` — Основная документация
-20. `DEVELOPER.md` — Документация разработчика
+20. `docs/DEVELOPER.md` — Документация разработчика
 
 ---
 

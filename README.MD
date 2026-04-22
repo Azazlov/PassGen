@@ -4,7 +4,7 @@
 [![Flutter](https://img.shields.io/badge/flutter-^3.9.0-blue.svg)](https://flutter.dev)
 [![Platform](https://img.shields.io/badge/platform-windows%20%7C%20linux%20%7C%20android%20%7C%20macos-lightgrey.svg)](https://github.com/azazlov/passgen)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Security](https://img.shields.io/badge/security-98/100-brightgreen.svg)](DEVELOPER.MD)
+[![Security](https://img.shields.io/badge/security-98/100-brightgreen.svg)](docs/DEVELOPER.md)
 
 Кроссплатформенное приложение на Flutter для генерации, хранения и управления паролями с использованием современных криптографических методов и локальной базы данных SQLite.
 
@@ -399,7 +399,8 @@ flutter build apk
 ## 📚 Документация
 
 ### Основная документация
-- **[DEVELOPER.md](DEVELOPER.md)** — Полная документация разработчика (архитектура, API, БД, криптография, тестирование, сборка)
+- **[docs/DEVELOPER.md](docs/DEVELOPER.md)** — Полная документация разработчика (архитектура, API, БД, криптография, тестирование, сборка)
+- **[docs/README.md](docs/README.md)** — Индекс документации по разделам
 
 ### Проектная документация (актуальная)
 - **[passgen.tz.md](project_context/product-manager-tracker/planning/passgen.tz.md)** — Техническое задание
@@ -416,11 +417,11 @@ flutter build apk
 - **Unit/Widget тесты** находятся в `test/` (запуск: `flutter test`)
 
 ### Сборка и развёртывание
-- Сборка описана в **[DEVELOPER.md](DEVELOPER.md)** (раздел “Сборка и развёртывание”)
+- Сборка описана в **[docs/DEVELOPER.md](docs/DEVELOPER.md)** (раздел “Сборка и развёртывание”)
 
 ### Устаревшая документация (в архиве)
-- [ARCHITECTURE.md](.archive/ARCHITECTURE.md) — Устарело, см. [DEVELOPER.md](DEVELOPER.md)
-- [structure.md](.archive/structure.md) — Устарело, см. [DEVELOPER.md](DEVELOPER.md)
+- [ARCHITECTURE.md](.archive/ARCHITECTURE.md) — Устарело, см. [docs/DEVELOPER.md](docs/DEVELOPER.md)
+- [structure.md](.archive/structure.md) — Устарело, см. [docs/DEVELOPER.md](docs/DEVELOPER.md)
 
 ---
 

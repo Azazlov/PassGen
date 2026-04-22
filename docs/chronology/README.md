@@ -210,7 +210,7 @@ docs/chronology/
 - [Финальный отчёт](../../project_context/product-manager-tracker/stages/FINAL_REPORT.md)
 
 ### Техническая документация
-- [Архитектура](../../DEVELOPER.md)
+- [Архитектура](../DEVELOPER.md)
 - [База данных](../../project_context/tech-docs-writer/technical/database.md)
 - [Руководство пользователя](../../project_context/tech-docs-writer/user_guide.md)
 - [FAQ](../../project_context/tech-docs-writer/faq.md)
