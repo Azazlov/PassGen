@@ -6,12 +6,23 @@ class AuthState {
     this.isLocked = false,
     this.remainingAttempts,
     this.lockoutUntil,
+    this.currentProfileId,
+    this.isBiometricEnabled = false,
+    this.isBiometricAvailable = false,
+    this.lockoutSeriesIndex = 0,
   });
+
   final bool isAuthenticated;
   final bool isPinSetup;
   final bool isLocked;
   final int? remainingAttempts;
   final DateTime? lockoutUntil;
+
+  // v0.6: per-profile fields
+  final int? currentProfileId;
+  final bool isBiometricEnabled;
+  final bool isBiometricAvailable;
+  final int lockoutSeriesIndex;
 
   AuthState copyWith({
     bool? isAuthenticated,
@@ -19,6 +30,10 @@ class AuthState {
     bool? isLocked,
     int? remainingAttempts,
     DateTime? lockoutUntil,
+    int? currentProfileId,
+    bool? isBiometricEnabled,
+    bool? isBiometricAvailable,
+    int? lockoutSeriesIndex,
   }) {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
@@ -26,6 +41,10 @@ class AuthState {
       isLocked: isLocked ?? this.isLocked,
       remainingAttempts: remainingAttempts ?? this.remainingAttempts,
       lockoutUntil: lockoutUntil ?? this.lockoutUntil,
+      currentProfileId: currentProfileId ?? this.currentProfileId,
+      isBiometricEnabled: isBiometricEnabled ?? this.isBiometricEnabled,
+      isBiometricAvailable: isBiometricAvailable ?? this.isBiometricAvailable,
+      lockoutSeriesIndex: lockoutSeriesIndex ?? this.lockoutSeriesIndex,
     );
   }
 
@@ -38,5 +57,5 @@ class AuthState {
 
   @override
   String toString() =>
-      'AuthState(auth: $isAuthenticated, setup: $isPinSetup, locked: $isLocked)';
+      'AuthState(auth: $isAuthenticated, setup: $isPinSetup, locked: $isLocked, profile: $currentProfileId)';
 }

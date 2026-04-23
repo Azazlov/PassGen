@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/event_types.dart';
+import '../../../core/security/master_password_session.dart';
 import '../../../domain/entities/character_set.dart';
 import '../../../domain/entities/password_generation_settings.dart';
 import '../../../domain/entities/password_result.dart';
@@ -322,11 +323,13 @@ class GeneratorController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final masterPassword = MasterPasswordSession.getAny();
       final result = await savePasswordUseCase.execute(
         service: serviceController.text,
         password: _lastResult!.password,
         config: _lastResult!.config,
         categoryId: _selectedCategoryId,
+        masterPassword: masterPassword,
       );
 
       return result.fold(

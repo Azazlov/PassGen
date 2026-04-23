@@ -15,8 +15,10 @@ class SecurityLogRepositoryImpl implements SecurityLogRepository {
   Future<void> logEvent(
     String actionType, {
     Map<String, dynamic>? details,
+    int? profileId,
   }) async {
     final log = SecurityLogModel(
+      profileId: profileId,
       actionType: actionType,
       timestamp: DateTime.now(),
       details: details != null ? jsonEncode(details) : null,
@@ -31,12 +33,20 @@ class SecurityLogRepositoryImpl implements SecurityLogRepository {
   }
 
   @override
-  Future<List<SecurityLog>> getLogs({int limit = 1000}) async {
-    final maps = await _dbHelper.query(
-      'security_logs',
-      orderBy: 'timestamp DESC',
-      limit: limit,
-    );
+  Future<List<SecurityLog>> getLogs({int limit = 1000, int? profileId}) async {
+    final maps = profileId != null
+        ? await _dbHelper.query(
+            'security_logs',
+            where: 'profile_id = ?',
+            whereArgs: [profileId],
+            orderBy: 'timestamp DESC',
+            limit: limit,
+          )
+        : await _dbHelper.query(
+            'security_logs',
+            orderBy: 'timestamp DESC',
+            limit: limit,
+          );
     return maps.map(SecurityLogModel.fromMap).map(_toEntity).toList();
   }
 
@@ -44,14 +54,23 @@ class SecurityLogRepositoryImpl implements SecurityLogRepository {
   Future<List<SecurityLog>> getLogsByType(
     String actionType, {
     int limit = 100,
+    int? profileId,
   }) async {
-    final maps = await _dbHelper.query(
-      'security_logs',
-      where: 'action_type = ?',
-      whereArgs: [actionType],
-      orderBy: 'timestamp DESC',
-      limit: limit,
-    );
+    final maps = profileId != null
+        ? await _dbHelper.query(
+            'security_logs',
+            where: 'action_type = ? AND profile_id = ?',
+            whereArgs: [actionType, profileId],
+            orderBy: 'timestamp DESC',
+            limit: limit,
+          )
+        : await _dbHelper.query(
+            'security_logs',
+            where: 'action_type = ?',
+            whereArgs: [actionType],
+            orderBy: 'timestamp DESC',
+            limit: limit,
+          );
     return maps.map(SecurityLogModel.fromMap).map(_toEntity).toList();
   }
 
@@ -89,6 +108,7 @@ class SecurityLogRepositoryImpl implements SecurityLogRepository {
   SecurityLog _toEntity(SecurityLogModel model) {
     return SecurityLog(
       id: model.id,
+      profileId: model.profileId,
       actionType: model.actionType,
       timestamp: model.timestamp,
       details: model.details,

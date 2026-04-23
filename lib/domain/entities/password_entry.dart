@@ -4,6 +4,7 @@ import 'dart:convert';
 class PasswordEntry {
   const PasswordEntry({
     this.id,
+    this.profileId,
     this.categoryId,
     required this.service,
     this.password, // ← Теперь необязательный (только для временного хранения)
@@ -19,6 +20,7 @@ class PasswordEntry {
   factory PasswordEntry.fromJson(Map<String, dynamic> json) {
     return PasswordEntry(
       id: json['id'] as int?,
+      profileId: json['profile_id'] as int?,
       categoryId: json['category_id'] as int?,
       service: json['service'] ?? '',
       password: json['password'] as String?, // ← Для обратной совместимости
@@ -35,6 +37,7 @@ class PasswordEntry {
     );
   }
   final int? id;
+  final int? profileId;
   final int? categoryId;
   final String service;
   final String? password; // ← Открытый пароль (только в RAM, не сохраняется)
@@ -49,6 +52,7 @@ class PasswordEntry {
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
       if (categoryId != null) 'category_id': categoryId,
       'service': service,
       // НИКОГДА не сохраняем открытый пароль!
@@ -89,6 +93,7 @@ class PasswordEntry {
   /// Создаёт копию записи с обновлёнными данными
   PasswordEntry copyWith({
     int? id,
+    int? profileId,
     int? categoryId,
     String? service,
     String? password,
@@ -100,6 +105,7 @@ class PasswordEntry {
   }) {
     return PasswordEntry(
       id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
       categoryId: categoryId ?? this.categoryId,
       service: service ?? this.service,
       password: password ?? this.password,

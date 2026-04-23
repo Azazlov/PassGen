@@ -19,7 +19,12 @@ import '../../data/repositories/password_generator_repository_impl.dart';
 import '../../data/repositories/password_history_repository_impl.dart';
 import '../../data/repositories/security_log_repository_impl.dart';
 import '../../data/repositories/storage_repository_impl.dart';
+import '../../domain/repositories/biometric_repository.dart';
 import '../../domain/repositories/password_generator_repository.dart';
+import '../../domain/repositories/profile_repository.dart';
+import '../../domain/repositories/qr_transfer_repository.dart';
+import '../../domain/services/glitch_service.dart';
+import '../../domain/services/performance_benchmark_service.dart';
 import '../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../domain/usecases/auth/get_auth_state_usecase.dart';
 import '../../domain/usecases/auth/remove_pin_usecase.dart';
@@ -78,6 +83,11 @@ class PasswordGeneratorApp extends StatelessWidget {
     super.key,
     this.authDataSource,
     this.authRepository,
+    this.profileRepository,
+    this.biometricRepository,
+    this.qrTransferRepository,
+    this.glitchService,
+    this.benchmarkService,
     this.setupPinUseCase,
     this.verifyPinUseCase,
     this.changePinUseCase,
@@ -87,6 +97,11 @@ class PasswordGeneratorApp extends StatelessWidget {
   });
   final AuthLocalDataSource? authDataSource;
   final AuthRepositoryImpl? authRepository;
+  final ProfileRepository? profileRepository;
+  final BiometricRepository? biometricRepository;
+  final QrTransferRepository? qrTransferRepository;
+  final GlitchService? glitchService;
+  final PerformanceBenchmarkService? benchmarkService;
   final SetupPinUseCase? setupPinUseCase;
   final VerifyPinUseCase? verifyPinUseCase;
   final ChangePinUseCase? changePinUseCase;
@@ -115,6 +130,11 @@ class PasswordGeneratorApp extends StatelessWidget {
         // Auth data source / repository - передаём готовые экземпляры (создаются в main.dart)
         Provider<AuthLocalDataSource>.value(value: authDataSource!),
         Provider<AuthRepositoryImpl>.value(value: authRepository!),
+        Provider<ProfileRepository>.value(value: profileRepository!),
+        Provider<BiometricRepository>.value(value: biometricRepository!),
+        Provider<QrTransferRepository>.value(value: qrTransferRepository!),
+        Provider<GlitchService>.value(value: glitchService!),
+        Provider<PerformanceBenchmarkService>.value(value: benchmarkService!),
         Provider(create: (context) => SecurityLogRepositoryImpl()),
 
         // Data Sources (singletons)
@@ -335,6 +355,8 @@ class PasswordGeneratorApp extends StatelessWidget {
             removePinUseCase: removePinUseCase,
             getAuthStateUseCase: getAuthStateUseCase,
             logEventUseCase: logEventUseCase,
+            biometricRepository: context.read<BiometricRepository>(),
+            profileRepository: context.read<ProfileRepository>(),
           ),
         ),
       ],
