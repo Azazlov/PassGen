@@ -1,539 +1,440 @@
-# PassGen — Документация разработчика
+# PassGen - документация разработчика
 
-**Версия:** 0.5.2
-**Последнее обновление:** 1 апреля 2026
-**Статус:** ✅ Готов к релизу
+Документ описывает фактическую архитектуру и схему работы приложения по
+состоянию кода на 7 мая 2026 года. Он предназначен для разработки и для
+использования в дипломной работе как техническое основание: здесь зафиксированы
+не только реализованные возможности, но и текущие архитектурные ограничения.
 
----
+## 1. Краткое резюме
 
-## 📊 Текущий статус проекта
+PassGen - Flutter-приложение для локальной генерации, хранения, импорта,
+экспорта и шифрования паролей. Проект использует Clean Architecture в
+практической форме: бизнес-сущности и use cases вынесены в `domain`, доступ к
+данным инкапсулирован в `data`, а интерфейс построен на `presentation` с
+`ChangeNotifier` и `provider`.
 
-| Метрика | Значение | Статус |
-|---------|----------|--------|
-| **Готовность** | 100% | ✅ |
-| **Соответствие ТЗ** | ~98% | ✅ |
-| **Безопасность** | 98/100 | ✅ (+13 с аудита) |
-| **Unit-тесты** | 33/33 пройдено | ✅ |
-| **Widget-тесты** | 82% покрытие | ✅ |
-| **Файлов Dart** | 130+ | ✅ |
-| **Строк кода** | ~11000+ | ✅ |
+Фактическая версия проекта неоднородна:
 
-### 🔐 Безопасность (15 исправлений)
-- ✅ Хранение PIN только в SQLite
-- ✅ Затирание ключей после использования
-- ✅ Автоочистка буфера обмена (60 сек)
-- ✅ FLAG_SECURE для Android
-- ✅ Удалена debug-отладка
+- `pubspec.yaml` указывает версию приложения `0.5.2+3`;
+- `AppConstants.appVersion` содержит `0.5.2`;
+- `DatabaseSchema.version` равен `4`, а комментарии схемы называют её `v0.6.0`;
+- в коде уже присутствуют профили, биометрия, QR-передача и история паролей;
+- пользовательский UI пока раскрывает только часть этих модулей.
 
-### 🆕 Новое в версии 0.5.2
+Главный вывод для диплома: проект находится в состоянии функционального
+локального менеджера паролей с гибридным слоем хранения. SQLite используется
+для PIN, профилей, категорий, настроек, логов и истории, но основной список
+`PasswordEntry` в текущем пользовательском потоке хранится в
+`SharedPreferences`.
 
-| Функция | Описание | Статус |
-|---------|----------|--------|
-| **История паролей** | Таблица `password_history` для отслеживания изменений | ✅ |
-| **Система уведомлений** | Уведомления о слабых/старых паролях, дубликатах | ✅ |
-| **Сервис навигации** | Централизованное управление вкладками | ✅ |
-| **Автообновление** | Обновление списка при импорте и переключении вкладок | ✅ |
-| **Импорт без дубликатов** | Проверка по service + login при импорте | ✅ |
-| **Исправлен .passgen** | Корректное использование ChaCha20 nonce (12 байт) | ✅ |
-| **macOS entitlements** | Разрешения на доступ к файлам | ✅ |
+## 2. Инвентаризация проекта
 
-### 📈 Детальный прогресс
-См. [PROJECT_STATUS_REPORT.md](docs/PROJECT_STATUS_REPORT.md)
-См. [IMPLEMENTATION_REPORT.md](docs/IMPLEMENTATION_REPORT.md)
+| Объект | Фактическое значение |
+| --- | --- |
+| Dart-файлов в `lib/` | 142 |
+| Строк Dart-кода в `lib/` | около 17 346 |
+| Domain entities | 16 |
+| Repository interfaces | 12 |
+| Use cases | 27 |
+| Data sources | 6 |
+| Repository implementations | 12 |
+| Основных UI-контроллеров | 7 |
+| Основных экранов | 8 |
+| SQLite tables | 8 |
+| Тестовых файлов `*_test.dart` | 26 |
+| Последний запуск тестов | 172 passed, 2 load failures |
 
----
+## 3. Слои архитектуры
 
-## 📖 Оглавление
-
-1. [Обзор проекта](#обзор-проекта)
-2. [Быстрый старт](#быстрый-старт)
-3. [Архитектура](#архитектура)
-4. [Структура проекта](#структура-проекта)
-5. [Domain Layer](#domain-layer)
-6. [Data Layer](#data-layer)
-7. [Presentation Layer](#presentation-layer)
-8. [База данных](#база-данных)
-9. [Криптография](#криптография)
-10. [Тестирование](#тестирование)
-11. [Сборка и развёртывание](#сборка-и-развёртывание)
-12. [Диаграммы](#диаграммы)
-
----
-
-## Обзор проекта
-
-PassGen — кроссплатформенный менеджер паролей на Flutter для генерации, хранения и управления паролями с использованием современных криптографических методов и локальной базы данных SQLite.
-
-### Возможности
-
-#### 🔐 Аутентификация и безопасность
-- PIN-код (4-8 цифр) при запуске
-- PBKDF2 деривация ключа (10000 итераций, HMAC-SHA256)
-- Защита от подбора (30 сек блокировка после 5 попыток)
-- Автоблокировка при неактивности (5 минут)
-- Логирование событий безопасности
-
-#### 🎲 Генератор паролей
-- Длина пароля: 8–64 символа
-- 4 категории символов: a-z, A-Z, 0-9, спецсимволы
-- 5 пресетов сложности (Стандартный → Максимальный)
-- Оценка надёжности (zxcvbn + эвристика)
-- Выбор категории для сохранения
-
-#### 🗄️ Хранилище данных
-- SQLite база данных (5 таблиц)
-- CRUD операции с паролями
-- Категоризация (7 системных + пользовательские)
-- Поиск по названию сервиса
-- Фильтрация по категориям
-
-#### 📦 Импорт и Экспорт
-- JSON (Miniified) — стандартный формат
-- .passgen — фирменный формат с шифрованием
-- Шифрование ChaCha20-Poly1305
-
-#### 🔧 Шифратор сообщений
-- Шифрование/дешифрование текстовых сообщений
-- Алгоритм ChaCha20-Poly1305 (AEAD)
-- Проверка целостности (Poly1305 tag)
-
-### Технологии
-
-| Категория | Технологии |
-|-----------|------------|
-| **Фреймворк** | Flutter, Dart ^3.9.0 |
-| **State Management** | Provider, ChangeNotifier |
-| **База данных** | SQLite (`sqflite` ^2.4.2) |
-| **Криптография** | `cryptography` (ChaCha20-Poly1305, PBKDF2, CSPRNG) |
-| **Оценка паролей** | `zxcvbn`, `password_strength` |
-| **UI** | Material 3, Google Fonts |
-| **Функциональное программирование** | `dartz` (Either) |
-| **Работа с файлами** | `file_picker`, `share_plus`, `path_provider` |
-
-### Статистика проекта
-
-| Метрика | Значение |
-|---------|----------|
-| **Файлов Dart** | 130+ |
-| **Строк кода** | ~11000+ |
-| **Entities** | 10 (добавлены PasswordHistoryEntry, Notification) |
-| **Repository интерфейсов** | 11 (добавлен PasswordHistoryRepository) |
-| **Use Cases** | 29+ (добавлены для истории паролей) |
-| **Controllers** | 7 |
-| **Экранов** | 8-9 |
-| **Виджетов** | 15+ (добавлены NotificationCard, Lottie-заглушки) |
-| **Таблиц БД** | 6 (добавлена password_history) |
-| **Сервисов** | 1 (NavigationService) |
-| **Покрытие тестами** | ~82% |
-
----
-
-## Быстрый старт
-
-```bash
-# Клонируйте репозиторий
-git clone https://github.com/azazlov/passgen.git
-cd passgen
-
-# Установите зависимости
-flutter pub get
-
-# Запустите приложение
-flutter run -d <устройство>  # linux, windows, android
-```
-
-### Требования
-
-| Компонент | Версия |
-|-----------|--------|
-| Flutter SDK | ^3.9.0 |
-| Dart SDK | ^3.9.0 |
-| Android Studio | Для сборки APK |
-| Xcode | Для сборки под iOS/macOS |
-
----
-
-## Архитектура
-
-### Clean Architecture
-
-Проект реализует паттерн **Clean Architecture** с разделением на 5 слоёв:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    App Layer                            │
-│            (DI, Navigation, Theme)                      │
-├─────────────────────────────────────────────────────────┤
-│               Presentation Layer                        │
-│         (UI, Controllers, Widgets)                      │
-├─────────────────────────────────────────────────────────┤
-│                 Domain Layer                            │
-│    (Entities, Use Cases, Repository Interfaces)         │
-├─────────────────────────────────────────────────────────┤
-│                  Data Layer                             │
-│   (Repository Implementations, Data Sources, SQLite)    │
-├─────────────────────────────────────────────────────────┤
-│                  Core Layer                             │
-│        (Utils, Constants, Errors)                       │
-└─────────────────────────────────────────────────────────┘
-```
-
-**Принципы:**
-- Зависимости направлены только внутрь (к Domain)
-- Domain Layer не зависит от других слоёв
-- Data Layer зависит от Domain
-- Presentation Layer зависит от Domain
-- Core Layer используется всеми слоями
-
-### SOLID
-
-| Принцип | Применение |
-|---------|------------|
-| **S**RP | Каждый Use Case — одна операция |
-| **O**CP | Расширение через новые Use Cases |
-| **L**SP | Реализации заменяют интерфейсы |
-| **I**SP | Узкие интерфейсы репозиториев |
-| **D**IP | Зависимость от абстракций (Repository) |
-
----
-
-## Структура проекта
-
-```
+```text
 lib/
-├── app/                          # Точка входа, DI, навигация, темы
-│   ├── app.dart                  # Основной виджет и настройка Provider
-│   └── theme.dart                # Темы приложения
-│
-├── core/                         # Общесистемные утилиты, константы, ошибки
+├── main.dart
+├── app/
+│   └── app.dart
+├── core/
 │   ├── constants/
-│   │   ├── app_constants.dart    # Константы приложения
-│   │   ├── event_types.dart      # Типы событий для логирования
-│   │   ├── breakpoints.dart      # Брейкпоинты для адаптивности
-│   │   └── spacing.dart          # Отступы
 │   ├── errors/
-│   │   └── failures.dart         # Failure классы для Either
+│   ├── security/
 │   ├── services/
-│   │   └── navigation_service.dart  # Сервис навигации между вкладками
 │   └── utils/
-│       ├── crypto_utils.dart     # Криптографические утилиты
-│       └── password_utils.dart   # Оценка надёжности паролей
-│
-├── domain/                       # Бизнес-логика (НЕ зависит от других слоёв)
-│   ├── entities/                 # Бизнес-объекты (10)
-│   │   ├── auth_state.dart       # Состояние аутентификации
-│   │   ├── auth_result.dart      # Результат аутентификации
-│   │   ├── category.dart         # Категория паролей
-│   │   ├── notification.dart     # Уведомления (новое в 0.5.2)
-│   │   ├── password_config.dart  # Конфигурация пароля
-│   │   ├── password_entry.dart   # Запись пароля
-│   │   ├── password_generation_settings.dart  # Настройки генератора
-│   │   ├── password_history_entry.dart  # История паролей (новое в 0.5.2)
-│   │   ├── password_result.dart  # Результат генерации
-│   │   └── security_log.dart     # Лог безопасности
-│   │
-│   ├── repositories/             # Интерфейсы репозиториев (11)
-│   │   ├── app_settings_repository.dart
-│   │   ├── auth_repository.dart
-│   │   ├── category_repository.dart
-│   │   ├── encryptor_repository.dart
-│   │   ├── password_data_repository.dart  # Импорт/экспорт
-│   │   ├── password_generator_repository.dart
-│   │   ├── password_history_repository.dart  # История (новое в 0.5.2)
-│   │   ├── security_log_repository.dart
-│   │   └── storage_repository.dart
-│   │
-│   ├── usecases/                 # Бизнес-правила (Use Cases, 29+)
-│   │   ├── auth/                 # Аутентификация (5)
-│   │   ├── category/             # Категории (4)
-│   │   ├── encryptor/            # Шифрование (2)
-│   │   ├── log/                  # Логирование (2)
-│   │   ├── password/             # Генерация (4, добавлены history)
-│   │   ├── settings/             # Настройки (3)
-│   │   └── storage/              # Хранилище (6-8)
-│   │
+├── domain/
+│   ├── entities/
+│   ├── repositories/
 │   ├── services/
-│   │   └── password_strength_notification_service.dart  # Уведомления
-│   │
+│   ├── usecases/
 │   └── validators/
-│       └── password_settings_validator.dart
-│
-├── data/                         # Слой данных (зависит от domain)
+├── data/
 │   ├── database/
-│   │   ├── database_helper.dart  # Помощник БД
-│   │   ├── database_schema.dart  # Схема БД (6 таблиц)
-│   │   ├── database_migrations.dart  # Миграции
-│   │   └── migration_from_shared_preferences.dart
-│   │
-│   ├── datasources/              # Источники данных (4)
-│   │   ├── auth_local_datasource.dart
-│   │   ├── encryptor_local_datasource.dart
-│   │   ├── password_generator_local_datasource.dart
-│   │   └── storage_local_datasource.dart
-│   │
+│   ├── datasources/
 │   ├── formats/
-│   │   └── passgen_format.dart   # Формат .passgen (исправлен в 0.5.2)
-│   │
-│   ├── models/                   # Модели данных (расширяют Entities)
-│   │   ├── app_settings_model.dart
-│   │   ├── category_model.dart
-│   │   ├── password_config_model.dart
-│   │   ├── password_entry_model.dart
-│   │   └── security_log_model.dart
-│   │
-│   └── repositories/             # Реализации репозиториев (11)
-│       ├── app_settings_repository_impl.dart
-│       ├── auth_repository_impl.dart
-│       ├── category_repository_impl.dart
-│       ├── encryptor_repository_impl.dart
-│       ├── password_data_repository_impl.dart
-│       ├── password_generator_repository_impl.dart
-│       ├── password_history_repository_impl.dart  # История (новое)
-│       ├── security_log_repository_impl.dart
-│       └── storage_repository_impl.dart
-│
-├── presentation/                 # UI слой (зависит от domain)
-│   ├── features/                 # Экраны приложения (8)
-│   │   ├── about/                # О приложении
-│   │   ├── auth/                 # Аутентификация
-│   │   ├── categories/           # Категории
-│   │   ├── encryptor/            # Шифратор
-│   │   ├── generator/            # Генератор
-│   │   ├── logs/                 # Логи
-│   │   ├── settings/             # Настройки
-│   │   └── storage/              # Хранилище
-│   │
-│   └── widgets/                  # Переиспользуемые виджеты (15+)
-│       ├── app_button.dart
-│       ├── app_dialogs.dart
-│       ├── app_switch.dart
-│       ├── app_text_field.dart
-│       ├── character_set_display.dart
-│       ├── copyable_password.dart  # Исправлено уведомление (0.5.2)
-│       ├── lottie_animations.dart  # Заглушки вместо Lottie (0.5.2)
-│       ├── notification_card.dart  # Карточка уведомления (новое)
-│       └── shimmer_effect.dart
-│
-└── shared/                       # Общие компоненты
-    ├── dialog.dart
-    └── interface.dart
+│   ├── models/
+│   └── repositories/
+├── presentation/
+│   ├── features/
+│   └── widgets/
+└── shared/
 ```
 
----
+### 3.1 App layer
 
-## Domain Layer
+Файлы:
 
-### Entities (8 сущностей)
+- `lib/main.dart`;
+- `lib/app/app.dart`.
 
-#### AuthState
+Назначение:
+
+- инициализация Flutter binding;
+- настройка SQLite factory для desktop-платформ через `sqflite_common_ffi`;
+- открытие базы `passgen.db`;
+- миграция старых данных из `SharedPreferences`;
+- создание ключевых data sources, repositories, services и use cases;
+- регистрация зависимостей через `MultiProvider`;
+- настройка `MaterialApp`, темы и навигационного каркаса.
+
+Последовательность запуска:
+
+```mermaid
+flowchart TD
+    A["main()"] --> B["WidgetsFlutterBinding.ensureInitialized()"]
+    B --> C["DatabaseHelper.initFactory()"]
+    C --> D["Open passgen.db"]
+    D --> E["MigrationFromSharedPreferences.migrate() if needed"]
+    E --> F["Create data sources"]
+    F --> G["Create repositories and services"]
+    G --> H["Create auth/log use cases"]
+    H --> I["runApp(PasswordGeneratorApp)"]
+    I --> J["MultiProvider"]
+    J --> K["AuthWrapper"]
+    K --> L{"isAuthenticated?"}
+    L -->|false| M["AuthScreen"]
+    L -->|true| N["TabScaffold"]
+```
+
+### 3.2 Core layer
+
+`core` содержит общие механизмы, которые используются несколькими слоями:
+
+- `constants/app_constants.dart` - версия приложения, пресеты генерации,
+  диапазоны длин, флаги наборов символов;
+- `constants/event_types.dart` - типы событий журнала безопасности;
+- `errors/failures.dart` - типизированные failures для `Either`;
+- `security/master_password_session.dart` - неперсистентное хранение PIN в RAM
+  на время активной сессии;
+- `services/navigation_service.dart` - централизованное переключение вкладок;
+- `utils/crypto_utils.dart` - Base64, CSPRNG, constant-time сравнение, очистка
+  байтовых массивов;
+- `utils/encryption_versioning.dart` - версии параметров шифрования;
+- `utils/lockout_calculator.dart` - расчёт прогрессивной блокировки PIN;
+- `utils/qr_payload_codec.dart` - кодирование QR-payload;
+- `utils/password_utils.dart` - оценка стойкости паролей.
+
+### 3.3 Domain layer
+
+Domain layer содержит бизнес-модель без Flutter UI. Он задаёт контракты
+репозиториев и сценарии приложения.
+
+Entities:
+
+- `AuthResult`;
+- `AuthState`;
+- `BiometricType`;
+- `Category`;
+- `CharacterSet`;
+- `GlitchResult`;
+- `GlitchRule`;
+- `Notification`;
+- `PasswordConfig`;
+- `PasswordEntry`;
+- `PasswordGenerationSettings`;
+- `PasswordHistoryEntry`;
+- `PasswordResult`;
+- `Profile`;
+- `QrTransferPayload`;
+- `SecurityLog`.
+
+Repository interfaces:
+
+- `AppSettingsRepository`;
+- `AuthRepository`;
+- `BiometricRepository`;
+- `CategoryRepository`;
+- `EncryptorRepository`;
+- `PasswordDataRepository`;
+- `PasswordGeneratorRepository`;
+- `PasswordHistoryRepository`;
+- `ProfileRepository`;
+- `QrTransferRepository`;
+- `SecurityLogRepository`;
+- `StorageRepository`.
+
+Use cases:
+
+| Группа | Количество | Сценарии |
+| --- | ---: | --- |
+| Auth | 5 | setup, verify, change, remove PIN, get auth state |
+| Category | 4 | create, get, update, delete categories |
+| Encryptor | 2 | encrypt/decrypt message |
+| Generator | 1 | validate generator settings |
+| Log | 2 | log event, get logs |
+| Password | 4 | generate, save, save history, get history |
+| Settings | 3 | get, set, remove setting |
+| Storage | 6 | get, delete, import/export JSON, import/export `.passgen` |
+
+### 3.4 Data layer
+
+Data layer реализует доступ к SQLite, `SharedPreferences`, secure storage,
+формату `.passgen` и криптографии.
+
+Data sources:
+
+- `AuthLocalDataSource` - PIN, PBKDF2, блокировки, `auth_data`;
+- `BiometricLocalDataSource` - `local_auth` и `flutter_secure_storage`;
+- `EncryptorLocalDataSource` - ChaCha20-Poly1305 и PBKDF2;
+- `PasswordGeneratorLocalDataSource` - генерация, восстановление и сохранение
+  паролей;
+- `ProfileLocalDataSource` - CRUD профилей в SQLite;
+- `StorageLocalDataSource` - JSON-список `PasswordEntry` в `SharedPreferences`.
+
+Repository implementations:
+
+- `AppSettingsRepositoryImpl`;
+- `AuthRepositoryImpl`;
+- `BiometricRepositoryImpl`;
+- `CategoryRepositoryImpl`;
+- `EncryptorRepositoryImpl`;
+- `PasswordDataRepositoryImpl`;
+- `PasswordGeneratorRepositoryImpl`;
+- `PasswordHistoryRepositoryImpl`;
+- `ProfileRepositoryImpl`;
+- `QrTransferRepositoryImpl`;
+- `SecurityLogRepositoryImpl`;
+- `StorageRepositoryImpl`.
+
+### 3.5 Presentation layer
+
+Presentation layer состоит из экранов, контроллеров и переиспользуемых
+виджетов. State management реализован через `provider` и `ChangeNotifier`.
+
+Основные контроллеры:
+
+- `AuthController`;
+- `GeneratorController`;
+- `StorageController`;
+- `EncryptorController`;
+- `SettingsController`;
+- `CategoriesController`;
+- `LogsController`.
+
+Основные экраны:
+
+- `AuthScreen`;
+- `GeneratorScreen`;
+- `EncryptorScreen`;
+- `StorageScreen`;
+- `SettingsScreen`;
+- `CategoriesScreen`;
+- `LogsScreen`;
+- `AboutScreen`.
+
+Навигация после входа строится через `TabScaffold`:
+
+- на мобильных ширинах используется `BottomNavigationBar`;
+- на планшетах и desktop используется `NavigationRail`;
+- вкладки: генератор, шифратор, хранилище, настройки, о приложении.
+
+## 4. Основные потоки работы
+
+### 4.1 Первый запуск и установка PIN
+
+```mermaid
+sequenceDiagram
+    actor User as "Пользователь"
+    participant UI as "AuthScreen"
+    participant C as "AuthController"
+    participant UC as "SetupPinUseCase"
+    participant R as "AuthRepositoryImpl"
+    participant DS as "AuthLocalDataSource"
+    participant DB as "SQLite auth_data"
+
+    User->>UI: "Вводит PIN 4-8 цифр"
+    UI->>C: "setupPin()"
+    C->>UC: "execute(pin)"
+    UC->>R: "setupPin(pin)"
+    R->>DS: "setupPin(pin, profileId)"
+    DS->>DS: "PBKDF2-HMAC-SHA256 + salt"
+    DS->>DB: "insert/update auth_data"
+    DB-->>DS: "ok"
+    DS-->>R: "true"
+    R-->>UC: "Either.right(true)"
+    UC-->>C: "success"
+    C->>C: "isPinSetup=true, isAuthenticated=false"
+```
+
+PIN не хранится в открытом виде. В БД записываются `pin_hash`, `pin_salt`,
+счётчики неудачных попыток, индекс серии блокировки и `lockout_until`.
+
+### 4.2 Вход по PIN
+
+```mermaid
+sequenceDiagram
+    actor User as "Пользователь"
+    participant C as "AuthController"
+    participant UC as "VerifyPinUseCase"
+    participant R as "AuthRepositoryImpl"
+    participant DS as "AuthLocalDataSource"
+    participant S as "MasterPasswordSession"
+    participant L as "SecurityLogRepository"
+
+    User->>C: "Вводит PIN"
+    C->>UC: "execute(pin)"
+    UC->>R: "verifyPin(pin)"
+    R->>DS: "verifyPin(pin, profileId)"
+    DS->>DS: "Проверка блокировки"
+    DS->>DS: "PBKDF2 + constant-time compare"
+    DS-->>R: "success / wrongPin / locked"
+    R-->>UC: "AuthResult"
+    UC-->>C: "AuthResult"
+    alt "success"
+        C->>S: "setForProfile(profileId, pin)"
+        C->>L: "AUTH_SUCCESS"
+    else "wrongPin"
+        C->>L: "AUTH_FAILURE"
+    else "locked"
+        C->>L: "AUTH_LOCKOUT"
+    end
+```
+
+После успешного входа PIN находится только в памяти. Он нужен, потому что
+сохранение пароля использует PIN как мастер-пароль для шифрования.
+
+### 4.3 Генерация пароля
+
+```mermaid
+sequenceDiagram
+    actor User as "Пользователь"
+    participant UI as "GeneratorScreen"
+    participant C as "GeneratorController"
+    participant V as "ValidateGeneratorSettingsUseCase"
+    participant UC as "GeneratePasswordUseCase"
+    participant R as "PasswordGeneratorRepositoryImpl"
+    participant DS as "PasswordGeneratorLocalDataSource"
+    participant E as "EncryptorLocalDataSource"
+
+    User->>UI: "Выбирает пресет и параметры"
+    UI->>C: "generatePassword()"
+    C->>C: "Rate limit 60/min"
+    C->>V: "execute(settings)"
+    V-->>C: "validated settings"
+    C->>UC: "execute(validatedSettings)"
+    UC->>R: "generatePassword(settings)"
+    R->>DS: "generate(...)"
+    DS->>E: "generateRandomBytes / generateRandomInt"
+    E-->>DS: "CSPRNG bytes"
+    DS->>DS: "coreEngine + Fisher-Yates shuffle"
+    DS-->>R: "PasswordResult"
+    R-->>UC: "Either.right(result)"
+    UC-->>C: "lastResult"
+```
+
+`PasswordGeneratorLocalDataSource` строит пароль из включённых наборов символов:
+цифры, строчные буквы, заглавные буквы и спецсимволы. Дополнительно могут
+исключаться похожие символы `1lI0Oo`, а режим `allUnique` запрещает повторение
+символов.
+
+### 4.4 Сохранение пароля
+
+```mermaid
+sequenceDiagram
+    actor User as "Пользователь"
+    participant C as "GeneratorController"
+    participant S as "MasterPasswordSession"
+    participant UC as "SavePasswordUseCase"
+    participant R as "PasswordGeneratorRepositoryImpl"
+    participant DS as "PasswordGeneratorLocalDataSource"
+    participant E as "EncryptorLocalDataSource"
+    participant SP as "SharedPreferences"
+
+    User->>C: "Сохраняет сгенерированный пароль"
+    C->>S: "getAny()"
+    S-->>C: "PIN текущей сессии"
+    C->>UC: "execute(service, password, config, masterPassword)"
+    UC->>R: "savePassword(...)"
+    R->>DS: "savePassword(...)"
+    DS->>E: "encryptToMini(password, PIN)"
+    DS->>E: "encryptToMini(config, PIN)"
+    DS->>SP: "save JSON under saved_passwords"
+    SP-->>DS: "ok"
+    DS-->>R: "{success, updated}"
+    R-->>UC: "Either.right(map)"
+    UC-->>C: "success"
+```
+
+Текущее поведение при совпадении сервиса: `PasswordGeneratorLocalDataSource`
+ищет существующую запись по `service.toLowerCase()` и обновляет её. При импорте
+дубликаты определяются точнее: по паре `service + login`.
+
+### 4.5 Импорт и экспорт
+
+JSON-экспорт возвращает список `PasswordEntry.toJson()`. В JSON не сохраняется
+открытый пароль, но сохраняются `encrypted_password`, `config`, `category_id`,
+`login`, даты создания и обновления.
+
+`.passgen` экспорт шифрует JSON-список через `PassgenFormat`:
+
+```text
+HEADER            "PASSGEN_V1"                      10 bytes
+VERSION           formatVersion = 1                  1 byte
+FLAGS             flagsNone = 0                      1 byte
+METADATA_LENGTH   little-endian uint16               2 bytes
+METADATA          EncryptionMetadata JSON             variable
+PBKDF2_NONCE      random bytes                        32 bytes
+CHACHA_NONCE      SecretBox nonce                     12 bytes
+DATA_LENGTH       little-endian uint32                4 bytes
+CIPHERTEXT        encrypted JSON                      variable
+MAC               Poly1305 authentication tag         16 bytes
+```
+
+Метаданные шифрования записывают версию параметров. Текущая версия -
+`EncryptionVersion.currentVersion == 2`, то есть PBKDF2-HMAC-SHA256 с
+600 000 итераций. Legacy `v1` с 10 000 итераций остаётся поддержанным для
+обратной совместимости.
+
+## 5. Хранение данных
+
+### 5.1 SQLite
+
+Файл базы создаётся через `sqflite`/`sqflite_common_ffi` с именем `passgen.db`.
+Актуальная версия схемы:
+
 ```dart
-class AuthState {
-  final bool isAuthenticated;
-  final bool isPinSetup;
-  final bool isLocked;
-  final int? remainingAttempts;
-  final DateTime? lockoutUntil;
-
-  AuthState copyWith({
-    bool? isAuthenticated,
-    bool? isPinSetup,
-    bool? isLocked,
-    int? remainingAttempts,
-    DateTime? lockoutUntil,
-  });
-}
+static const int version = 4;
+static const String appVersion = '0.6.0';
 ```
 
-#### PasswordEntry
-```dart
-class PasswordEntry {
-  final int? id;
-  final int categoryId;
-  final String service;
-  final String? login;
-  final String password; // decrypted
-  final PasswordConfig? config;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-
-  static List<PasswordEntry> decodeList(String jsonString);
-  static String encodeList(List<PasswordEntry> entries);
-  PasswordEntry copyWith({...});
-}
-```
-
-#### PasswordResult
-```dart
-class PasswordResult {
-  final String password;
-  final int strength; // 0-4
-  final PasswordConfig? config;
-  final String? error;
-
-  bool hasError();
-}
-```
-
-#### Остальные сущности
-- **Category** — категория паролей
-- **PasswordConfig** — конфигурация генерации
-- **PasswordGenerationSettings** — настройки генератора
-- **AuthResult** — результат проверки PIN
-- **SecurityLog** — запись лога безопасности
-
-### Repository Interfaces (7-10)
-
-| Интерфейс | Методы | Описание |
-|-----------|--------|----------|
-| `AuthRepository` | `setupPin()`, `verifyPin()`, `changePin()`, `removePin()`, `getAuthState()` | Аутентификация |
-| `CategoryRepository` | `getAll()`, `getById()`, `create()`, `update()`, `delete()` | Категории |
-| `EncryptorRepository` | `encrypt()`, `decrypt()` | Шифрование |
-| `PasswordGeneratorRepository` | `generatePassword()`, `restorePassword()`, `savePassword()` | Генерация |
-| `SecurityLogRepository` | `logEvent()`, `getLogs()`, `getLogsByType()`, `clearOldLogs()` | Логи |
-| `SettingsRepository` | `getValue()`, `setValue()`, `remove()`, `getAll()`, `clear()` | Настройки |
-| `StorageRepository` | `getAll()`, `getByCategory()`, `searchByService()`, `create()`, `update()`, `delete()`, `exportJson()`, `importJson()`, `exportPassgen()`, `importPassgen()` | Хранилище |
-
-### Use Cases (25+)
-
-#### Аутентификация (5)
-| Use Case | Вход | Выход |
-|----------|------|-------|
-| `SetupPinUseCase` | `String pin` | `Either<AuthFailure, bool>` |
-| `VerifyPinUseCase` | `String pin` | `Either<AuthFailure, AuthResult>` |
-| `ChangePinUseCase` | `String oldPin, String newPin` | `Either<AuthFailure, bool>` |
-| `RemovePinUseCase` | `String pin` | `Either<AuthFailure, bool>` |
-| `GetAuthStateUseCase` | — | `Either<AuthFailure, AuthState>` |
-
-#### Генерация паролей (2)
-| Use Case | Вход | Выход |
-|----------|------|-------|
-| `GeneratePasswordUseCase` | `PasswordGenerationSettings` | `Either<Failure, PasswordResult>` |
-| `SavePasswordUseCase` | `service, password, config, categoryId, login` | `Either<Failure, Map>` |
-
-#### Хранилище (6-8)
-| Use Case | Вход | Выход |
-|----------|------|-------|
-| `GetPasswordsUseCase` | — | `Either<Failure, List<PasswordEntry>>` |
-| `DeletePasswordUseCase` | `int index` | `Either<Failure, bool>` |
-| `ExportPasswordsUseCase` | — | `Either<Failure, String>` |
-| `ImportPasswordsUseCase` | `String jsonString` | `Either<Failure, bool>` |
-| `ExportPassgenUseCase` | `String masterPassword` | `Either<Failure, String>` |
-| `ImportPassgenUseCase` | `String data, String masterPassword` | `Either<Failure, bool>` |
-
-#### Шифрование (2)
-| Use Case | Вход | Выход |
-|----------|------|-------|
-| `EncryptMessageUseCase` | `String message, String password` | `Either<Failure, String>` |
-| `DecryptMessageUseCase` | `String encryptedData, String password` | `Either<Failure, String>` |
-
-#### Категории (4), Логи (2), Настройки (3)
-- См. полную документацию в `lib/domain/usecases/`
-
----
-
-## Data Layer
-
-### Data Sources (4)
-
-#### AuthLocalDataSource
-- **Зависимости:** `shared_preferences`, `cryptography` (PBKDF2)
-- **Методы:** `isPinSetup()`, `setupPin()`, `verifyPin()`, `changePin()`, `removePin()`
-- **Безопасность:** PBKDF2 10000 итераций, HMAC-SHA256, соль CSPRNG
-
-#### EncryptorLocalDataSource
-- **Зависимости:** `cryptography` (ChaCha20-Poly1305)
-- **Методы:** `encrypt()`, `decrypt()`, `encryptToMini()`, `decryptFromMini()`
-- **Алгоритм:** AEAD ChaCha20-Poly1305, nonce 12 байт
-
-#### StorageLocalDataSource
-- **Зависимости:** `shared_preferences`
-- **Методы:** `saveConfig()`, `getConfigs()`, `savePasswords()`, `getPasswords()`, `exportPasswords()`, `importPasswords()`
-
-#### PasswordGeneratorLocalDataSource
-- **Зависимости:** `EncryptorLocalDataSource`, `StorageLocalDataSource`
-- **Методы:** `generate()`, `restoreFromConfig()`, `savePassword()`
-
-### Repository Implementations (9)
-
-Каждая реализация делегирует соответствующему DataSource:
-
-```dart
-class AuthRepositoryImpl implements AuthRepository {
-  final AuthLocalDataSource dataSource;
-  final SecurityLogRepository logRepository;
-
-  @override
-  Future<Either<AuthFailure, AuthResult>> verifyPin(String pin) async {
-    try {
-      final result = await dataSource.verifyPin(pin);
-      if (result.success) {
-        await logRepository.logEvent(EventTypes.AUTH_SUCCESS, {});
-      }
-      return Right(result);
-    } catch (e) {
-      return Left(AuthFailure(message: 'Ошибка: $e'));
-    }
-  }
-}
-```
-
----
-
-## Presentation Layer
-
-### Controllers (7)
-
-| Controller | Назначение | Состояние |
-|------------|------------|-----------|
-| `AuthController` | Аутентификация, таймер неактивности | `AuthState`, `isLoading`, `error`, `isSetupMode` |
-| `GeneratorController` | Генерация паролей | `PasswordGenerationSettings`, `PasswordResult?` |
-| `StorageController` | Управление хранилищем | `List<PasswordEntry>`, `currentIndex`, `filters` |
-| `EncryptorController` | Шифрование сообщений | `result`, `isEncryptMode` |
-| `SettingsController` | Настройки приложения | — |
-| `CategoriesController` | Управление категориями | `List<Category>` |
-| `LogsController` | Просмотр логов | `List<SecurityLog>` |
-
-### Screens (8-9)
-
-1. **AuthScreen** — ввод PIN-кода
-2. **GeneratorScreen** — генератор паролей
-3. **StorageScreen** — хранилище паролей
-4. **EncryptorScreen** — шифратор сообщений
-5. **SettingsScreen** — настройки
-6. **CategoriesScreen** — управление категориями
-7. **LogsScreen** — журнал событий
-8. **AboutScreen** — о приложении
-
-### Widgets (6-12)
-
-- `AppButton` — кнопка с индикатором загрузки
-- `AppDialogs` — диалоги (подтверждение, информация, ошибка)
-- `AppSwitch` — переключатель с иконкой
-- `AppTextField` — поле ввода с валидацией
-- `CopyablePassword` — отображение пароля с копированием
-- `ShimmerEffect` — эффект загрузки
-
----
-
-## База данных
-
-### Схема БД (6 таблиц)
-
-**Версия схемы:** 3 (v0.5.2)
+Таблицы:
 
 ```sql
--- Категории
+CREATE TABLE profiles (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  avatar_emoji TEXT,
+  created_at INTEGER NOT NULL,
+  last_accessed_at INTEGER
+);
+
 CREATE TABLE categories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  profile_id INTEGER REFERENCES profiles(id),
   name TEXT NOT NULL,
   icon TEXT,
   is_system INTEGER DEFAULT 0,
   created_at INTEGER NOT NULL
 );
 
--- Записи паролей
 CREATE TABLE password_entries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  profile_id INTEGER REFERENCES profiles(id),
   category_id INTEGER REFERENCES categories(id),
   service TEXT NOT NULL,
   login TEXT,
@@ -543,12 +444,9 @@ CREATE TABLE password_entries (
   updated_at INTEGER NOT NULL
 );
 
-CREATE INDEX idx_password_entries_category ON password_entries(category_id);
-CREATE INDEX idx_password_entries_service ON password_entries(service);
-
--- Конфигурации паролей
 CREATE TABLE password_configs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  profile_id INTEGER REFERENCES profiles(id),
   entry_id INTEGER UNIQUE REFERENCES password_entries(id),
   strength INTEGER,
   min_length INTEGER,
@@ -558,26 +456,34 @@ CREATE TABLE password_configs (
   encrypted_config BLOB
 );
 
--- Логи безопасности
 CREATE TABLE security_logs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  profile_id INTEGER REFERENCES profiles(id),
   action_type TEXT NOT NULL,
   timestamp INTEGER NOT NULL,
   details TEXT
 );
 
-CREATE INDEX idx_security_logs_timestamp ON security_logs(timestamp);
-
--- Настройки приложения
 CREATE TABLE app_settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL,
   encrypted INTEGER DEFAULT 0
 );
 
--- История изменений паролей (добавлено в v0.5.2)
+CREATE TABLE auth_data (
+  profile_id INTEGER NOT NULL PRIMARY KEY REFERENCES profiles(id),
+  pin_hash TEXT NOT NULL,
+  pin_salt TEXT NOT NULL,
+  failed_attempts INTEGER DEFAULT 0,
+  series_index INTEGER DEFAULT 0,
+  lockout_until INTEGER,
+  biometric_enabled INTEGER DEFAULT 0,
+  created_at INTEGER NOT NULL
+);
+
 CREATE TABLE password_history (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  profile_id INTEGER REFERENCES profiles(id),
   entry_id INTEGER NOT NULL REFERENCES password_entries(id) ON DELETE CASCADE,
   service TEXT NOT NULL,
   encrypted_password BLOB NOT NULL,
@@ -587,555 +493,359 @@ CREATE TABLE password_history (
   created_at INTEGER NOT NULL,
   reason TEXT
 );
-
-CREATE INDEX idx_password_history_entry ON password_history(entry_id);
-CREATE INDEX idx_password_history_created ON password_history(created_at);
 ```
 
-### Системные категории (7)
+Индексы создаются для:
 
-| ID | Название | Иконка |
-|----|----------|--------|
-| 1 | Интернет | language |
-| 2 | Социальные сети | people |
-| 3 | Развлечения | entertainment |
-| 4 | Работа | work |
-| 5 | Финансы | attach_money |
-| 6 | Покупки | shopping_cart |
-| 7 | Почта | email |
+- `password_entries.category_id`;
+- `password_entries.service`;
+- `password_entries.profile_id`;
+- `security_logs.action_type`;
+- `security_logs.timestamp`;
+- `security_logs.profile_id`;
+- `password_history.entry_id`;
+- `password_history.created_at`;
+- `password_history.profile_id`;
+- `auth_data.profile_id`;
+- `categories.profile_id`;
+- `password_configs.profile_id`.
 
-### Типы событий логов
+Системные категории при создании БД:
 
-| Тип | Описание |
-|-----|----------|
-| `AUTH_SUCCESS` | Успешная аутентификация |
-| `AUTH_FAIL` | Неудачная попытка входа |
-| `PWD_CREATED` | Создание пароля |
-| `PWD_DELETED` | Удаление пароля |
-| `PWD_UPDATED` | Обновление пароля |
-| `EXPORT` | Экспорт данных |
-| `IMPORT` | Импорт данных |
-| `PIN_CHANGED` | Смена PIN-кода |
+| Название | Иконка |
+| --- | --- |
+| Соцсети | 👥 |
+| Почта | 📧 |
+| Банки | 🏦 |
+| Магазины | 🛒 |
+| Работа | 💼 |
+| Развлечения | 🎮 |
+| Другое | 📁 |
 
----
+### 5.2 SharedPreferences
 
-## Криптография
+Несмотря на наличие таблиц `password_entries` и `password_configs`, текущий
+пользовательский поток хранения паролей использует:
 
-### Алгоритмы
-
-| Алгоритм | Назначение | Параметры |
-|----------|------------|-----------|
-| **ChaCha20-Poly1305** | Шифрование данных | AEAD, 256-bit ключ |
-| **PBKDF2-HMAC-SHA256** | Деривация ключа из PIN | 10 000 итераций, 256-bit |
-| **CSPRNG** | Генерация случайных чисел | `Random.secure()` |
-
-### Формат .passgen (исправлен в v0.5.2)
-
-**Структура файла:**
-
-```
-┌─────────────────────────────────────┐
-│ HEADER: "PASSGEN_V1" (10 байт)      │
-├─────────────────────────────────────┤
-│ VERSION: 1 (1 байт)                 │
-├─────────────────────────────────────┤
-│ FLAGS: 0 (1 байт)                   │
-├─────────────────────────────────────┤
-│ METADATA_LENGTH: длина (2 байта)    │
-├─────────────────────────────────────┤
-│ METADATA: EncryptionMetadata JSON   │
-├─────────────────────────────────────┤
-│ PBKDF2_NONCE: 32 байта              │ ← Для деривации ключа
-├─────────────────────────────────────┤
-│ CHACHA_NONCE: 12 байт               │ ← Для ChaCha20-Poly1305
-├─────────────────────────────────────┤
-│ DATA_LENGTH: длина (4 байта)        │
-├─────────────────────────────────────┤
-│ DATA: зашифрованный JSON            │
-├─────────────────────────────────────┤
-│ MAC: authentication tag (16 байт)   │
-└─────────────────────────────────────┘
+```text
+SharedPreferences key: saved_passwords
+Value: JSON string with List<PasswordEntry>
 ```
 
-**⚠️ Важно:** В версии 0.5.2 исправлена ошибка с nonce:
-- **До:** Использовался один 32-байтовый nonce для обоих целей (ошибка!)
-- **После:** Разделён на PBKDF2_NONCE (32 байта) и CHACHA_NONCE (12 байт)
+`StorageLocalDataSource` отвечает за:
 
-### Структура зашифрованной записи
+- `savePasswords(List<PasswordEntry>)`;
+- `getPasswords()`;
+- `removePasswordAt(index)`;
+- `exportPasswords()`;
+- `importPasswords(jsonString)`.
 
-```dart
-class EncryptedEntry {
-  final Uint8List ciphertext;   // Зашифрованные данные
-  final Uint8List nonce;        // Уникальный номер (12 байт)
-  final Uint8List mac;          // Authentication tag (16 байт)
-}
+Это означает, что схема SQLite уже подготовлена шире, чем фактическое
+использование в текущем UI. Для диплома это корректно описывать как этап
+эволюции архитектуры: проект перешёл от раннего `SharedPreferences`-хранилища к
+SQLite для системных данных и подготовил миграцию записей паролей, но не
+завершил её в видимом пользовательском сценарии.
+
+## 6. Криптографическая модель
+
+### 6.1 Версионирование параметров
+
+`EncryptionVersion` задаёт поддерживаемые версии:
+
+| Версия | KDF | Итерации | Назначение |
+| --- | --- | ---: | --- |
+| v1 | PBKDF2-HMAC-SHA256 | 10 000 | legacy |
+| v2 | PBKDF2-HMAC-SHA256 | 600 000 | текущая версия |
+| v3 | Argon2id | 3 | перспективная заготовка |
+
+Текущая версия `EncryptionVersion.currentVersion` равна `2`.
+
+### 6.2 PIN
+
+PIN хранится в `auth_data` как:
+
+- `pin_hash` - Base64 от derived key;
+- `pin_salt` - Base64 от 32 случайных байтов;
+- `failed_attempts`;
+- `series_index`;
+- `lockout_until`.
+
+Проверка PIN:
+
+1. Извлекается строка `auth_data` для активного профиля.
+2. Проверяется, не действует ли блокировка.
+3. Новый derived key вычисляется через PBKDF2-HMAC-SHA256.
+4. Base64-хэш сравнивается с сохранённым через constant-time сравнение.
+5. При успехе счётчики сбрасываются.
+6. При ошибке увеличивается счётчик попыток.
+7. После 5 ошибок создаётся новая серия блокировки.
+
+Формула задержки:
+
+```text
+delay = min(30 seconds * 6^(seriesIndex - 1), 7 days)
 ```
 
----
+### 6.3 Шифрование записей паролей
 
-## Тестирование
+При сохранении пароля используется `EncryptorLocalDataSource.encryptToMini()`:
 
-### Запуск тестов
-
-```bash
-# Все тесты
-flutter test
-
-# Конкретный тест
-flutter test test/widgets/copyable_password_test.dart
-
-# С покрытием
-flutter test --coverage
+```text
+mini = base64(pbkdf2Nonce(32) + chachaNonce(12) + ciphertext + mac(16))
 ```
 
-### Структура тестов
+Входной пароль для KDF - PIN текущей сессии из `MasterPasswordSession`.
+Пароль и конфигурация генерации шифруются отдельно. В JSON сохраняются
+зашифрованные строки, а не открытый пароль.
 
-```
+Текущее ограничение: полная обратная расшифровка сохранённой записи не
+интегрирована в UI-хранилище. В `PasswordEntry.decryptPassword()` прямо указано,
+что дешифрование должно быть вынесено в data layer/repository.
+
+### 6.4 Шифратор сообщений
+
+`EncryptorLocalDataSource` также используется для отдельного экрана шифратора.
+Метод `encrypt()` возвращает JSON-подобную структуру:
+
+- `nonce` - nonce/salt для PBKDF2, 32 байта;
+- `nonceBox` - nonce ChaCha20-Poly1305;
+- `cipherText`;
+- `mac`.
+
+`encryptToMini()` упаковывает эти поля в компактный Base64.
+
+### 6.5 `.passgen`
+
+`.passgen` - фирменный экспортный формат. Он не является отдельным бинарным
+файлом на диске в текущем UI: пользователь экспортирует Base64-строку в файл с
+расширением `.passgen`.
+
+Безопасность формата обеспечивается:
+
+- PBKDF2-HMAC-SHA256 для получения ключа из мастер-пароля;
+- отдельным PBKDF2 nonce 32 байта;
+- отдельным ChaCha20-Poly1305 nonce 12 байт;
+- Poly1305 MAC 16 байт;
+- метаданными версии шифрования.
+
+## 7. Модули версии 0.6.0 и степень готовности
+
+| Модуль | Файлы | Состояние |
+| --- | --- | --- |
+| Профили | `Profile`, `ProfileRepository`, `ProfileLocalDataSource` | Есть CRUD и таблица `profiles`; полноценный UI выбора профиля отсутствует |
+| Per-profile auth | `AuthLocalDataSource`, `AuthRepositoryImpl` | Реализован default profile id `1`; переключение профиля в UI не раскрыто |
+| Биометрия | `BiometricRepository`, `BiometricLocalDataSource` | Data layer есть; UI-кнопки входа/настройки биометрии отсутствуют |
+| QR-передача | `QrTransferRepositoryImpl`, `QrPayloadCodec` | Доменная и data-логика есть; UI-сценарий отсутствует |
+| История паролей | `PasswordHistoryRepositoryImpl`, use cases | Таблица и репозиторий есть; обычное сохранение из генератора не передаёт `entryId`, поэтому история не заполняется в основном потоке |
+| Бенчмарки | `PerformanceBenchmarkService` | Сервис есть; UI/CLI запуск не подключён |
+| Glitch-пароль | `GlitchService` | Доменный сервис есть; UI не подключён |
+
+Эти модули можно описывать в дипломе как перспективные или частично
+интегрированные подсистемы, но не как завершённые пользовательские функции.
+
+## 8. UI и навигация
+
+### 8.1 AuthScreen
+
+Функции:
+
+- установка PIN;
+- ввод PIN с экранной цифровой клавиатурой;
+- ввод PIN с физической клавиатуры;
+- отображение оставшихся попыток;
+- отображение экрана блокировки с таймером;
+- установка Android `FLAG_SECURE` через `AndroidSecurityUtils`.
+
+### 8.2 GeneratorScreen
+
+Функции:
+
+- выбор пресета сложности через `FilterChip`;
+- настройка длины;
+- включение обязательных наборов символов;
+- исключение похожих символов;
+- режим уникальных символов;
+- отображение текущего набора символов;
+- копирование сгенерированного пароля;
+- сохранение в хранилище с выбором категории.
+
+### 8.3 StorageScreen
+
+Функции:
+
+- загрузка списка записей;
+- поиск по сервису;
+- фильтр по категории;
+- адаптивный список/детальная панель;
+- импорт/экспорт JSON;
+- импорт/экспорт `.passgen`;
+- удаление записи.
+
+Текущее ограничение хранилища: детальная панель и копирование используют
+`entry.displayPassword`, который может вернуть encrypted payload.
+
+### 8.4 SettingsScreen
+
+Функции:
+
+- смена PIN;
+- удаление PIN;
+- переход к управлению категориями;
+- просмотр журнала событий.
+
+В UI есть пункт "Очистить логи", но обработчик содержит комментарий, что
+очистка будет реализована в следующей версии. Репозиторий `clearAll()` уже
+существует.
+
+## 9. Логирование
+
+Типы событий определены в `EventTypes`:
+
+| Тип | Назначение |
+| --- | --- |
+| `AUTH_SUCCESS` | успешный вход |
+| `AUTH_FAILURE` | неудачная попытка входа |
+| `AUTH_LOCKOUT` | блокировка после серии ошибок |
+| `PIN_SETUP` | установка PIN |
+| `PIN_CHANGED` | смена PIN |
+| `PIN_REMOVED` | удаление PIN |
+| `PWD_CREATED` | создание пароля |
+| `PWD_ACCESSED` | доступ к паролю |
+| `PWD_UPDATED` | обновление пароля |
+| `PWD_DELETED` | удаление пароля |
+| `DATA_EXPORT` | экспорт |
+| `DATA_IMPORT` | импорт |
+| `DATA_IMPORT_FAILURE` | ошибка импорта |
+| `SETTINGS_CHG` | изменение настроек |
+| `SESSION_STARTED` | начало сессии |
+| `SESSION_ENDED` | завершение сессии |
+| `SESSION_TIMEOUT` | таймаут сессии |
+
+`SecurityLogRepositoryImpl` пишет логи в SQLite и автоматически очищает старые
+записи: если количество логов превышает 2000, остаются последние 1000.
+
+## 10. Тестирование
+
+Структура:
+
+```text
 test/
-├── unit/                      # Unit-тесты
-├── usecases/                  # UseCase-тесты
-└── widgets/                   # Widget-тесты
+├── unit/
+│   ├── crypto_utils_test.dart
+│   ├── integrity_and_versioning_test.dart
+│   └── usecases/
+├── usecases/
+│   ├── auth/
+│   └── password/
+└── widgets/
 ```
 
-### Пример теста
+Последняя проверка:
 
-```dart
-import 'package:flutter_test/flutter_test.dart';
-import 'package:pass_gen/domain/usecases/password/generate_password_usecase.dart';
-
-void main() {
-  group('GeneratePasswordUseCase', () {
-    test('должен генерировать пароль заданной длины', () async {
-      final settings = PasswordGenerationSettings(
-        strength: 2,
-        lengthRange: (12, 12),
-        flags: 0b1111,
-      );
-
-      final result = await useCase.execute(settings);
-
-      result.fold(
-        (failure) => fail('Генерация не удалась'),
-        (passwordResult) {
-          expect(passwordResult.password.length, 12);
-          expect(passwordResult.strength, greaterThanOrEqualTo(0));
-          expect(passwordResult.strength, lessThanOrEqualTo(4));
-        },
-      );
-    });
-  });
-}
+```text
+Дата: 7 мая 2026
+Команда: flutter test
+Результат: 172 passed, 2 load failures
 ```
 
----
+Причина падения: сгенерированные Mockito mocks для `SecurityLogRepository`
+устарели после изменения интерфейса. В интерфейсе появились named-параметры
+`profileId`, а mocks в файлах ниже их не содержат:
 
-## Сборка и развёртывание
+- `test/unit/usecases/log/get_logs_usecase_test.mocks.dart`;
+- `test/unit/usecases/log/log_event_usecase_test.mocks.dart`.
 
-### Сборка
+Ошибка компиляции относится к методам:
+
+- `logEvent(String actionType, {Map<String, dynamic>? details, int? profileId})`;
+- `getLogs({int limit = 1000, int? profileId})`;
+- `getLogsByType(String actionType, {int limit = 100, int? profileId})`.
+
+Команда для обновления generated mocks:
 
 ```bash
-# Windows
-flutter build windows
-
-# Linux
-flutter build linux
-
-# Android APK
-flutter build apk
-
-# Android App Bundle
-flutter build appbundle
-
-# macOS (требуется настройка entitlements)
-flutter build macos
+dart run build_runner build --delete-conflicting-outputs
 ```
 
-### macOS Entitlements
+После регенерации нужно повторить:
 
-Для работы с файлами (импорт/экспорт) требуются разрешения в файлах `.entitlements`:
-
-**Файлы:**
-- `macos/Runner/DebugProfile.entitlements`
-- `macos/Runner/Release.entitlements`
-
-**Необходимые разрешения:**
-
-```xml
-<!-- Доступ к файлам, выбранным пользователем -->
-<key>com.apple.security.files.user-selected.read-write</key>
-<true/>
+```bash
+flutter test
 ```
 
-**Полный список разрешений:**
+## 11. Сборка и запуск
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <!-- App Sandbox -->
-    <key>com.apple.security.app-sandbox</key>
-    <true/>
-    
-    <!-- JIT для debug-сборки -->
-    <key>com.apple.security.cs.allow-jit</key>
-    <true/>
-    
-    <!-- Доступ к файлам -->
-    <key>com.apple.security.files.user-selected.read-write</key>
-    <true/>
-</dict>
-</plist>
-```
-
-**⚠️ Важно:** Без разрешения `com.apple.security.files.user-selected.read-write` импорт/экспорт файлов будет выдавать ошибку `ENTITLEMENT_NOT_FOUND`.
-
-### Установка зависимостей
+Установка зависимостей:
 
 ```bash
 flutter pub get
 ```
 
-### Генерация иконок
+Запуск:
+
+```bash
+flutter run -d android
+flutter run -d ios
+flutter run -d macos
+flutter run -d windows
+flutter run -d linux
+flutter run -d chrome
+```
+
+Сборка:
+
+```bash
+flutter build apk
+flutter build appbundle
+flutter build macos
+flutter build windows
+flutter build linux
+flutter build web
+```
+
+Генерация иконок:
 
 ```bash
 flutter pub run flutter_launcher_icons
 ```
 
----
+Для macOS импорт и экспорт требуют entitlement:
 
-## Диаграммы
-
-### Диаграмма вариантов использования
-
-```mermaid
-usecaseDiagram
-    actor Пользователь
-
-    usecase "Аутентификация по PIN" as UC1
-    usecase "Установка PIN" as UC2
-    usecase "Смена PIN" as UC3
-    usecase "Удаление PIN" as UC4
-    usecase "Генерация пароля" as UC5
-    usecase "Настройка сложности" as UC6
-    usecase "Сохранение пароля" as UC7
-    usecase "Просмотр паролей" as UC8
-    usecase "Поиск и фильтрация" as UC9
-    usecase "Удаление пароля" as UC10
-    usecase "Шифрование сообщения" as UC11
-    usecase "Дешифрование сообщения" as UC12
-    usecase "Экспорт (JSON)" as UC13
-    usecase "Экспорт (.passgen)" as UC14
-    usecase "Импорт (JSON)" as UC15
-    usecase "Импорт (.passgen)" as UC16
-    usecase "Управление категориями" as UC17
-    usecase "Просмотр логов" as UC18
-
-    Пользователь --> UC1
-    Пользователь --> UC2
-    Пользователь --> UC3
-    Пользователь --> UC4
-    Пользователь --> UC5
-    Пользователь --> UC6
-    Пользователь --> UC7
-    Пользователь --> UC8
-    Пользователь --> UC9
-    Пользователь --> UC10
-    Пользователь --> UC11
-    Пользователь --> UC12
-    Пользователь --> UC13
-    Пользователь --> UC14
-    Пользователь --> UC15
-    Пользователь --> UC16
-    Пользователь --> UC17
-    Пользователь --> UC18
+```xml
+<key>com.apple.security.files.user-selected.read-write</key>
+<true/>
 ```
 
-### Диаграмма последовательности: Генерация и сохранение пароля
+## 12. Ограничения текущей реализации
 
-```mermaid
-sequenceDiagram
-    participant U as Пользователь
-    participant UI as GeneratorScreen
-    participant C as GeneratorController
-    participant GUC as GeneratePasswordUseCase
-    participant PGR as PasswordGeneratorRepository
-    participant PGD as PasswordGeneratorLocalDataSource
-    participant ENC as EncryptorLocalDataSource
-    participant PU as PasswordUtils
-    participant SUC as SavePasswordUseCase
-    participant LUC as LogEventUseCase
+1. Основной список паролей пока хранится в `SharedPreferences`, а не в таблице
+   `password_entries`.
+2. UI хранилища не выполняет полноценную расшифровку сохранённых паролей через
+   отдельный repository/data source.
+3. Таблица `password_history` и use cases истории есть, но основной поток
+   сохранения из генератора не передаёт `entryId`, поэтому история не работает
+   как пользовательская функция.
+4. Профили реализованы на уровне данных, но пользовательский интерфейс выбора
+   и изоляции профилей не завершён.
+5. Биометрия подключена в data/domain слоях, но отсутствует видимый UI входа и
+   настройки.
+6. QR-передача есть как repository/codec, но не доступна пользователю.
+7. Тесты логирования требуют регенерации Mockito mocks.
+8. Версии проекта требуют выравнивания: `pubspec.yaml`, `AppConstants` и
+   `DatabaseSchema.appVersion` сейчас указывают разные состояния.
 
-    U->>UI: Нажимает "Сгенерировать"
-    UI->>C: generatePassword()
-    C->>GUC: execute(settings)
-    GUC->>PGR: generatePassword(settings)
-    PGR->>PGD: generate(settings)
-    PGD->>ENC: generateRandomBytes()
-    ENC-->>PGD: случайные байты
-    PGD->>PU: evaluateStrength(password)
-    PU-->>PGD: оценка надёжности
-    PGD-->>PGR: PasswordResult
-    PGR-->>GUC: PasswordResult
-    GUC-->>C: PasswordResult
-    C-->>UI: обновить состояние
+## 13. Как использовать это описание в дипломе
 
-    U->>UI: Нажимает "Сохранить"
-    UI->>C: savePassword()
-    C->>SUC: execute(service, password, config)
-    SUC->>PGR: savePassword(entry)
-    PGR->>PGD: savePassword(entry)
-    PGD->>PGD: шифрование пароля
-    PGD-->>PGR: success
-    PGR-->>SUC: success
-    SUC->>LUC: execute(PWD_CREATED, details)
-    LUC-->>SUC: logged
-    SUC-->>C: success
-    C-->>UI: обновить состояние
-```
+Рекомендуемая структура технической части:
 
-### Диаграмма компонентов
-
-```mermaid
-componentDiagram
-    component "App Layer" as App {
-        component "app.dart" as app_dart
-        component "Provider" as provider
-    }
-
-    component "Presentation Layer" as Presentation {
-        component "AuthController" as auth_ctrl
-        component "GeneratorController" as gen_ctrl
-        component "StorageController" as stor_ctrl
-        component "EncryptorController" as enc_ctrl
-        component "Screens" as screens
-    }
-
-    component "Domain Layer" as Domain {
-        component "Entities" as entities
-        component "Use Cases" as usecases
-        component "Repository Interfaces" as repo_interfaces
-    }
-
-    component "Data Layer" as Data {
-        component "Repositories" as repositories
-        component "Data Sources" as datasources
-        component "SQLite" as sqlite
-    }
-
-    component "Core Layer" as Core {
-        component "Utils" as utils
-        component "Constants" as constants
-        component "Errors" as errors
-    }
-
-    App --> Presentation
-    Presentation --> Domain
-    Domain --> Data
-    Data --> Core
-    Presentation ..> Core : использует
-    Domain ..> Core : использует
-```
-
-### ER-диаграмма базы данных
-
-```mermaid
-erDiagram
-    categories {
-        int id PK
-        string name
-        string icon
-        int is_system
-        int created_at
-    }
-
-    password_entries {
-        int id PK
-        int category_id FK
-        string service
-        string login
-        blob encrypted_password
-        blob nonce
-        int created_at
-        int updated_at
-    }
-
-    password_configs {
-        int id PK
-        int entry_id FK
-        int strength
-        int min_length
-        int max_length
-        int flags
-        int require_unique
-        blob encrypted_config
-    }
-
-    security_logs {
-        int id PK
-        string action_type
-        int timestamp
-        string details
-    }
-
-    app_settings {
-        string key PK
-        string value
-        int encrypted
-    }
-
-    categories ||--o{ password_entries : contains
-    password_entries ||--|| password_configs : has_config
-```
-
----
-
-## Приложение A: Поток данных
-
-### Генерация пароля
-
-```
-Пользователь → GeneratorScreen → GeneratorController → GeneratePasswordUseCase
-→ PasswordGeneratorRepository → PasswordGeneratorLocalDataSource
-→ EncryptorLocalDataSource (CSPRNG) → PasswordUtils (оценка) → PasswordResult
-→ GeneratorController → notifyListeners() → UI обновляется
-```
-
-### Сохранение пароля
-
-```
-Пользователь → GeneratorScreen → GeneratorController → SavePasswordUseCase
-→ PasswordGeneratorRepository → PasswordGeneratorLocalDataSource
-→ EncryptorLocalDataSource (шифрование) → SQLite
-→ LogEventUseCase → SecurityLogRepository → SQLite
-→ notifyListeners() → UI обновляется
-```
-
-### Аутентификация
-
-```
-Пользователь → AuthScreen → AuthController → VerifyPinUseCase
-→ AuthRepository → AuthLocalDataSource
-→ PBKDF2 (деривация ключа) → сравнение хэшей
-→ AuthResult → AuthController → resetInactivityTimer()
-→ notifyListeners() → UI обновляется
-```
-
----
-
-## Приложение B: Dependency Injection
-
-### Provider Setup
-
-```dart
-MultiProvider(
-  providers: [
-    // Data Sources
-    Provider(create: (_) => AuthLocalDataSource()),
-    Provider(create: (_) => EncryptorLocalDataSource()),
-    Provider(create: (_) => StorageLocalDataSource()),
-    Provider(create: (_) => PasswordGeneratorLocalDataSource()),
-
-    // Repositories
-    Provider(create: (ctx) => AuthRepositoryImpl(ctx.read())),
-    Provider(create: (ctx) => EncryptorRepositoryImpl(ctx.read())),
-    Provider(create: (ctx) => StorageRepositoryImpl(ctx.read())),
-    Provider(create: (ctx) => PasswordGeneratorRepositoryImpl(ctx.read())),
-
-    // Use Cases
-    Provider(create: (ctx) => VerifyPinUseCase(ctx.read())),
-    Provider(create: (ctx) => GeneratePasswordUseCase(ctx.read())),
-    Provider(create: (ctx) => SavePasswordUseCase(ctx.read())),
-
-    // Controllers
-    ChangeNotifierProxyProvider<...>(...),
-  ],
-  child: const PassGenApp(),
-)
-```
-
-### Порядок инициализации
-
-1. Data Sources
-2. Repositories
-3. Use Cases
-4. Controllers
-
----
-
-## Приложение C: Roadmap
-
-- [ ] Опции генератора: «Без повторяющихся символов», «Исключить похожие»
-- [ ] Автоочистка буфера обмена (60 сек)
-- [ ] CSV экспорт
-- [ ] Биометрическая аутентификация
-- [ ] Синхронизация между устройствами
-- [ ] Поддержка macOS и iOS
-
----
-
-## Приложение D: Контакты и ресурсы
-
-- **GitHub:** [github.com/azazlov/passgen](https://github.com/azazlov/passgen)
-- **Issues:** [Сообщить о проблеме](https://github.com/azazlov/passgen/issues)
-- **Лицензия:** MIT License
-
----
-
-## Приложение E: Документация проекта
-
-### E.1 Прогресс и отчёты
-
-| Документ | Описание | Статус |
-|----------|----------|--------|
-| [CURRENT_PROGRESS.md](project_context/product-manager-tracker/progress/CURRENT_PROGRESS.md) | Текущий прогресс проекта | ✅ Актуально |
-| [FINAL_REPORT.md](project_context/product-manager-tracker/stages/FINAL_REPORT.md) | Финальный отчёт о завершении | ✅ Актуально |
-
-### E.2 Безопасность
-
-| Документ | Описание | Статус |
-|----------|----------|--------|
-| [security_fix_report_2026-03-10.md](project_context/security-data-flow-analyzer/audit/security_fix_report_2026-03-10.md) | Отчёт об исправлениях | ✅ Актуально |
-| [security_audit_report.md](project_context/security-data-flow-analyzer/audit/security_audit_report.md) | Полный аудит безопасности | ✅ Актуально |
-| [security_policy.md](project_context/security-data-flow-analyzer/security/security_policy.md) | Политика безопасности | ✅ Актуально |
-| [key_management.md](project_context/security-data-flow-analyzer/security/key_management.md) | Управление ключами | ✅ Актуально |
-| [threat_model.md](project_context/security-data-flow-analyzer/security/threat_model.md) | Модель угроз | ✅ Актуально |
-| [chacha20_specs.md](project_context/security-data-flow-analyzer/encryption/chacha20_specs.md) | Спецификация ChaCha20 | ✅ Актуально |
-| [nonce_management.md](project_context/security-data-flow-analyzer/encryption/nonce_management.md) | Управление nonce | ✅ Актуально |
-
-### E.3 Тестирование
-
-| Документ | Описание | Статус |
-|----------|----------|--------|
-| `test/` | Unit/Widget тесты | ✅ Актуально |
-
-### E.4 Сборка и развёртывание
-
-| Документ | Описание | Статус |
-|----------|----------|--------|
-| Раздел “Сборка и развёртывание” | Инструкции по сборке | ✅ Актуально |
-
-### E.5 UI/UX улучшения
-
-| Документ | Описание | Статус |
-|----------|----------|--------|
-| [FINAL_IMPROVEMENT_PLAN_v0.7.0.md](project_context/ui_ux_designer/FINAL_IMPROVEMENT_PLAN_v0.7.0.md) | План улучшений v0.7.0 | ⏳ План |
-| [guidelines.md](project_context/ui_ux_designer/guidelines/guidelines.md) | Гайдлайны UI/UX | ✅ Актуально |
-| [changelog.md](project_context/ui_ux_designer/changelog.md) | История изменений UI | ✅ Актуально |
-
-### E.6 Техническое задание
-
-| Документ | Описание | Статус |
-|----------|----------|--------|
-| [passgen.tz.md](project_context/product-manager-tracker/planning/passgen.tz.md) | Техническое задание | ✅ Актуально |
-
-### E.7 Код-ревью и аудит
-
-| Документ | Описание | Статус |
-|----------|----------|--------|
-| [CODE_REVIEW_REPORT.md](project_context/product-manager-tracker/reviews/CODE_REVIEW_REPORT.md) | Код-ревью по ТЗ | ✅ Актуально |
-| [DATA_SECURITY_AUDIT.md](project_context/product-manager-tracker/reviews/DATA_SECURITY_AUDIT.md) | Аудит безопасности | ✅ Актуально |
-
----
-
-**PassGen v0.5.0** | [MIT License](LICENSE) | **Обновлено:** 10 марта 2026
+1. Обоснование выбора Flutter для кроссплатформенного локального приложения.
+2. Описание Clean Architecture и разделения на `presentation`, `domain`,
+   `data`, `core`, `app`.
+3. Разбор модели безопасности: PIN, PBKDF2, ChaCha20-Poly1305, локальное
+   хранение, автоблокировка, защита от подбора.
+4. Описание гибридной модели данных и плана миграции от `SharedPreferences` к
+   SQLite.
+5. Диаграммы потоков: вход, генерация, сохранение, импорт/экспорт.
+6. Раздел тестирования с честным указанием текущего состояния автотестов.
+7. Раздел ограничений и направлений развития: профили, биометрия, QR,
+   полноценная история паролей и SQLite-хранилище записей.

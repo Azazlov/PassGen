@@ -256,6 +256,22 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
     return categories;
   }
 
+  @override
+  Future<Either<PasswordGenerationFailure, String>> decryptConfig(
+    String encryptedConfig,
+    String masterPassword,
+  ) async {
+    try {
+      final decrypted = await dataSource.decryptConfig(
+        encryptedConfig: encryptedConfig,
+        masterPassword: masterPassword,
+      );
+      return Right(decrypted);
+    } catch (e) {
+      return Left(PasswordGenerationFailure(message: 'Ошибка дешифрования конфига: $e'));
+    }
+  }
+
   String _excludeSimilar(String chars) {
     final similar = {'l', '1', 'I', 'O', '0'};
     return chars.split('').where((c) => !similar.contains(c)).join();

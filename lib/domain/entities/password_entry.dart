@@ -167,7 +167,10 @@ class PasswordEntry {
   }
 
   /// Проверяет, есть ли зашифрованный пароль
-  bool get isEncrypted => encryptedPassword != null && nonce != null;
+  /// 
+  /// Используется мини-формат (pbkdf2-nonce + nonceBox + ciphertext + mac),
+  /// поэтому nonce может быть null - это нормально.
+  bool get isEncrypted => encryptedPassword != null && encryptedPassword!.isNotEmpty;
 
   /// Проверяет, есть ли открытый пароль (в RAM)
   bool get hasPlainText => password != null;

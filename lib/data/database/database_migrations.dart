@@ -107,124 +107,195 @@ class DatabaseMigrations {
   /// Многопрофильность: per-profile auth_data, profile_id в связанных таблицах
   static Future<void> _migrateToV4(Database db) async {
     await db.transaction((txn) async {
-      // 1. Создать таблицу profiles
-      await txn.execute(DatabaseSchema.profiles);
-
-      // 2. Создать дефолтный профиль
-      final now = DateTime.now().millisecondsSinceEpoch;
-      await txn.insert('profiles', {
-        'id': 1,
-        'name': 'Профиль по умолчанию',
-        'created_at': now,
-      });
-
-      // 3. Добавить profile_id в связанные таблицы
-      await txn.execute(
-        'ALTER TABLE password_entries ADD COLUMN profile_id INTEGER REFERENCES profiles(id)',
-      );
-      await txn.execute(
-        'ALTER TABLE security_logs ADD COLUMN profile_id INTEGER REFERENCES profiles(id)',
-      );
-      await txn.execute(
-        'ALTER TABLE password_history ADD COLUMN profile_id INTEGER REFERENCES profiles(id)',
-      );
-      await txn.execute(
-        'ALTER TABLE categories ADD COLUMN profile_id INTEGER REFERENCES profiles(id)',
-      );
-      await txn.execute(
-        'ALTER TABLE password_configs ADD COLUMN profile_id INTEGER REFERENCES profiles(id)',
-      );
-
-      // 4. Привязать существующие данные к дефолтному профилю
-      await txn.execute(
-        'UPDATE password_entries SET profile_id = 1 WHERE profile_id IS NULL',
-      );
-      await txn.execute(
-        'UPDATE security_logs SET profile_id = 1 WHERE profile_id IS NULL',
-      );
-      await txn.execute(
-        'UPDATE password_history SET profile_id = 1 WHERE profile_id IS NULL',
-      );
-      await txn.execute(
-        'UPDATE categories SET profile_id = 1 WHERE profile_id IS NULL',
-      );
-      await txn.execute(
-        'UPDATE password_configs SET profile_id = 1 WHERE profile_id IS NULL',
-      );
-
-      // 5. Перестроить auth_data под per-profile схему
-      // SQLite не поддерживает ALTER TABLE ADD COLUMN с UNIQUE constraint
-      await txn.execute('''
-        CREATE TABLE auth_data_new (
-          profile_id INTEGER NOT NULL PRIMARY KEY REFERENCES profiles(id),
-          pin_hash TEXT NOT NULL,
-          pin_salt TEXT NOT NULL,
-          failed_attempts INTEGER DEFAULT 0,
-          series_index INTEGER DEFAULT 0,
-          lockout_until INTEGER,
-          biometric_enabled INTEGER DEFAULT 0,
-          created_at INTEGER NOT NULL
-        )
-      ''');
-
-      // Мигрируем существующие данные auth_data (key-value → per-profile)
-      final pinHashResult = await txn.query(
-        'auth_data',
-        where: "key = 'pin_hash'",
-        limit: 1,
-      );
-      final pinSaltResult = await txn.query(
-        'auth_data',
-        where: "key = 'pin_salt'",
-        limit: 1,
-      );
-      final createdAtResult = await txn.query(
-        'auth_data',
-        where: "key = 'pin_hash'",
-        limit: 1,
-      );
-
-      final pinHash = pinHashResult.isNotEmpty ? pinHashResult.first['value'] as String? : null;
-      final pinSalt = pinSaltResult.isNotEmpty ? pinSaltResult.first['value'] as String? : null;
-      final createdAt = createdAtResult.isNotEmpty
-          ? createdAtResult.first['created_at'] as int?
-          : now;
-
-      if (pinHash != null) {
-        await txn.insert('auth_data_new', {
-          'profile_id': 1,
-          'pin_hash': pinHash,
-          'pin_salt': pinSalt ?? '',
-          'failed_attempts': 0,
-          'series_index': 0,
-          'lockout_until': null,
-          'biometric_enabled': 0,
-          'created_at': createdAt ?? now,
-        });
+      // Вспомогательные утилиты
+      Future<bool> tableExists(String name) async {
+        final res = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+          [name],
+        );
+        return res.isNotEmpty;
       }
 
-      await txn.execute('DROP TABLE auth_data');
-      await txn.execute('ALTER TABLE auth_data_new RENAME TO auth_data');
+      Future<bool> columnExists(String tableName, String columnName) async {
+        final cols = await txn.rawQuery('PRAGMA table_info($tableName)');
+        return cols.any((c) => (c['name'] as String) == columnName);
+      }
 
-      // 6. Создать новые индексы v4
-      await txn.execute(
-        'CREATE INDEX idx_password_entries_profile ON password_entries(profile_id)',
+      Future<void> maybeAddColumn(String tableName, String columnDef) async {
+        final columnName = columnDef.split(' ').first;
+        if (!await tableExists(tableName)) return;
+        if (await columnExists(tableName, columnName)) return;
+        await txn.execute('ALTER TABLE $tableName ADD COLUMN $columnDef');
+      }
+
+      // 1. Создать таблицу profiles если её нет
+      if (!await tableExists('profiles')) {
+        await txn.execute(DatabaseSchema.profiles);
+      }
+
+      // 2. Создать дефолтный профиль если он отсутствует
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (!await tableExists('profiles')) {
+        await txn.insert('profiles', {
+          'id': 1,
+          'name': 'Профиль по умолчанию',
+          'created_at': now,
+        });
+      } else {
+        final existing = await txn.query(
+          'profiles',
+          where: 'id = ?',
+          whereArgs: [1],
+          limit: 1,
+        );
+        if (existing.isEmpty) {
+          await txn.insert('profiles', {
+            'id': 1,
+            'name': 'Профиль по умолчанию',
+            'created_at': now,
+          });
+        }
+      }
+
+      // 3. Добавить profile_id в связанные таблицы аккуратно
+      await maybeAddColumn(
+        'password_entries',
+        'profile_id INTEGER REFERENCES profiles(id)',
       );
-      await txn.execute(
-        'CREATE INDEX idx_security_logs_profile ON security_logs(profile_id)',
+      await maybeAddColumn(
+        'security_logs',
+        'profile_id INTEGER REFERENCES profiles(id)',
       );
-      await txn.execute(
-        'CREATE INDEX idx_password_history_profile ON password_history(profile_id)',
+      await maybeAddColumn(
+        'password_history',
+        'profile_id INTEGER REFERENCES profiles(id)',
       );
-      await txn.execute(
-        'CREATE UNIQUE INDEX idx_auth_data_profile ON auth_data(profile_id)',
+      await maybeAddColumn(
+        'categories',
+        'profile_id INTEGER REFERENCES profiles(id)',
       );
-      await txn.execute(
-        'CREATE INDEX idx_categories_profile ON categories(profile_id)',
+      await maybeAddColumn(
+        'password_configs',
+        'profile_id INTEGER REFERENCES profiles(id)',
       );
+
+      // 4. Привязать существующие данные к дефолтному профилю если таблицы существуют
+      if (await tableExists('password_entries')) {
+        await txn.execute(
+          'UPDATE password_entries SET profile_id = 1 WHERE profile_id IS NULL',
+        );
+      }
+      if (await tableExists('security_logs')) {
+        await txn.execute(
+          'UPDATE security_logs SET profile_id = 1 WHERE profile_id IS NULL',
+        );
+      }
+      if (await tableExists('password_history')) {
+        await txn.execute(
+          'UPDATE password_history SET profile_id = 1 WHERE profile_id IS NULL',
+        );
+      }
+      if (await tableExists('categories')) {
+        await txn.execute(
+          'UPDATE categories SET profile_id = 1 WHERE profile_id IS NULL',
+        );
+      }
+      if (await tableExists('password_configs')) {
+        await txn.execute(
+          'UPDATE password_configs SET profile_id = 1 WHERE profile_id IS NULL',
+        );
+      }
+
+      // 5. Перестроить auth_data под per-profile схему только если auth_data существует
+      if (await tableExists('auth_data')) {
+        await txn.execute('''
+          CREATE TABLE IF NOT EXISTS auth_data_new (
+            profile_id INTEGER NOT NULL PRIMARY KEY REFERENCES profiles(id),
+            pin_hash TEXT NOT NULL,
+            pin_salt TEXT NOT NULL,
+            failed_attempts INTEGER DEFAULT 0,
+            series_index INTEGER DEFAULT 0,
+            lockout_until INTEGER,
+            biometric_enabled INTEGER DEFAULT 0,
+            created_at INTEGER NOT NULL
+          )
+        ''');
+
+        final pinHashResult = await txn.query(
+          'auth_data',
+          where: "key = 'pin_hash'",
+          limit: 1,
+        );
+        final pinSaltResult = await txn.query(
+          'auth_data',
+          where: "key = 'pin_salt'",
+          limit: 1,
+        );
+        final createdAtResult = await txn.query(
+          'auth_data',
+          where: "key = 'pin_hash'",
+          limit: 1,
+        );
+
+        final pinHash = pinHashResult.isNotEmpty
+            ? pinHashResult.first['value'] as String?
+            : null;
+        final pinSalt = pinSaltResult.isNotEmpty
+            ? pinSaltResult.first['value'] as String?
+            : null;
+        final createdAt = createdAtResult.isNotEmpty
+            ? createdAtResult.first['created_at'] as int?
+            : now;
+
+        if (pinHash != null) {
+          await txn.insert('auth_data_new', {
+            'profile_id': 1,
+            'pin_hash': pinHash,
+            'pin_salt': pinSalt ?? '',
+            'failed_attempts': 0,
+            'series_index': 0,
+            'lockout_until': null,
+            'biometric_enabled': 0,
+            'created_at': createdAt ?? now,
+          });
+        }
+
+        // Удаляем старую таблицу auth_data и переименовываем новую
+        await txn.execute('DROP TABLE IF EXISTS auth_data');
+        await txn.execute('ALTER TABLE auth_data_new RENAME TO auth_data');
+      }
+
+      // 6. Создать новые индексы v4 аккуратно
+      if (await tableExists('password_entries')) {
+        await txn.execute(
+          'CREATE INDEX IF NOT EXISTS idx_password_entries_profile ON password_entries(profile_id)',
+        );
+      }
+      if (await tableExists('security_logs')) {
+        await txn.execute(
+          'CREATE INDEX IF NOT EXISTS idx_security_logs_profile ON security_logs(profile_id)',
+        );
+      }
+      if (await tableExists('password_history')) {
+        await txn.execute(
+          'CREATE INDEX IF NOT EXISTS idx_password_history_profile ON password_history(profile_id)',
+        );
+      }
+
       await txn.execute(
-        'CREATE INDEX idx_password_configs_profile ON password_configs(profile_id)',
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_data_profile ON auth_data(profile_id)',
       );
+
+      if (await tableExists('categories')) {
+        await txn.execute(
+          'CREATE INDEX IF NOT EXISTS idx_categories_profile ON categories(profile_id)',
+        );
+      }
+      if (await tableExists('password_configs')) {
+        await txn.execute(
+          'CREATE INDEX IF NOT EXISTS idx_password_configs_profile ON password_configs(profile_id)',
+        );
+      }
     });
   }
 }
