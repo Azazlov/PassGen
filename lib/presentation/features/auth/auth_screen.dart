@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/utils/android_security_utils.dart';
+import '../../../data/database/database_helper.dart';
 import '../../../domain/entities/auth_result.dart';
 import 'auth_controller.dart';
 import 'pin_input_widget.dart';
@@ -142,6 +144,50 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
     await AndroidSecurityUtils.setSecureFlag(true);
   }
 
+  Future<void> _resetDatabaseForDevelopment() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Сбросить БД?'),
+        content: const Text(
+          'Будут удалены PIN, категории, настройки, логи и другие данные SQLite. '
+          'Действие доступно только в debug-режиме.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton.tonalIcon(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            icon: const Icon(Icons.delete_forever),
+            label: const Text('Сбросить'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final authController = context.read<AuthController>();
+    final databaseHelper = context.read<DatabaseHelper>();
+
+    try {
+      await databaseHelper.resetAllDataForDevelopment();
+      await authController.refreshState();
+      authController.clearPin();
+
+      if (!mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('База данных сброшена')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text('Ошибка сброса БД: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -273,6 +319,14 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
                       : const Text('Установить PIN'),
                 ),
               ),
+              if (kDebugMode) ...[
+                const SizedBox(height: 8),
+                _DevDatabaseResetButton(
+                  onPressed: controller.isLoading
+                      ? null
+                      : _resetDatabaseForDevelopment,
+                ),
+              ],
               const SizedBox(height: 16),
             ],
           ),
@@ -401,6 +455,14 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
                       : const Text('Войти'),
                 ),
               ),
+              if (kDebugMode) ...[
+                const SizedBox(height: 8),
+                _DevDatabaseResetButton(
+                  onPressed: controller.isLoading
+                      ? null
+                      : _resetDatabaseForDevelopment,
+                ),
+              ],
               const SizedBox(height: 16),
             ],
           ),
@@ -456,7 +518,32 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
               ),
             ),
           ),
+          if (kDebugMode) ...[
+            const SizedBox(height: 12),
+            _DevDatabaseResetButton(onPressed: _resetDatabaseForDevelopment),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _DevDatabaseResetButton extends StatelessWidget {
+  const _DevDatabaseResetButton({required this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.storage),
+        label: const Text('Сбросить БД'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Theme.of(context).colorScheme.error,
+        ),
       ),
     );
   }

@@ -38,18 +38,29 @@ class MockSecurityLogRepository extends _i1.Mock
   _i3.Future<void> logEvent(
     String? actionType, {
     Map<String, dynamic>? details,
+    int? profileId,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#logEvent, [actionType], {#details: details}),
+            Invocation.method(
+              #logEvent,
+              [actionType],
+              {#details: details, #profileId: profileId},
+            ),
             returnValue: _i3.Future<void>.value(),
             returnValueForMissingStub: _i3.Future<void>.value(),
           )
           as _i3.Future<void>);
 
   @override
-  _i3.Future<List<_i4.SecurityLog>> getLogs({int? limit = 1000}) =>
+  _i3.Future<List<_i4.SecurityLog>> getLogs({
+    int? limit = 1000,
+    int? profileId,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#getLogs, [], {#limit: limit}),
+            Invocation.method(#getLogs, [], {
+              #limit: limit,
+              #profileId: profileId,
+            }),
             returnValue: _i3.Future<List<_i4.SecurityLog>>.value(
               <_i4.SecurityLog>[],
             ),
@@ -60,9 +71,14 @@ class MockSecurityLogRepository extends _i1.Mock
   _i3.Future<List<_i4.SecurityLog>> getLogsByType(
     String? actionType, {
     int? limit = 100,
+    int? profileId,
   }) =>
       (super.noSuchMethod(
-            Invocation.method(#getLogsByType, [actionType], {#limit: limit}),
+            Invocation.method(
+              #getLogsByType,
+              [actionType],
+              {#limit: limit, #profileId: profileId},
+            ),
             returnValue: _i3.Future<List<_i4.SecurityLog>>.value(
               <_i4.SecurityLog>[],
             ),

@@ -37,6 +37,7 @@ import '../../domain/usecases/category/update_category_usecase.dart';
 import '../../domain/usecases/encryptor/decrypt_message_usecase.dart';
 import '../../domain/usecases/encryptor/encrypt_message_usecase.dart';
 import '../../domain/usecases/generator/validate_generator_settings_usecase.dart';
+import '../../domain/usecases/log/clear_logs_usecase.dart';
 import '../../domain/usecases/log/get_logs_usecase.dart';
 import '../../domain/usecases/log/log_event_usecase.dart';
 // Use cases
@@ -249,6 +250,10 @@ class PasswordGeneratorApp extends StatelessWidget {
         Provider(
           create: (context) =>
               GetLogsUseCase(context.read<SecurityLogRepositoryImpl>()),
+        ),
+        Provider(
+          create: (context) =>
+              ClearLogsUseCase(context.read<SecurityLogRepositoryImpl>()),
         ),
         Provider(
           create: (context) =>

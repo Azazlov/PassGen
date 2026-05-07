@@ -23,7 +23,7 @@ PassGen - кроссплатформенное Flutter-приложение дл
 | Основные платформы проекта | Android, iOS, macOS, Windows, Linux, Web |
 | Dart-файлов в `lib/` | 142 |
 | Тестовых файлов `*_test.dart` | 26 |
-| Последний запуск `flutter test` | 7 мая 2026: 172 теста прошли, 2 файла тестов не скомпилировались из-за устаревших Mockito mocks |
+| Последний запуск `flutter test` | 7 мая 2026: 182 теста, все пройдены |
 
 В коде присутствуют заготовки версии `0.6.0`: профили, биометрия, QR-передача,
 история паролей и бенчмарки криптографии. При этом публичный пользовательский
@@ -222,18 +222,12 @@ flutter test
 ```text
 Дата: 7 мая 2026
 Команда: flutter test
-Результат: 172 passed, 2 load failures
-Причина: сгенерированные Mockito mocks для SecurityLogRepository не совпадают
-с актуальным интерфейсом, где появились named-параметры profileId.
+Результат: 182 passed, 0 failures
 ```
 
-Проблемные файлы:
-
-- `test/unit/usecases/log/get_logs_usecase_test.mocks.dart`;
-- `test/unit/usecases/log/log_event_usecase_test.mocks.dart`.
-
-Ожидаемое техническое действие: регенерация mocks через `build_runner` после
-изменения интерфейса `SecurityLogRepository`.
+Ранее тесты логирования не компилировались из-за устаревших Mockito mocks после
+добавления `profileId` в `SecurityLogRepository`. Mocks регенерированы через
+`flutter pub run build_runner build --delete-conflicting-outputs`.
 
 ## Сборка
 

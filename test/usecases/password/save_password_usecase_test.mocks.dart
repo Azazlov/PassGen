@@ -8,6 +8,7 @@ import 'dart:async' as _i4;
 import 'package:dartz/dartz.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:pass_gen/core/errors/failures.dart' as _i5;
+import 'package:pass_gen/domain/entities/character_set.dart' as _i9;
 import 'package:pass_gen/domain/entities/password_config.dart' as _i8;
 import 'package:pass_gen/domain/entities/password_generation_settings.dart'
     as _i7;
@@ -183,4 +184,41 @@ class MockPasswordGeneratorRepository extends _i1.Mock
           as _i4.Future<
             _i2.Either<_i5.PasswordGenerationFailure, Map<String, dynamic>>
           >);
+
+  @override
+  _i4.Future<List<_i9.CharacterSet>> getCharacterSets({
+    required _i7.PasswordGenerationSettings? settings,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getCharacterSets, [], {#settings: settings}),
+            returnValue: _i4.Future<List<_i9.CharacterSet>>.value(
+              <_i9.CharacterSet>[],
+            ),
+          )
+          as _i4.Future<List<_i9.CharacterSet>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.PasswordGenerationFailure, String>> decryptConfig(
+    String? encryptedConfig,
+    String? masterPassword,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#decryptConfig, [
+              encryptedConfig,
+              masterPassword,
+            ]),
+            returnValue:
+                _i4.Future<
+                  _i2.Either<_i5.PasswordGenerationFailure, String>
+                >.value(
+                  _FakeEither_0<_i5.PasswordGenerationFailure, String>(
+                    this,
+                    Invocation.method(#decryptConfig, [
+                      encryptedConfig,
+                      masterPassword,
+                    ]),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.Either<_i5.PasswordGenerationFailure, String>>);
 }
