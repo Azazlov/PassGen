@@ -9,6 +9,7 @@ class DatabaseMigrations {
     2: _migrateToV2,
     3: _migrateToV3,
     4: _migrateToV4,
+    5: _migrateToV5,
   };
 
   /// Получение списка миграций для применения
@@ -296,6 +297,42 @@ class DatabaseMigrations {
           'CREATE INDEX IF NOT EXISTS idx_password_configs_profile ON password_configs(profile_id)',
         );
       }
+    });
+  }
+
+  /// Миграция к версии 5
+  /// Полевое шифрование: добавляются BLOB-колонки encrypted_service и
+  /// encrypted_login в `password_entries` и `password_history`.
+  ///
+  /// Реальное шифрование существующих plaintext-значений выполняется
+  /// **лениво** при первом успешном unlock'е профиля (там есть PIN, без
+  /// которого ключа шифрования взять негде). Здесь только меняется схема.
+  static Future<void> _migrateToV5(Database db) async {
+    await db.transaction((txn) async {
+      Future<bool> tableExists(String name) async {
+        final res = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+          [name],
+        );
+        return res.isNotEmpty;
+      }
+
+      Future<bool> columnExists(String tableName, String columnName) async {
+        final cols = await txn.rawQuery('PRAGMA table_info($tableName)');
+        return cols.any((c) => (c['name'] as String) == columnName);
+      }
+
+      Future<void> maybeAddColumn(String tableName, String columnDef) async {
+        final columnName = columnDef.split(' ').first;
+        if (!await tableExists(tableName)) return;
+        if (await columnExists(tableName, columnName)) return;
+        await txn.execute('ALTER TABLE $tableName ADD COLUMN $columnDef');
+      }
+
+      await maybeAddColumn('password_entries', 'encrypted_service BLOB');
+      await maybeAddColumn('password_entries', 'encrypted_login BLOB');
+      await maybeAddColumn('password_history', 'encrypted_service BLOB');
+      await maybeAddColumn('password_history', 'encrypted_login BLOB');
     });
   }
 }

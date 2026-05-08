@@ -1,19 +1,24 @@
 /// Схема базы данных SQLite
 ///
-/// Версия схемы: 4 (v0.6.0)
-/// Версия приложения: 0.6.0
+/// Версия схемы: 5 (v0.6.1)
+/// Версия приложения: 0.6.1
 ///
 /// История изменений:
 /// - Version 1: Initial schema (5 таблиц)
 /// - Version 2: Добавлена таблица auth_data, индексы
 /// - Version 2.1 (v0.5.1): Увеличены итерации PBKDF2 до 100K (исторический шаг)
 /// - Version 3 (v0.5.2): Добавлена таблица password_history для истории паролей
+/// - Version 4 (v0.6.0): Многопрофильность (profiles + profile_id everywhere)
+/// - Version 5 (v0.6.1): Полевое шифрование метаданных (encrypted_service /
+///                       encrypted_login BLOB на password_entries и
+///                       password_history). Plaintext колонки `service`/`login`
+///                       сохранены для совместимости и будут удалены в v6.
 ///
 /// Текущие криптопараметры (см. [EncryptionParams.v2]): PBKDF2-HMAC-SHA256,
 /// 600 000 итераций (соответствует рекомендации OWASP 2024).
 class DatabaseSchema {
-  static const int version = 4;
-  static const String appVersion = '0.6.0';
+  static const int version = 5;
+  static const String appVersion = '0.6.1';
   static const String schemaInfo = '''
 Version 1: Initial schema (5 tables)
   - categories
@@ -41,6 +46,14 @@ Version 4 (v0.6.0): Multi-profile support
   - auth_data перестроена под per-profile (profile_id PK)
   - profile_id во всех связанных таблицах
   - Новые индексы для профилей
+
+Version 5 (v0.6.1): Field-level encryption
+  - encrypted_service / encrypted_login (BLOB, nullable)
+    в password_entries и password_history
+  - service / login plaintext колонки сохранены для совместимости и для
+    fallback'а в случае отсутствия активного vault-ключа (тестовые сценарии,
+    одноразовые миграционные сценарии)
+  - В v6 запланирован дроп plaintext-колонок
 ''';
 
   // ==================== ТАБЛИЦЫ ====================
@@ -68,7 +81,12 @@ Version 4 (v0.6.0): Multi-profile support
     )
   ''';
 
-  /// Таблица записей паролей
+  /// Таблица записей паролей.
+  ///
+  /// Plaintext-колонки `service` / `login` остаются `NOT NULL` для
+  /// совместимости с записями v1..v4. Реальные значения хранятся в
+  /// `encrypted_service` / `encrypted_login` (BLOB), а в plaintext-полях
+  /// после первого unlock'а профиля остаётся пустая строка `''`.
   static const String passwordEntries = '''
     CREATE TABLE password_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,6 +96,8 @@ Version 4 (v0.6.0): Multi-profile support
       login TEXT,
       encrypted_password BLOB NOT NULL,
       nonce BLOB NOT NULL,
+      encrypted_service BLOB,
+      encrypted_login BLOB,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     )
@@ -132,7 +152,11 @@ Version 4 (v0.6.0): Multi-profile support
     )
   ''';
 
-  /// Таблица истории паролей (v3)
+  /// Таблица истории паролей (v3, расширена в v5).
+  ///
+  /// Аналогично `password_entries`, plaintext `service`/`login` остаются для
+  /// совместимости со старыми записями; новые добавляются с непустыми
+  /// `encrypted_service`/`encrypted_login`.
   static const String passwordHistory = '''
     CREATE TABLE password_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -143,6 +167,8 @@ Version 4 (v0.6.0): Multi-profile support
       nonce BLOB NOT NULL,
       config TEXT NOT NULL,
       login TEXT,
+      encrypted_service BLOB,
+      encrypted_login BLOB,
       created_at INTEGER NOT NULL,
       reason TEXT
     )

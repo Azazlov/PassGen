@@ -111,6 +111,23 @@ class AuthLocalDataSource {
     } catch (_) {}
   }
 
+  /// Возвращает байты `pin_salt` для указанного профиля или `null`,
+  /// если строки нет / соль пустая.
+  ///
+  /// Используется `VaultUnlockService` для вывода vault-ключа на тех же
+  /// `(PIN, salt)`, что и хеш PIN'а, без дублирования логики PBKDF2.
+  Future<List<int>?> getProfileSalt(int profileId) async {
+    final row = await _getProfileAuthData(profileId);
+    if (row == null) return null;
+    final saltBase64 = row['pin_salt'] as String?;
+    if (saltBase64 == null || saltBase64.isEmpty) return null;
+    try {
+      return base64Decode(saltBase64);
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ==================== ХЭШИРОВАНИЕ ====================
 
   Future<Map<String, String>> _hashPin(String pin) async {

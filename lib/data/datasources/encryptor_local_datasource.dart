@@ -164,4 +164,68 @@ class EncryptorLocalDataSource {
   static Map<String, dynamic> fromJsonString(String jsonStr) {
     return jsonDecode(jsonStr) as Map<String, dynamic>;
   }
+
+  // ==================== VAULT-KEY (PER-PROFILE) ====================
+
+  /// Производит «vault key» из PIN и соли профиля.
+  ///
+  /// Один раз после успешной аутентификации этот ключ кэшируется в памяти
+  /// (см. `VaultKeySession`) и используется для быстрого шифрования/дешифрования
+  /// метаданных (`service`, `login`) — без повторного PBKDF2 на каждое поле.
+  Future<List<int>> deriveVaultKeyBytes({
+    required List<int> pin,
+    required List<int> salt,
+  }) async {
+    final secretKey = await _deriveKey(password: pin, nonce: salt);
+    final extracted = await secretKey.extractBytes();
+    return extracted;
+  }
+
+  /// Шифрует короткое поле уже выведенным ключом и возвращает компактный BLOB.
+  ///
+  /// Формат: `nonce(12) + ciphertext + mac(16)`. Не требует PBKDF2 —
+  /// предполагается, что `keyBytes` уже выведены через `deriveVaultKeyBytes`.
+  /// Безопасность: nonce генерируется случайно для каждого вызова, ключ
+  /// (per-profile, выведенный из PIN+pin_salt) обеспечивает изоляцию профилей.
+  Future<List<int>> encryptFieldWithKey({
+    required List<int> message,
+    required List<int> keyBytes,
+  }) async {
+    try {
+      final nonce = generateRandomBytes(length: 12);
+      final secretKey = SecretKey(keyBytes);
+      final secretBox = await _algorithm.encrypt(
+        message,
+        secretKey: secretKey,
+        nonce: nonce,
+      );
+      return <int>[
+        ...secretBox.nonce,
+        ...secretBox.cipherText,
+        ...secretBox.mac.bytes,
+      ];
+    } catch (e) {
+      throw EncryptionFailure(message: 'Ошибка шифрования поля: $e');
+    }
+  }
+
+  /// Расшифровывает поле, зашифрованное `encryptFieldWithKey`.
+  Future<List<int>> decryptFieldWithKey({
+    required List<int> blob,
+    required List<int> keyBytes,
+  }) async {
+    if (blob.length < 12 + 16) {
+      throw const EncryptionFailure(message: 'Слишком короткий BLOB поля');
+    }
+    try {
+      final nonce = blob.sublist(0, 12);
+      final cipherText = blob.sublist(12, blob.length - 16);
+      final mac = Mac(blob.sublist(blob.length - 16));
+      final secretBox = SecretBox(cipherText, nonce: nonce, mac: mac);
+      final secretKey = SecretKey(keyBytes);
+      return await _algorithm.decrypt(secretBox, secretKey: secretKey);
+    } catch (e) {
+      throw EncryptionFailure(message: 'Ошибка дешифрования поля: $e');
+    }
+  }
 }
