@@ -6,9 +6,11 @@
 /// История изменений:
 /// - Version 1: Initial schema (5 таблиц)
 /// - Version 2: Добавлена таблица auth_data, индексы
-/// - Version 2.1 (v0.5.1): Увеличены итерации PBKDF2 до 100K
+/// - Version 2.1 (v0.5.1): Увеличены итерации PBKDF2 до 100K (исторический шаг)
 /// - Version 3 (v0.5.2): Добавлена таблица password_history для истории паролей
-/// - Version 4 (v0.6.0): Многопрофильность, per-profile auth_data, индексы
+///
+/// Текущие криптопараметры (см. [EncryptionParams.v2]): PBKDF2-HMAC-SHA256,
+/// 600 000 итераций (соответствует рекомендации OWASP 2024).
 class DatabaseSchema {
   static const int version = 4;
   static const String appVersion = '0.6.0';
@@ -25,7 +27,7 @@ Version 2: Added auth_data table, indexes
   - 4 индекса для оптимизации
 
 Version 2.1 (v0.5.1): Security improvements
-  - PBKDF2 iterations: 10,000 → 100,000
+  - PBKDF2 iterations: 10,000 → 100,000 (исторический шаг; текущая v2 = 600,000)
   - Duplicate check on import (service + login)
   - Rollback on import error
   - Configurable clipboard timeout

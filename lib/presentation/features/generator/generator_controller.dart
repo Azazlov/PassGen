@@ -4,6 +4,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/event_types.dart';
 import '../../../core/security/master_password_session.dart';
 import '../../../domain/entities/character_set.dart';
+import '../../../domain/entities/password_entry.dart';
 import '../../../domain/entities/password_generation_settings.dart';
 import '../../../domain/entities/password_result.dart';
 import '../../../domain/repositories/password_generator_repository.dart';
@@ -11,6 +12,7 @@ import '../../../domain/usecases/generator/validate_generator_settings_usecase.d
 import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
+import '../../../domain/usecases/storage/get_passwords_usecase.dart';
 
 /// Конфигурация уровня сложности пароля
 class StrengthConfig {
@@ -28,6 +30,7 @@ class GeneratorController extends ChangeNotifier {
     required this.validateSettingsUseCase,
     required this.logEventUseCase,
     required this.repository,
+    required this.getPasswordsUseCase,
   }) {
     _updateSettingsByStrength(_strength);
   }
@@ -36,6 +39,7 @@ class GeneratorController extends ChangeNotifier {
   final ValidateGeneratorSettingsUseCase validateSettingsUseCase;
   final LogEventUseCase logEventUseCase;
   final PasswordGeneratorRepository repository;
+  final GetPasswordsUseCase getPasswordsUseCase;
 
   // Состояние
   PasswordGenerationSettings _settings = const PasswordGenerationSettings();
@@ -347,12 +351,35 @@ class GeneratorController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Ищем существующую запись по названию сервиса, чтобы передать в use case
+      // entryId и старые крипто-поля — это включит запись в password_history.
+      // До миграции с SharedPreferences на SQLite идентификатор записи может быть null,
+      // в этом случае история не фиксируется (FK в password_history требует реальный id).
+      PasswordEntry? existingEntry;
+      try {
+        final passwordsResult = await getPasswordsUseCase.execute();
+        existingEntry = passwordsResult.fold((_) => null, (entries) {
+          final lower = serviceController.text.toLowerCase();
+          for (final entry in entries) {
+            if (entry.service.toLowerCase() == lower) {
+              return entry;
+            }
+          }
+          return null;
+        });
+      } catch (_) {
+        existingEntry = null;
+      }
+
       final masterPassword = MasterPasswordSession.getAny();
       final result = await savePasswordUseCase.execute(
         service: serviceController.text,
         password: _lastResult!.password,
         config: _lastResult!.config,
         categoryId: _selectedCategoryId,
+        entryId: existingEntry?.id,
+        encryptedPassword: existingEntry?.encryptedPassword,
+        nonce: existingEntry?.nonce,
         masterPassword: masterPassword,
       );
 

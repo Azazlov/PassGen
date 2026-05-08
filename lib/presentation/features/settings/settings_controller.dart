@@ -137,13 +137,19 @@ class SettingsController extends ChangeNotifier {
     }
   }
 
-  /// Полная очистка журнала событий.
+  /// Очистка всех логов безопасности. Возвращает `true` при успехе.
   Future<bool> clearLogs() async {
     try {
       _isLoading = true;
       notifyListeners();
-
       await _clearLogsUseCase.execute();
+
+      // Факт очистки фиксируем сразу после удаления, чтобы в журнале оставалась отметка
+      // об этом событии (событие попадаёт в следующую пачку записей).
+      _logEventUseCase.execute(
+        EventTypes.logsCleared,
+        details: {'success': true},
+      );
       return true;
     } catch (e) {
       _error = e.toString();

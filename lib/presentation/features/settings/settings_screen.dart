@@ -320,14 +320,14 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     );
 
     if (confirmed == true && context.mounted) {
-      final success = await controller.clearLogs();
+      final ok = await controller.clearLogs();
       if (!context.mounted) return;
-
-      if (success) {
-        setState(() => _logsCount = 0);
-        _showSuccessDialog(context, 'Журнал событий очищен');
+      if (ok) {
+        await _loadLogsCount();
+        if (!context.mounted) return;
+        _showSuccessDialog(context, 'Логи очищены');
       } else {
-        _showErrorDialog(context, controller.error ?? 'Ошибка очистки логов');
+        _showErrorDialog(context, 'Не удалось очистить логи');
       }
     }
   }

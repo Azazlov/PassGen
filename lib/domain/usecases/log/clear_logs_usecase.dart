@@ -1,9 +1,11 @@
 import '../../repositories/security_log_repository.dart';
 
-/// Use case для полной очистки журнала событий безопасности.
+/// Использование: Очистка всех логов безопасности.
+///
+/// Полностью удаляет содержимое таблицы `security_logs`. Используется на
+/// экране настроек по запросу владельца профиля.
 class ClearLogsUseCase {
   const ClearLogsUseCase(this.repository);
-
   final SecurityLogRepository repository;
 
   Future<void> execute() {

@@ -316,14 +316,16 @@ class PasswordGeneratorApp extends StatelessWidget {
                 .read<ValidateGeneratorSettingsUseCase>(),
             logEventUseCase: context.read<LogEventUseCase>(),
             repository: context.read<PasswordGeneratorRepositoryImpl>(),
+            getPasswordsUseCase: context.read<GetPasswordsUseCase>(),
           ),
-          update: (_, genUc, saveUc, valUc, logUc, repo, controller) =>
+          update: (context, genUc, saveUc, valUc, logUc, repo, controller) =>
               GeneratorController(
                 generatePasswordUseCase: genUc,
                 savePasswordUseCase: saveUc,
                 validateSettingsUseCase: valUc,
                 logEventUseCase: logUc,
                 repository: repo,
+                getPasswordsUseCase: context.read<GetPasswordsUseCase>(),
               ),
         ),
         ChangeNotifierProxyProvider2<
