@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/event_types.dart';
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
+import '../../../domain/usecases/log/clear_logs_usecase.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/settings/get_setting_usecase.dart';
@@ -16,18 +17,21 @@ class SettingsController extends ChangeNotifier {
     required ChangePinUseCase changePinUseCase,
     required RemovePinUseCase removePinUseCase,
     required GetLogsUseCase getLogsUseCase,
+    required ClearLogsUseCase clearLogsUseCase,
     required LogEventUseCase logEventUseCase,
   }) : _getSettingUseCase = getSettingUseCase,
        _setSettingUseCase = setSettingUseCase,
        _changePinUseCase = changePinUseCase,
        _removePinUseCase = removePinUseCase,
        _getLogsUseCase = getLogsUseCase,
+       _clearLogsUseCase = clearLogsUseCase,
        _logEventUseCase = logEventUseCase;
   final GetSettingUseCase _getSettingUseCase;
   final SetSettingUseCase _setSettingUseCase;
   final ChangePinUseCase _changePinUseCase;
   final RemovePinUseCase _removePinUseCase;
   final GetLogsUseCase _getLogsUseCase;
+  final ClearLogsUseCase _clearLogsUseCase;
   final LogEventUseCase _logEventUseCase;
 
   bool _isLoading = false;
@@ -130,6 +134,29 @@ class SettingsController extends ChangeNotifier {
       return logs.length;
     } catch (e) {
       return 0;
+    }
+  }
+
+  /// Очистка всех логов безопасности. Возвращает `true` при успехе.
+  Future<bool> clearLogs() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      await _clearLogsUseCase.execute();
+
+      // Факт очистки фиксируем сразу после удаления, чтобы в журнале оставалась отметка
+      // об этом событии (событие попадаёт в следующую пачку записей).
+      _logEventUseCase.execute(
+        EventTypes.logsCleared,
+        details: {'success': true},
+      );
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

@@ -8,6 +8,7 @@ import '../../../domain/usecases/generator/validate_generator_settings_usecase.d
 import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
+import '../../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import '../../../presentation/widgets/app_switch.dart';
 import '../../../presentation/widgets/app_text_field.dart';
@@ -31,6 +32,7 @@ class GeneratorScreen extends StatelessWidget {
             .read<ValidateGeneratorSettingsUseCase>(),
         logEventUseCase: context.read<LogEventUseCase>(),
         repository: context.read<PasswordGeneratorRepository>(),
+        getPasswordsUseCase: context.read<GetPasswordsUseCase>(),
       ),
       child: const _GeneratorScreenContent(),
     );

@@ -23,6 +23,7 @@ class EventTypes {
 
   // События настроек
   static const String settingsChanged = 'SETTINGS_CHG';
+  static const String logsCleared = 'LOGS_CLEARED';
 
   // События сессии
   static const String sessionStarted = 'SESSION_STARTED';
