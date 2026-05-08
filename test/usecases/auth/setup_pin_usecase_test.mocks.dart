@@ -128,10 +128,8 @@ class MockAuthRepository extends _i1.Mock implements _i4.AuthRepository {
   );
 
   @override
-  _i5.Future<bool> checkLockoutExpired() =>
-      (super.noSuchMethod(
-            Invocation.method(#checkLockoutExpired, []),
-            returnValue: _i5.Future<bool>.value(false),
-          )
-          as _i5.Future<bool>);
+  void setCurrentProfileId(int? profileId) => super.noSuchMethod(
+    Invocation.method(#setCurrentProfileId, [profileId]),
+    returnValueForMissingStub: null,
+  );
 }

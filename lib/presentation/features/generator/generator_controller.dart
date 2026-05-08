@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/event_types.dart';
+import '../../../core/security/master_password_session.dart';
 import '../../../domain/entities/character_set.dart';
 import '../../../domain/entities/password_entry.dart';
 import '../../../domain/entities/password_generation_settings.dart';
@@ -45,6 +46,11 @@ class GeneratorController extends ChangeNotifier {
   PasswordResult? _lastResult;
   bool _isLoading = false;
   String? _error;
+
+  // Rate limiting для защиты от DoS
+  static const int _maxGenerationsPerMinute = 60;
+  static const Duration _rateLimitWindow = Duration(minutes: 1);
+  final List<DateTime> _generationTimestamps = [];
 
   // Текстовые контроллеры
   final TextEditingController serviceController = TextEditingController();
@@ -266,6 +272,18 @@ class GeneratorController extends ChangeNotifier {
   Future<void> generatePassword() async {
     if (_isLoading) return;
 
+    // Rate limiting check
+    final now = DateTime.now();
+    _generationTimestamps.removeWhere(
+      (t) => now.difference(t) > _rateLimitWindow,
+    );
+    if (_generationTimestamps.length >= _maxGenerationsPerMinute) {
+      _error = 'Слишком много запросов. Подождите минуту.';
+      notifyListeners();
+      return;
+    }
+    _generationTimestamps.add(now);
+
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -316,8 +334,15 @@ class GeneratorController extends ChangeNotifier {
   /// Возвращает true если успешно, false если ошибка
   /// updated = true если пароль был обновлён, false если создан новый
   Future<Map<String, dynamic>> savePassword() async {
-    if (_lastResult == null || serviceController.text.isEmpty) {
-      _error = 'Укажите сервис для сохранения пароля';
+    if (_lastResult == null) {
+      _error = 'Сначала сгенерируйте пароль';
+      notifyListeners();
+      return {'success': false, 'updated': false};
+    }
+
+    final serviceValidation = _validateServiceInput(serviceController.text);
+    if (serviceValidation != null) {
+      _error = serviceValidation;
       notifyListeners();
       return {'success': false, 'updated': false};
     }
@@ -346,6 +371,7 @@ class GeneratorController extends ChangeNotifier {
         existingEntry = null;
       }
 
+      final masterPassword = MasterPasswordSession.getAny();
       final result = await savePasswordUseCase.execute(
         service: serviceController.text,
         password: _lastResult!.password,
@@ -354,6 +380,7 @@ class GeneratorController extends ChangeNotifier {
         entryId: existingEntry?.id,
         encryptedPassword: existingEntry?.encryptedPassword,
         nonce: existingEntry?.nonce,
+        masterPassword: masterPassword,
       );
 
       return result.fold(
@@ -391,6 +418,30 @@ class GeneratorController extends ChangeNotifier {
     minLengthController.dispose();
     maxLengthController.dispose();
     super.dispose();
+  }
+
+  /// Валидирует ввод service/login
+  /// 
+  /// Защита от:
+  /// - XSS (при отображении в WebView)
+  /// - SQL injection (если в будущем будет DB)
+  /// - Спецсимволов, которые могут сломать парсинг
+  String? _validateServiceInput(String input) {
+    if (input.isEmpty) {
+      return 'Укажите сервис для сохранения пароля';
+    }
+
+    if (input.length > 100) {
+      return 'Название сервиса слишком длинное (макс. 100 символов)';
+    }
+
+    // Запрещённые символы которые могут сломать формат
+    final forbiddenChars = RegExp(r'[\x00-\x1F\x7F]');
+    if (forbiddenChars.hasMatch(input)) {
+      return 'Название сервиса содержит недопустимые символы';
+    }
+
+    return null;
   }
 
   /// Получает наборы символов из репозитория

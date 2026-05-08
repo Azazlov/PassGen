@@ -149,7 +149,7 @@ class AboutScreen extends StatelessWidget {
                 context,
                 Icons.description,
                 'Документация',
-                'https://github.com/azazlov/passgen/blob/main/DEVELOPER.MD',
+                'https://github.com/azazlov/passgen/blob/main/docs/DEVELOPER.md',
               ),
               const SizedBox(height: 32),
 

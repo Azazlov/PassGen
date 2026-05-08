@@ -1,17 +1,18 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+
+import '../../core/errors/failures.dart';
 import '../entities/auth_result.dart';
 import '../entities/auth_state.dart';
 
 /// Интерфейс репозитория аутентификации
 abstract class AuthRepository {
-  /// Проверяет, установлен ли PIN
+  /// Проверяет, установлен ли PIN для активного профиля
   Future<bool> isPinSetup();
 
-  /// Устанавливает новый PIN
+  /// Устанавливает новый PIN для активного профиля
   Future<Either<AuthFailure, bool>> setupPin(String pin);
 
-  /// Проверяет PIN
+  /// Проверяет PIN для активного профиля
   Future<Either<AuthFailure, AuthResult>> verifyPin(String pin);
 
   /// Меняет PIN (требуется старый PIN)
@@ -26,6 +27,6 @@ abstract class AuthRepository {
   /// Сбрасывает состояние аутентификации (при выходе из приложения)
   void resetAuthState();
 
-  /// Проверяет, не истёк ли срок блокировки
-  Future<bool> checkLockoutExpired();
+  /// Устанавливает ID активного профиля для последующих операций
+  void setCurrentProfileId(int? profileId);
 }

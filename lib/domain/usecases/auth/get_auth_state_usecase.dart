@@ -6,7 +6,7 @@ class GetAuthStateUseCase {
   const GetAuthStateUseCase(this.repository);
   final AuthRepository repository;
 
-  Future<AuthState> execute() async {
+  Future<AuthState> execute() {
     return repository.getAuthState();
   }
 }

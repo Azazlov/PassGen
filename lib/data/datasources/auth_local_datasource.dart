@@ -1,153 +1,122 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../../../core/errors/failures.dart';
-import '../../../../core/utils/crypto_utils.dart';
-import '../../../../core/utils/encryption_versioning.dart';
+import '../../../core/errors/failures.dart';
+import '../../../core/utils/crypto_utils.dart';
+import '../../../core/utils/encryption_versioning.dart';
+import '../../../core/utils/lockout_calculator.dart';
 import 'encryptor_local_datasource.dart';
 
-/// Источник данных для аутентификации
+/// Источник данных для аутентификации (v0.6 — per-profile)
 ///
-/// Хранение данных выполняется ТОЛЬКО в SQLite для безопасности.
-/// SharedPreferences НЕ используется для хранения чувствительных данных.
+/// Каждый профиль имеет независимую строку в auth_data:
+/// (profile_id, pin_hash, pin_salt, failed_attempts, series_index, lockout_until, biometric_enabled, created_at)
 class AuthLocalDataSource {
-  /// Конструктор с готовой базой данных
   const AuthLocalDataSource({Database? database}) : _database = database;
-  // Ключи для SQLite
-  static const String _sqlitePinHashKey = 'pin_hash';
-  static const String _sqlitePinSaltKey = 'pin_salt';
-  static const String _sqliteFailedAttemptsKey = 'failed_attempts';
-  static const String _sqliteLockoutTimestampKey = 'lockout_timestamp';
 
-  static const int maxFailedAttempts = 5;
-  static const int lockoutDurationSeconds = 30;
   static const int minPinLength = 4;
   static const int maxPinLength = 8;
-  // PBKDF2 iterations из текущей версии шифрования
   static int get pbkdf2Iterations => EncryptionParams.v2().iterations;
 
   final Database? _database;
 
-  /// Получает базу данных
   Future<Database> get _db async {
-    if (_database != null) {
-      return _database;
-    }
+    if (_database != null) return _database;
     throw const StorageFailure(message: 'База данных не инициализирована');
   }
 
-  /// Проверяет валидность PIN (4-8 цифр)
+  // ==================== ВСПОМОГАТЕЛЬНЫЕ ====================
+
   bool isValidPinFormat(String pin) {
-    if (pin.length < minPinLength || pin.length > maxPinLength) {
-      return false;
-    }
+    if (pin.length < minPinLength || pin.length > maxPinLength) return false;
     return RegExp(r'^\d+$').hasMatch(pin);
   }
 
-  /// Проверяет, установлен ли PIN
-  ///
-  /// Проверка выполняется ТОЛЬКО в SQLite.
-  Future<bool> isPinSetup() async {
+  List<int> _generateSecureRandomBytes(int length) {
+    final random = Random.secure();
+    return List.generate(length, (_) => random.nextInt(256));
+  }
+
+  // ==================== PER-PROFILE CRUD ====================
+
+  Future<Map<String, dynamic>?> _getProfileAuthData(int profileId) async {
     try {
       final db = await _db;
       final result = await db.query(
         'auth_data',
-        where: 'key = ?',
-        whereArgs: [_sqlitePinHashKey],
+        where: 'profile_id = ?',
+        whereArgs: [profileId],
+        limit: 1,
       );
-
-      return result.isNotEmpty;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  /// Сохраняет данные аутентификации в SQLite
-  Future<void> _saveToSqlite(String key, String value) async {
-    try {
-      final db = await _db;
-      final now = DateTime.now().millisecondsSinceEpoch;
-      await db.insert('auth_data', {
-        'key': key,
-        'value': value,
-        'created_at': now,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
-    } catch (_) {
-      // Игнорируем ошибки сохранения
-    }
-  }
-
-  /// Читает данные аутентификации из SQLite
-  Future<String?> _readFromSqlite(String key) async {
-    try {
-      final db = await _db;
-      final result = await db.query(
-        'auth_data',
-        where: 'key = ?',
-        whereArgs: [key],
-      );
-
-      if (result.isEmpty) return null;
-      return result.first['value'] as String?;
+      return result.isNotEmpty ? result.first : null;
     } catch (_) {
       return null;
     }
   }
 
-  /// Удаляет данные аутентификации из SQLite
-  Future<void> _deleteFromSqlite(String key) async {
+  Future<void> _updateProfileAuthData(
+    int profileId, {
+    String? pinHash,
+    String? pinSalt,
+    int? failedAttempts,
+    int? seriesIndex,
+    int? lockoutUntil,
+    int? biometricEnabled,
+  }) async {
     try {
       final db = await _db;
-      await db.delete('auth_data', where: 'key = ?', whereArgs: [key]);
-    } catch (_) {
-      // Игнорируем ошибки удаления
-    }
-  }
-
-  /// Сохраняет целочисленное значение в SQLite
-  Future<void> _saveIntToSqlite(String key, int value) async {
-    try {
-      final db = await _db;
+      final existing = await _getProfileAuthData(profileId);
       final now = DateTime.now().millisecondsSinceEpoch;
-      await db.insert('auth_data', {
-        'key': key,
-        'value': value.toString(),
-        'created_at': now,
-      }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+      if (existing == null) {
+        await db.insert('auth_data', {
+          'profile_id': profileId,
+          'pin_hash': pinHash ?? '',
+          'pin_salt': pinSalt ?? '',
+          'failed_attempts': failedAttempts ?? 0,
+          'series_index': seriesIndex ?? 0,
+          'lockout_until': lockoutUntil,
+          'biometric_enabled': biometricEnabled ?? 0,
+          'created_at': now,
+        });
+      } else {
+        await db.update(
+          'auth_data',
+          {
+            if (pinHash != null) 'pin_hash': pinHash,
+            if (pinSalt != null) 'pin_salt': pinSalt,
+            if (failedAttempts != null) 'failed_attempts': failedAttempts,
+            if (seriesIndex != null) 'series_index': seriesIndex,
+            if (lockoutUntil != null) 'lockout_until': lockoutUntil,
+            if (biometricEnabled != null) 'biometric_enabled': biometricEnabled,
+          },
+          where: 'profile_id = ?',
+          whereArgs: [profileId],
+        );
+      }
     } catch (_) {
-      // Игнорируем ошибки сохранения
+      // Игнорируем ошибки
     }
   }
 
-  /// Читает целочисленное значение из SQLite
-  Future<int?> _readIntFromSqlite(String key) async {
+  Future<void> _deleteProfileAuthData(int profileId) async {
     try {
       final db = await _db;
-      final result = await db.query(
-        'auth_data',
-        where: 'key = ?',
-        whereArgs: [key],
-      );
-
-      if (result.isEmpty) return null;
-      final value = result.first['value'] as String?;
-      return value != null ? int.tryParse(value) : null;
-    } catch (_) {
-      return null;
-    }
+      await db.delete('auth_data', where: 'profile_id = ?', whereArgs: [profileId]);
+    } catch (_) {}
   }
 
-  /// Хэширует PIN с солью используя PBKDF2
+  // ==================== ХЭШИРОВАНИЕ ====================
+
   Future<Map<String, String>> _hashPin(String pin) async {
-    // Генерируем случайную соль
     final saltBytes = _generateSecureRandomBytes(32);
     final salt = base64Encode(saltBytes);
 
-    // Создаём хэш
     final pbkdf2 = Pbkdf2(
       macAlgorithm: Hmac.sha256(),
       iterations: pbkdf2Iterations,
@@ -160,78 +129,67 @@ class AuthLocalDataSource {
     );
 
     final hash = base64Encode(await secretKey.extractBytes());
-
     return {'hash': hash, 'salt': salt};
   }
 
-  /// Проверяет PIN против сохранённого хэша
-  Future<bool> _verifyPinHash(
-    String pin,
-    String storedHash,
-    String storedSalt,
-  ) async {
+  Future<bool> _verifyPinHash(String pin, String storedHash, String storedSalt) async {
     try {
       final saltBytes = base64Decode(storedSalt);
-
       final pbkdf2 = Pbkdf2(
         macAlgorithm: Hmac.sha256(),
         iterations: pbkdf2Iterations,
         bits: 256,
       );
-
       final secretKey = await pbkdf2.deriveKeyFromPassword(
         password: pin,
         nonce: Uint8List.fromList(saltBytes),
       );
-
       final computedHashBytes = await secretKey.extractBytes();
       final computedHash = base64Encode(computedHashBytes);
-
-      // Constant-time сравнение хэшей (защита от timing attacks)
-      final isValid = CryptoUtils.constantTimeEqualsBase64(
-        computedHash,
-        storedHash,
-      );
-
-      // Затирание ключа из памяти
-      // Создаём модифицируемую копию, т.к. extractBytes() возвращает unmodifiable Uint8List
+      final isValid = CryptoUtils.constantTimeEqualsBase64(computedHash, storedHash);
       try {
-        final modifiableHashBytes = Uint8List.fromList(computedHashBytes);
-        CryptoUtils.secureWipeKey(modifiableHashBytes);
-      } catch (e) {
-        // Dart GC eventually collects the memory
-        // No sensitive data logged
-      }
-
+        final modifiable = Uint8List.fromList(computedHashBytes);
+        CryptoUtils.secureWipeKey(modifiable);
+      } catch (_) {}
       return isValid;
     } catch (e) {
       return false;
     }
   }
 
-  /// Устанавливает новый PIN
-  ///
-  /// Хранение данных выполняется ТОЛЬКО в SQLite для безопасности.
-  /// SharedPreferences не используется для хранения чувствительных данных.
-  Future<bool> setupPin(String pin) async {
+  // ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
+
+  /// Проверяет, установлен ли PIN для профиля
+  Future<bool> isPinSetup({int? profileId}) async {
+    try {
+      final db = await _db;
+      final result = await db.query('auth_data', limit: 1);
+      if (profileId != null) {
+        final row = await _getProfileAuthData(profileId);
+        return row != null && (row['pin_hash'] as String?)?.isNotEmpty == true;
+      }
+      return result.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Устанавливает PIN для профиля
+  Future<bool> setupPin(String pin, {required int profileId}) async {
     try {
       if (!isValidPinFormat(pin)) {
         throw const ValidationFailure(message: 'PIN должен содержать 4-8 цифр');
       }
-
       final hashed = await _hashPin(pin);
-
-      // Сохраняем ТОЛЬКО в SQLite (безопасное хранилище)
-      await _db;
-
-      await _saveToSqlite(_sqlitePinHashKey, hashed['hash']!);
-
-      await _saveToSqlite(_sqlitePinSaltKey, hashed['salt']!);
-
-      await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
-
-      await _deleteFromSqlite(_sqliteLockoutTimestampKey);
-
+      await _updateProfileAuthData(
+        profileId,
+        pinHash: hashed['hash']!,
+        pinSalt: hashed['salt']!,
+        failedAttempts: 0,
+        seriesIndex: 0,
+        lockoutUntil: null,
+        biometricEnabled: 0,
+      );
       return true;
     } catch (e) {
       if (e is ValidationFailure) rethrow;
@@ -239,83 +197,108 @@ class AuthLocalDataSource {
     }
   }
 
-  /// Проверяет PIN
-  ///
-  /// Чтение данных выполняется ТОЛЬКО из SQLite.
-  /// SharedPreferences не используется для чтения чувствительных данных.
-  Future<Map<String, dynamic>> verifyPin(String pin) async {
+  /// Проверяет PIN для профиля с прогрессивной блокировкой
+  Future<Map<String, dynamic>> verifyPin(
+    String pin, {
+    required int profileId,
+  }) async {
     try {
-      String? storedHash;
-      String? storedSalt;
-
-      // Читаем ТОЛЬКО из SQLite (безопасное хранилище)
-      storedHash = await _readFromSqlite(_sqlitePinHashKey);
-
-      storedSalt = await _readFromSqlite(_sqlitePinSaltKey);
-
-      if (storedHash == null || storedSalt == null) {
+      final row = await _getProfileAuthData(profileId);
+      if (row == null) {
         return {'result': 'notSetup', 'isLocked': false};
       }
 
-      // Проверяем блокировку
-      final isLocked = await _isLocked();
-      if (isLocked) {
-        return {'result': 'locked', 'isLocked': true};
+      final storedHash = row['pin_hash'] as String?;
+      final storedSalt = row['pin_salt'] as String?;
+      if (storedHash == null || storedSalt == null || storedHash.isEmpty) {
+        return {'result': 'notSetup', 'isLocked': false};
       }
 
-      // Проверяем PIN
+      // Проверка блокировки
+      final lockoutUntilRaw = row['lockout_until'] as int?;
+      if (lockoutUntilRaw != null) {
+        final lockoutUntil = DateTime.fromMillisecondsSinceEpoch(lockoutUntilRaw);
+        if (DateTime.now().isBefore(lockoutUntil)) {
+          return {
+            'result': 'locked',
+            'isLocked': true,
+            'lockoutUntil': lockoutUntil,
+          };
+        }
+        // Блокировка истекла — сброс
+        await _updateProfileAuthData(
+          profileId,
+          failedAttempts: 0,
+          lockoutUntil: null,
+        );
+      }
+
+      // Проверка PIN
       final isValid = await _verifyPinHash(pin, storedHash, storedSalt);
 
       if (isValid) {
-        // Сбрасываем счётчик неудачных попыток
-        if (_database != null) {
-          await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
-        }
+        // Успех: сброс всего
+        await _updateProfileAuthData(
+          profileId,
+          failedAttempts: 0,
+          seriesIndex: 0,
+          lockoutUntil: null,
+        );
         return {'result': 'success', 'isLocked': false};
       } else {
-        // Увеличиваем счётчик неудачных попыток
-        final failedAttempts = await _incrementFailedAttempts();
-        final isNowLocked = failedAttempts >= maxFailedAttempts;
+        // Неудача: инкремент попыток
+        final currentFailed = (row['failed_attempts'] as int?) ?? 0;
+        final currentSeries = (row['series_index'] as int?) ?? 0;
+        final newFailed = currentFailed + 1;
 
-        if (isNowLocked) {
-          await _setLockout();
+        if (newFailed >= LockoutCalculator.attemptsPerSeries) {
+          // Новая серия блокировки
+          final newSeries = currentSeries + 1;
+          final delay = LockoutCalculator.calculateDelay(newSeries);
+          final lockoutTime = DateTime.now().add(delay);
+          await _updateProfileAuthData(
+            profileId,
+            failedAttempts: 0,
+            seriesIndex: newSeries,
+            lockoutUntil: lockoutTime.millisecondsSinceEpoch,
+          );
+          return {
+            'result': 'wrongPin',
+            'isLocked': true,
+            'remainingAttempts': 0,
+            'lockoutUntil': lockoutTime,
+            'seriesIndex': newSeries,
+          };
+        } else {
+          await _updateProfileAuthData(
+            profileId,
+            failedAttempts: newFailed,
+          );
+          return {
+            'result': 'wrongPin',
+            'isLocked': false,
+            'remainingAttempts': LockoutCalculator.attemptsPerSeries - newFailed,
+            'seriesIndex': currentSeries,
+          };
         }
-
-        return {
-          'result': 'wrongPin',
-          'isLocked': isNowLocked,
-          'remainingAttempts': maxFailedAttempts - failedAttempts,
-        };
       }
     } catch (e) {
+      if (e is ValidationFailure || e is AuthFailure) rethrow;
       throw const StorageFailure(message: 'Ошибка проверки PIN');
     }
   }
 
-  /// Меняет PIN с ротацией ключей шифрования
-  ///
-  /// Процесс ротации:
-  /// 1. Проверка старого PIN
-  /// 2. Генерация нового хэша/соли (до ротации)
-  /// 3. Derive старого ключа
-  /// 4. Расшифровка всех паролей старым ключом
-  /// 5. Derive нового ключа (с использованием новой соли)
-  /// 6. Зашифровка всех паролей новым ключом
-  /// 7. Сохранение нового PIN (с той же солью)
-  /// 8. Затирание старых ключей
+  /// Смена PIN с ротацией ключей шифрования
   Future<bool> changePin(
     String oldPin,
     String newPin, {
-    Database? database,
+    required int profileId,
   }) async {
     try {
       if (!isValidPinFormat(newPin)) {
         throw const ValidationFailure(message: 'PIN должен содержать 4-8 цифр');
       }
-
-      // Проверяем старый PIN
-      final verifyResult = await verifyPin(oldPin);
-
+      final verifyResult = await verifyPin(oldPin, profileId: profileId);
       if (verifyResult['result'] != 'success') {
         throw const AuthFailure(
           message: 'Неверный старый PIN',
@@ -323,24 +306,21 @@ class AuthLocalDataSource {
         );
       }
 
-      // Получаем базу данных для работы с паролями
       final db = await _db;
-
-      // Генерируем новый хэш и соль ДО ротации ключей
       final newHashData = await _hashPin(newPin);
       final newSalt = newHashData['salt']!;
       final newHash = newHashData['hash']!;
 
-      // Выполняем ротацию ключей с использованием новой соли
-      await _rotateEncryptionKeys(oldPin, newPin, newSalt, db);
+      await _rotateEncryptionKeys(oldPin, newPin, newSalt, db, profileId);
 
-      // Устанавливаем новый PIN (использует ту же соль, что и при ротации)
-      // Переопределяем сохранение, т.к. соль уже создана
-      await _saveToSqlite(_sqlitePinHashKey, newHash);
-      await _saveToSqlite(_sqlitePinSaltKey, newSalt);
-      await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
-      await _deleteFromSqlite(_sqliteLockoutTimestampKey);
-
+      await _updateProfileAuthData(
+        profileId,
+        pinHash: newHash,
+        pinSalt: newSalt,
+        failedAttempts: 0,
+        seriesIndex: 0,
+        lockoutUntil: null,
+      );
       return true;
     } catch (e) {
       if (e is ValidationFailure || e is AuthFailure) rethrow;
@@ -348,91 +328,128 @@ class AuthLocalDataSource {
     }
   }
 
-  /// Выполняет ротацию ключей шифрования при смене PIN
-  ///
-  /// [oldPin] - старый PIN-код
-  /// [newPin] - новый PIN-код
-  /// [newSalt] - соль нового PIN (уже сгенерированная)
-  /// [db] - база данных с паролями
-  ///
-  /// Процесс ротации:
-  /// 1. Получаем соль старого PIN
-  /// 2. Derive старого ключа
-  /// 3. Расшифровка всех паролей старым ключом
-  /// 4. Derive нового ключа (единожды, не в цикле)
-  /// 5. Зашифровка всех паролей новым ключом
-  /// 6. Обновление записей в БД
-  /// 7. Затирание всех чувствительных данных
+  /// Удаляет PIN профиля
+  Future<bool> removePin(String pin, {required int profileId}) async {
+    try {
+      final verifyResult = await verifyPin(pin, profileId: profileId);
+      if (verifyResult['result'] != 'success') {
+        throw const AuthFailure(
+          message: 'Неверный PIN',
+          type: AuthFailureType.wrongPin,
+        );
+      }
+      await _deleteProfileAuthData(profileId);
+      return true;
+    } catch (e) {
+      if (e is AuthFailure) rethrow;
+      throw const StorageFailure(message: 'Ошибка удаления PIN');
+    }
+  }
+
+  /// Возвращает состояние аутентификации профиля
+  Future<Map<String, dynamic>> getAuthState({int? profileId}) async {
+    try {
+      final db = await _db;
+      final tables = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='auth_data'",
+      );
+      if (tables.isEmpty) {
+        return {'isPinSetup': false, 'isLocked': false};
+      }
+
+      if (profileId != null) {
+        final row = await _getProfileAuthData(profileId);
+        if (row == null) {
+          return {'isPinSetup': false, 'isLocked': false};
+        }
+        final lockoutRaw = row['lockout_until'] as int?;
+        final isLocked = lockoutRaw != null &&
+            DateTime.now().isBefore(DateTime.fromMillisecondsSinceEpoch(lockoutRaw));
+        final failed = (row['failed_attempts'] as int?) ?? 0;
+        final series = (row['series_index'] as int?) ?? 0;
+        return {
+          'isPinSetup': (row['pin_hash'] as String?)?.isNotEmpty == true,
+          'isLocked': isLocked,
+          'failedAttempts': failed,
+          'remainingAttempts': LockoutCalculator.attemptsPerSeries - failed,
+          'lockoutUntil': isLocked ? DateTime.fromMillisecondsSinceEpoch(lockoutRaw) : null,
+          'seriesIndex': series,
+        };
+      }
+
+      // Если profileId не указан — проверяем, есть ли вообще auth_data
+      final any = await db.query('auth_data', limit: 1);
+      return {'isPinSetup': any.isNotEmpty, 'isLocked': false};
+    } catch (_) {
+      return {'isPinSetup': false, 'isLocked': false};
+    }
+  }
+
+  /// Сбрасывает состояние блокировки (если истекла)
+  Future<void> resetAuthState({int? profileId}) async {
+    if (profileId != null) {
+      final row = await _getProfileAuthData(profileId);
+      if (row != null) {
+        final lockoutRaw = row['lockout_until'] as int?;
+        if (lockoutRaw != null &&
+            DateTime.now().isAfter(DateTime.fromMillisecondsSinceEpoch(lockoutRaw))) {
+          await _updateProfileAuthData(
+            profileId,
+            failedAttempts: 0,
+            lockoutUntil: null,
+          );
+        }
+      }
+    }
+  }
+
+  // ==================== РОТАЦИЯ КЛЮЧЕЙ ====================
+
   Future<void> _rotateEncryptionKeys(
     String oldPin,
     String newPin,
     String newSalt,
     Database db,
+    int profileId,
   ) async {
-    // 1. Получаем соль старого PIN
-    final oldSaltBase64 = await _readFromSqlite(_sqlitePinSaltKey);
-    if (oldSaltBase64 == null) {
-      throw const StorageFailure(message: 'Соль старого PIN не найдена');
-    }
+    final oldRow = await _getProfileAuthData(profileId);
+    if (oldRow == null) throw const StorageFailure(message: 'Данные профиля не найдены');
+
+    final oldSaltBase64 = oldRow['pin_salt'] as String?;
+    if (oldSaltBase64 == null) throw const StorageFailure(message: 'Соль старого PIN не найдена');
+
     final oldSaltBytes = base64Decode(oldSaltBase64);
-
-    // 2. Derive старого ключа
-    final oldPbkdf2 = Pbkdf2(
-      macAlgorithm: Hmac.sha256(),
-      iterations: pbkdf2Iterations,
-      bits: 256,
-    );
-
+    final oldPbkdf2 = Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: pbkdf2Iterations, bits: 256);
     final oldSecretKey = await oldPbkdf2.deriveKeyFromPassword(
       password: oldPin,
       nonce: Uint8List.fromList(oldSaltBytes),
     );
-
     final oldKeyBytes = await oldSecretKey.extractBytes();
 
-    // 3. Используем переданную соль нового PIN для деривации нового ключа
     final newSaltBytes = base64Decode(newSalt);
-
-    final newPbkdf2 = Pbkdf2(
-      macAlgorithm: Hmac.sha256(),
-      iterations: pbkdf2Iterations,
-      bits: 256,
-    );
-
+    final newPbkdf2 = Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: pbkdf2Iterations, bits: 256);
     final newSecretKey = await newPbkdf2.deriveKeyFromPassword(
       password: newPin,
       nonce: Uint8List.fromList(newSaltBytes),
     );
-
     final newKeyBytes = await newSecretKey.extractBytes();
 
-    // 4. Получаем все пароли из БД
-    final passwordEntries = await db.query('password_entries');
+    final entries = await db.query(
+      'password_entries',
+      where: 'profile_id = ?',
+      whereArgs: [profileId],
+    );
 
-    for (final entry in passwordEntries) {
+    for (final entry in entries) {
       final encryptedPassword = entry['encrypted_password'] as List<int>;
       final nonceBytes = entry['nonce'] as List<int>;
-
-      // 5. Расшифровываем пароль старым ключом
       List<int>? decryptedPassword;
       try {
-        decryptedPassword = await _decryptPassword(
-          encryptedPassword,
-          nonceBytes,
-          oldKeyBytes,
-        );
-      } catch (e) {
-        // Если не удалось расшифровать, пропускаем
+        decryptedPassword = await _decryptPassword(encryptedPassword, nonceBytes, oldKeyBytes);
+      } catch (_) {
         continue;
       }
-
-      // 6. Зашифровываем пароль новым ключом
-      final encryptedData = await _encryptPassword(
-        decryptedPassword,
-        newKeyBytes,
-      );
-
-      // 7. Обновляем запись в БД
+      final encryptedData = await _encryptPassword(decryptedPassword, newKeyBytes);
       await db.update(
         'password_entries',
         {
@@ -443,250 +460,41 @@ class AuthLocalDataSource {
         where: 'id = ?',
         whereArgs: [entry['id']],
       );
-
-      // 8. Затираем расшифрованный пароль
-      // Создаём модифицируемую копию для затирания
       try {
-        final modifiableDecryptedPassword = Uint8List.fromList(
-          decryptedPassword,
-        );
-        CryptoUtils.secureWipeData(modifiableDecryptedPassword);
-      } catch (e) {
-        // Dart GC eventually collects the memory
-      }
-    }
-
-    // 9. Затираем все ключи после использования (с модифицируемыми копиями)
-    try {
-      final modifiableOldKey = Uint8List.fromList(oldKeyBytes);
-      CryptoUtils.secureWipeKey(modifiableOldKey);
-    } catch (e) {
-      // Dart GC eventually collects the memory
+        final modifiable = Uint8List.fromList(decryptedPassword);
+        CryptoUtils.secureWipeData(modifiable);
+      } catch (_) {}
     }
 
     try {
-      final modifiableNewKey = Uint8List.fromList(newKeyBytes);
-      CryptoUtils.secureWipeKey(modifiableNewKey);
-    } catch (e) {
-      // Dart GC eventually collects the memory
-    }
+      CryptoUtils.secureWipeKey(Uint8List.fromList(oldKeyBytes));
+    } catch (_) {}
+    try {
+      CryptoUtils.secureWipeKey(Uint8List.fromList(newKeyBytes));
+    } catch (_) {}
   }
 
-  /// Расшифровывает пароль
   Future<List<int>> _decryptPassword(
     List<int> encryptedData,
     List<int> nonce,
     List<int> key,
   ) async {
-    // Для расшифровки нужен SecretBox с ciphertext и mac
-    // Упрощённая версия - в реальной реализации нужно хранить MAC отдельно
-    // Здесь предполагаем, что encryptedData содержит ciphertext||mac
-
-    // Временное решение: используем EncryptorLocalDataSource
     final encryptor = EncryptorLocalDataSource();
-
-    // Декодируем из нашего формата
-    final decrypted = await encryptor.decryptFromMini(
+    return encryptor.decryptFromMini(
       miniEncrypted: base64Encode(encryptedData),
       password: key,
     );
-
-    return decrypted;
   }
 
-  /// Шифрует пароль
   Future<Map<String, dynamic>> _encryptPassword(
     List<int> password,
     List<int> key,
   ) async {
     final encryptor = EncryptorLocalDataSource();
-
     final encrypted = await encryptor.encrypt(message: password, password: key);
-
     return {
       'cipherText': base64Decode(encrypted['cipherText'] as String),
       'nonce': base64Decode(encrypted['nonce'] as String),
     };
-  }
-
-  /// Удаляет PIN
-  ///
-  /// Удаление выполняется ТОЛЬКО из SQLite.
-  Future<bool> removePin(String pin) async {
-    try {
-      // Проверяем PIN
-      final verifyResult = await verifyPin(pin);
-      if (verifyResult['result'] != 'success') {
-        throw const AuthFailure(
-          message: 'Неверный PIN',
-          type: AuthFailureType.wrongPin,
-        );
-      }
-
-      // Удаляем данные ТОЛЬКО из SQLite
-      if (_database != null) {
-        await _deleteFromSqlite(_sqlitePinHashKey);
-        await _deleteFromSqlite(_sqlitePinSaltKey);
-        await _deleteFromSqlite(_sqliteFailedAttemptsKey);
-        await _deleteFromSqlite(_sqliteLockoutTimestampKey);
-      }
-
-      return true;
-    } catch (e) {
-      if (e is AuthFailure) rethrow;
-      throw const StorageFailure(message: 'Ошибка удаления PIN');
-    }
-  }
-
-  /// Проверяет, заблокирован ли пользователь
-  ///
-  /// Чтение данных выполняется ТОЛЬКО из SQLite.
-  Future<bool> _isLocked() async {
-    int? lockoutTimestamp;
-
-    // Читаем ТОЛЬКО из SQLite
-    lockoutTimestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
-
-    if (lockoutTimestamp == null) {
-      return false;
-    }
-
-    final lockoutTime = DateTime.fromMillisecondsSinceEpoch(lockoutTimestamp);
-    final now = DateTime.now();
-
-    if (now.isBefore(lockoutTime)) {
-      return true;
-    }
-
-    // Блокировка истекла, сбрасываем
-    await _deleteFromSqlite(_sqliteLockoutTimestampKey);
-    await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
-
-    return false;
-  }
-
-  /// Увеличивает счётчик неудачных попыток
-  ///
-  /// Сохранение выполняется ТОЛЬКО в SQLite.
-  Future<int> _incrementFailedAttempts() async {
-    int? current = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
-
-    current ??= 0;
-
-    final newValue = current + 1;
-
-    // Сохраняем ТОЛЬКО в SQLite
-    await _saveIntToSqlite(_sqliteFailedAttemptsKey, newValue);
-
-    return newValue;
-  }
-
-  /// Устанавливает блокировку
-  ///
-  /// Сохранение выполняется ТОЛЬКО в SQLite.
-  Future<void> _setLockout() async {
-    final lockoutTime = DateTime.now().add(
-      const Duration(seconds: lockoutDurationSeconds),
-    );
-    final timestamp = lockoutTime.millisecondsSinceEpoch;
-
-    // Сохраняем ТОЛЬКО в SQLite
-    await _saveIntToSqlite(_sqliteLockoutTimestampKey, timestamp);
-  }
-
-  /// Получает количество неудачных попыток
-  ///
-  /// Чтение выполняется ТОЛЬКО из SQLite.
-  Future<int> getFailedAttempts() async {
-    final int? attempts = await _readIntFromSqlite(_sqliteFailedAttemptsKey);
-    return attempts ?? 0;
-  }
-
-  /// Получает время разблокировки
-  ///
-  /// Чтение выполняется ТОЛЬКО из SQLite.
-  Future<DateTime?> getLockoutUntil() async {
-    final int? timestamp = await _readIntFromSqlite(_sqliteLockoutTimestampKey);
-
-    if (timestamp == null) return null;
-
-    final lockoutTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
-    if (DateTime.now().isBefore(lockoutTime)) {
-      return lockoutTime;
-    }
-
-    return null;
-  }
-
-  /// Проверяет, истёк ли срок блокировки
-  ///
-  /// Чтение и сброс выполняются ТОЛЬКО в SQLite.
-  Future<bool> checkLockoutExpired() async {
-    final int? lockoutTimestamp = await _readIntFromSqlite(
-      _sqliteLockoutTimestampKey,
-    );
-
-    if (lockoutTimestamp == null) {
-      return true;
-    }
-
-    final lockoutTime = DateTime.fromMillisecondsSinceEpoch(lockoutTimestamp);
-    if (DateTime.now().isAfter(lockoutTime)) {
-      // Блокировка истекла, сбрасываем
-      await _deleteFromSqlite(_sqliteLockoutTimestampKey);
-      await _saveIntToSqlite(_sqliteFailedAttemptsKey, 0);
-      return true;
-    }
-
-    return false;
-  }
-
-  /// Получает состояние аутентификации
-  ///
-  /// Чтение выполняется ТОЛЬКО из SQLite.
-  Future<Map<String, dynamic>> getAuthState() async {
-    bool isPinSetupResult = false;
-
-    // Проверяем ТОЛЬКО SQLite с обработкой ошибок
-    try {
-      final db = await _db;
-      // Проверяем существует ли таблица
-      final tables = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='auth_data'",
-      );
-
-      if (tables.isNotEmpty) {
-        final hash = await _readFromSqlite(_sqlitePinHashKey);
-        isPinSetupResult = hash != null;
-      }
-    } catch (_) {
-      // Если база не инициализирована или таблица не существует,
-      // считаем что PIN не установлен
-      isPinSetupResult = false;
-    }
-
-    final isLocked = await _isLocked();
-    final failedAttempts = await getFailedAttempts();
-    final lockoutUntil = await getLockoutUntil();
-
-    return {
-      'isPinSetup': isPinSetupResult,
-      'isLocked': isLocked,
-      'failedAttempts': failedAttempts,
-      'remainingAttempts': maxFailedAttempts - failedAttempts,
-      'lockoutUntil': lockoutUntil,
-    };
-  }
-
-  /// Сбрасывает состояние (для выхода из приложения)
-  Future<void> resetAuthState() async {
-    // Не сбрасываем PIN, только счётчик попыток если блокировка истекла
-    await checkLockoutExpired();
-  }
-
-  /// Генерирует криптографически стойкие случайные байты
-  List<int> _generateSecureRandomBytes(int length) {
-    final random = Random.secure();
-    return List.generate(length, (_) => random.nextInt(256));
   }
 }

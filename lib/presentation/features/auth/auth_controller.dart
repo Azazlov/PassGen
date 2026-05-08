@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/event_types.dart';
+import '../../../core/security/master_password_session.dart';
 import '../../../domain/entities/auth_result.dart';
 import '../../../domain/entities/auth_state.dart';
+import '../../../domain/repositories/biometric_repository.dart';
+import '../../../domain/repositories/profile_repository.dart';
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/get_auth_state_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
@@ -13,7 +16,7 @@ import '../../../domain/usecases/auth/setup_pin_usecase.dart';
 import '../../../domain/usecases/auth/verify_pin_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
 
-/// Контроллер для экрана аутентификации
+/// Контроллер для экрана аутентификации (v0.6 — per-profile + biometric)
 class AuthController extends ChangeNotifier {
   AuthController({
     required this.setupPinUseCase,
@@ -22,6 +25,8 @@ class AuthController extends ChangeNotifier {
     required this.removePinUseCase,
     required this.getAuthStateUseCase,
     required this.logEventUseCase,
+    this.biometricRepository,
+    this.profileRepository,
   }) {
     _loadAuthState();
   }
@@ -31,6 +36,8 @@ class AuthController extends ChangeNotifier {
   final RemovePinUseCase removePinUseCase;
   final GetAuthStateUseCase getAuthStateUseCase;
   final LogEventUseCase logEventUseCase;
+  final BiometricRepository? biometricRepository;
+  final ProfileRepository? profileRepository;
 
   // Таймер неактивности
   Timer? _inactivityTimer;
@@ -59,6 +66,10 @@ class AuthController extends ChangeNotifier {
   int get pinLength => _enteredPin.length;
   bool get isPinComplete => _enteredPin.length >= 4;
 
+  /// Доступна ли биометрия для текущего профиля
+  bool get isBiometricAvailableForProfile =>
+      _authState.isBiometricAvailable && _authState.isBiometricEnabled;
+
   /// Загружает состояние аутентификации
   Future<void> _loadAuthState() async {
     _isLoading = true;
@@ -81,6 +92,20 @@ class AuthController extends ChangeNotifier {
       _isSetupMode = true;
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Устанавливает текущий профиль и обновляет состояние
+  Future<void> setCurrentProfile(int profileId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await profileRepository?.setActiveProfile(profileId);
+      await _loadAuthState();
+    } catch (e) {
+      _error = 'Ошибка переключения профиля: $e';
       notifyListeners();
     }
   }
@@ -138,7 +163,10 @@ class AuthController extends ChangeNotifier {
             _isSetupMode = false;
             _enteredPin = ''; // Очищаем PIN для нового ввода
             // Логируем установку PIN
-            await logEventUseCase.execute(EventTypes.pinSetup);
+            await logEventUseCase.execute(
+              EventTypes.pinSetup,
+              profileId: _authState.currentProfileId,
+            );
           }
           notifyListeners();
           return success;
@@ -176,24 +204,35 @@ class AuthController extends ChangeNotifier {
         },
         (authResult) {
           if (authResult == AuthResult.success) {
+            final profileId = _authState.currentProfileId ?? 1;
+            final pinForSession = _enteredPin;
+            MasterPasswordSession.setForProfile(
+              profileId: profileId,
+              pin: pinForSession,
+            );
             _authState = _authState.copyWith(
               isAuthenticated: true,
               isLocked: false,
             );
             _enteredPin = '';
 
-            // Логируем успешный вход
-            logEventUseCase.execute(EventTypes.authSuccess);
+            logEventUseCase.execute(
+              EventTypes.authSuccess,
+              profileId: _authState.currentProfileId,
+            );
           } else if (authResult == AuthResult.wrongPin) {
-            // Логируем неудачную попытку
+            _refreshStateSilent();
             logEventUseCase.execute(
               EventTypes.authFailure,
               details: {'attempt': _authState.remainingAttempts},
+              profileId: _authState.currentProfileId,
             );
           } else if (authResult == AuthResult.locked) {
-            // Логируем блокировку
-            logEventUseCase.execute(EventTypes.authLockout);
-            _loadAuthState(); // Обновляем состояние блокировки
+            _refreshStateSilent();
+            logEventUseCase.execute(
+              EventTypes.authLockout,
+              profileId: _authState.currentProfileId,
+            );
           }
           notifyListeners();
           return authResult;
@@ -205,6 +244,143 @@ class AuthController extends ChangeNotifier {
       _error = 'Ошибка проверки PIN: $e';
       notifyListeners();
       return AuthResult.wrongPin;
+    } finally {
+      _isLoading = false;
+    }
+  }
+
+  /// Аутентификация по биометрии
+  Future<AuthResult> authenticateWithBiometric() async {
+    if (biometricRepository == null) return AuthResult.wrongPin;
+    if (!await biometricRepository!.isAvailable()) return AuthResult.wrongPin;
+    if (!await biometricRepository!.isEnabledForProfile(
+      _authState.currentProfileId ?? 1,
+    )) {
+      return AuthResult.wrongPin;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final authenticated = await biometricRepository!.authenticate(
+        localizedReason: 'Подтвердите личность для входа в PassGen',
+      );
+
+      if (!authenticated) {
+        _isLoading = false;
+        notifyListeners();
+        return AuthResult.wrongPin;
+      }
+
+      final retrievedPin = await biometricRepository!.retrievePinForProfile(
+        _authState.currentProfileId ?? 1,
+      );
+
+      if (retrievedPin == null || retrievedPin.isEmpty) {
+        _error = 'PIN не найден в защищённом хранилище';
+        _isLoading = false;
+        notifyListeners();
+        return AuthResult.wrongPin;
+      }
+
+      // Используем retrievedPin для обычной верификации
+      final result = await verifyPinUseCase.execute(retrievedPin);
+
+      final authResult = result.fold(
+        (failure) {
+          _error = failure.message;
+          notifyListeners();
+          return AuthResult.wrongPin;
+        },
+        (authResult) {
+          if (authResult == AuthResult.success) {
+            MasterPasswordSession.setForProfile(
+              profileId: _authState.currentProfileId ?? 1,
+              pin: retrievedPin,
+            );
+            _authState = _authState.copyWith(
+              isAuthenticated: true,
+              isLocked: false,
+            );
+            logEventUseCase.execute(
+              EventTypes.authSuccess,
+              details: {'method': 'biometric'},
+              profileId: _authState.currentProfileId,
+            );
+          }
+          notifyListeners();
+          return authResult;
+        },
+      );
+
+      return authResult;
+    } catch (e) {
+      _error = 'Ошибка биометрической аутентификации: $e';
+      notifyListeners();
+      return AuthResult.wrongPin;
+    } finally {
+      _isLoading = false;
+    }
+  }
+
+  /// Включает биометрию для текущего профиля
+  Future<bool> enableBiometric(String pin) async {
+    if (biometricRepository == null) return false;
+    if (_authState.currentProfileId == null) return false;
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final success = await biometricRepository!.enableForProfile(
+        _authState.currentProfileId!,
+        pin,
+      );
+      if (success) {
+        _authState = _authState.copyWith(isBiometricEnabled: true);
+        await logEventUseCase.execute(
+          EventTypes.pinSetup,
+          details: {'action': 'enable_biometric'},
+          profileId: _authState.currentProfileId,
+        );
+      }
+      notifyListeners();
+      return success;
+    } catch (e) {
+      _error = 'Ошибка включения биометрии: $e';
+      notifyListeners();
+      return false;
+    } finally {
+      _isLoading = false;
+    }
+  }
+
+  /// Отключает биометрию для текущего профиля
+  Future<bool> disableBiometric() async {
+    if (biometricRepository == null) return false;
+    if (_authState.currentProfileId == null) return false;
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await biometricRepository!.disableForProfile(_authState.currentProfileId!);
+      _authState = _authState.copyWith(isBiometricEnabled: false);
+      await logEventUseCase.execute(
+        EventTypes.authFailure,
+        details: {'action': 'disable_biometric'},
+        profileId: _authState.currentProfileId,
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = 'Ошибка отключения биометрии: $e';
+      notifyListeners();
+      return false;
     } finally {
       _isLoading = false;
     }
@@ -279,6 +455,15 @@ class AuthController extends ChangeNotifier {
     await _loadAuthState();
   }
 
+  /// Обновляет состояние без показа loading
+  Future<void> _refreshStateSilent() async {
+    try {
+      _authState = await getAuthStateUseCase.execute();
+    } catch (_) {
+      // Игнорируем ошибки silent-обновления
+    }
+  }
+
   /// Сбрасывает ошибку
   void clearError() {
     _error = null;
@@ -302,6 +487,7 @@ class AuthController extends ChangeNotifier {
 
   /// Блокирует приложение
   void _lockApp() {
+    MasterPasswordSession.clear();
     _authState = const AuthState(
       isAuthenticated: false,
       isPinSetup: true,
@@ -316,6 +502,7 @@ class AuthController extends ChangeNotifier {
     logEventUseCase.execute(
       EventTypes.authFailure,
       details: {'reason': 'inactivity_timeout'},
+      profileId: _authState.currentProfileId,
     );
   }
 
@@ -324,6 +511,7 @@ class AuthController extends ChangeNotifier {
 
   @override
   void dispose() {
+    MasterPasswordSession.clear();
     _pinController.dispose();
     _confirmPinController.dispose();
     _enteredPin = '';

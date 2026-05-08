@@ -49,4 +49,10 @@ abstract class PasswordGeneratorRepository {
   Future<List<CharacterSet>> getCharacterSets({
     required PasswordGenerationSettings settings,
   });
+
+  /// Дешифрует конфигурацию сохранённого пароля
+  Future<Either<PasswordGenerationFailure, String>> decryptConfig(
+    String encryptedConfig,
+    String masterPassword,
+  );
 }

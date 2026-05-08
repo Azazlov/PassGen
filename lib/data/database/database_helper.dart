@@ -282,6 +282,50 @@ class DatabaseHelper {
     final path = await _dbPath;
     return databaseFactory.databaseExists(path);
   }
+
+  /// Полный сброс SQLite-данных для режима разработки.
+  ///
+  /// Метод не удаляет файл БД, а пересоздаёт схему на текущем соединении,
+  /// чтобы уже созданные data source с открытым Database не остались с
+  /// устаревшим connection.
+  Future<void> resetAllDataForDevelopment() async {
+    final db = await database;
+
+    await db.transaction((txn) async {
+      final tablesToDrop = [
+        'password_history',
+        'password_configs',
+        'password_entries',
+        'auth_data',
+        'security_logs',
+        'categories',
+        'app_settings',
+        'profiles',
+      ];
+
+      for (final table in tablesToDrop) {
+        await txn.execute('DROP TABLE IF EXISTS $table');
+      }
+
+      for (final table in DatabaseSchema.createAllTables) {
+        await txn.execute(table);
+      }
+
+      for (final index in DatabaseSchema.indexes) {
+        await txn.execute(index);
+      }
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      for (final category in DatabaseSchema.systemCategories) {
+        await txn.insert('categories', {
+          'name': category['name'],
+          'icon': category['icon'],
+          'is_system': category['is_system'],
+          'created_at': now,
+        });
+      }
+    });
+  }
 }
 
 /// Тип операции для пакетного выполнения

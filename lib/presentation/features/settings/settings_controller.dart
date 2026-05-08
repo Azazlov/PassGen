@@ -130,7 +130,7 @@ class SettingsController extends ChangeNotifier {
   /// Получение количества логов
   Future<int> getLogsCount() async {
     try {
-      final logs = await _getLogsUseCase.execute(limit: 1);
+      final logs = await _getLogsUseCase.execute();
       return logs.length;
     } catch (e) {
       return 0;

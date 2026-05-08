@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/crypto_utils.dart';
 import '../../../../core/utils/password_utils.dart';
 import '../../domain/entities/password_entry.dart';
@@ -291,18 +292,29 @@ class PasswordGeneratorLocalDataSource {
   }
 
   /// Расшифровывает конфигурацию пароля
+  /// 
+  /// Поддерживает обратную совместимость: если дешифровка не удалась,
+  /// проверяет, является ли config открытым текстом (старый формат).
   Future<String> decryptConfig({
     required String encryptedConfig,
     required String masterPassword,
   }) async {
-    final passwordBytes = utf8.encode(masterPassword);
-
-    final decryptedBytes = await _encryptor.decryptFromMini(
-      miniEncrypted: encryptedConfig,
-      password: passwordBytes,
-    );
-
-    return utf8.decode(decryptedBytes);
+    try {
+      final decrypted = await _encryptor.decryptFromMini(
+        miniEncrypted: encryptedConfig,
+        password: utf8.encode(masterPassword),
+      );
+      return utf8.decode(decrypted);
+    } catch (_) {
+      // Fallback: возможно старый формат (открытый текст)
+      // Проверяем, что это валидный Base64 конфиг
+      if (encryptedConfig.contains('.') && !encryptedConfig.contains(' ')) {
+        return encryptedConfig;
+      }
+      throw const PasswordGenerationFailure(
+        message: 'Неверный формат конфига',
+      );
+    }
   }
 
   /// Генерирует UUID
@@ -312,12 +324,9 @@ class PasswordGeneratorLocalDataSource {
 
   /// Сохраняет пароль в хранилище
   ///
-  /// ШИФРОВАНИЕ: Пароль шифруется с использованием мастер-пароля (PIN)
+  /// ШИФРОВАНИЕ: Пароль И конфигурация шифруются с использованием мастер-пароля (PIN)
   /// Данные сохраняются в мини-формате (компактный Base64: pbkdf2-nonce + nonceBox + ciphertext + mac)
   /// Возвращает результат с информацией о том, был ли пароль обновлён
-  /// 
-  /// TODO: Внедрить централизованное управление ключами (KeyProvider/SessionManager)
-  /// для хранения мастер-ключа в памяти после аутентификации.
   Future<Map<String, dynamic>> savePassword({
     required String service,
     required String password,
@@ -334,43 +343,44 @@ class PasswordGeneratorLocalDataSource {
     }
 
     try {
-      // Получаем текущие пароли
       final passwords = await _storage.getPasswords();
+      final masterPasswordBytes = utf8.encode(masterPassword);
 
-      // ШИФРУЕМ пароль перед сохранением с использованием мастер-пароля
-      // Используем мини-формат для компактного хранения всех необходимых данных
       final miniEncrypted = await _encryptor.encryptToMini(
         message: utf8.encode(password),
-        password: utf8.encode(masterPassword),
+        password: masterPasswordBytes,
       );
 
-      // Затираем открытый пароль после шифрования
       CryptoUtils.secureWipePassword(utf8.encode(password));
 
-      // Проверяем, существует ли уже запись с таким сервисом
+      final encryptedConfig = await _encryptor.encryptToMini(
+        message: utf8.encode(config),
+        password: masterPasswordBytes,
+      );
+
+      CryptoUtils.secureWipePassword(masterPasswordBytes);
+
       final existingIndex = passwords.indexWhere(
         (e) => e.service.toLowerCase() == service.toLowerCase(),
       );
 
       if (existingIndex != -1) {
-        // Обновляем существующую запись
         final existingEntry = passwords[existingIndex];
         final updatedEntry = existingEntry.copyWith(
           encryptedPassword: miniEncrypted,
-          nonce: null, // Мини-формат содержит все необходимые данные
-          config: config,
+          nonce: null,
+          config: encryptedConfig,
           login: login ?? existingEntry.login,
           categoryId: categoryId ?? existingEntry.categoryId,
           updatedAt: DateTime.now(),
         );
         passwords[existingIndex] = updatedEntry;
       } else {
-        // Создаём новую запись с зашифрованным паролем
         final newEntry = PasswordEntry(
           service: service,
           encryptedPassword: miniEncrypted,
-          nonce: null, // Мини-формат содержит все необходимые данные
-          config: config,
+          nonce: null,
+          config: encryptedConfig,
           login: login,
           categoryId: categoryId,
           createdAt: DateTime.now(),

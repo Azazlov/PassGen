@@ -47,5 +47,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>PassGen использует Face ID для быстрого и безопасного входа в приложение.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>PassGen использует камеру для сканирования QR-кодов при импорте паролей.</string>
 </dict>
 </plist>
