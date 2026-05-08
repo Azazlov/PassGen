@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -15,6 +16,13 @@ class DatabaseHelper {
   DatabaseHelper._internal();
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   static Database? _database;
+
+  /// Только для тестов: подменяет внутренний инстанс БД на переданный
+  /// (например, in-memory sqflite_ffi). Передайте `null`, чтобы сбросить.
+  @visibleForTesting
+  static set databaseForTesting(Database? db) {
+    _database = db;
+  }
 
   /// Инициализация фабрики баз данных (должна быть вызвана перед первым использованием)
   static void initFactory() {

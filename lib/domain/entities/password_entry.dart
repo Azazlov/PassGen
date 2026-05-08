@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 /// Запись о сохранённом пароле
 class PasswordEntry {
@@ -116,6 +117,89 @@ class PasswordEntry {
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
     );
+  }
+
+  /// Создаёт PasswordEntry из строки SQLite (таблица `password_entries`).
+  ///
+  /// `encryptedConfigBytes` — содержимое колонки `encrypted_config` из
+  /// связанной строки таблицы `password_configs` (один-к-одному по
+  /// `entry_id`). Если конфиг отсутствует — передаётся `null`.
+  factory PasswordEntry.fromMap(
+    Map<String, Object?> map, {
+    Uint8List? encryptedConfigBytes,
+  }) {
+    final encryptedPasswordBlob = map['encrypted_password'];
+    String? encryptedPassword;
+    if (encryptedPasswordBlob is Uint8List) {
+      if (encryptedPasswordBlob.isNotEmpty) {
+        encryptedPassword = utf8.decode(encryptedPasswordBlob);
+      }
+    } else if (encryptedPasswordBlob is List<int> &&
+        encryptedPasswordBlob.isNotEmpty) {
+      encryptedPassword = utf8.decode(encryptedPasswordBlob);
+    } else if (encryptedPasswordBlob is String &&
+        encryptedPasswordBlob.isNotEmpty) {
+      encryptedPassword = encryptedPasswordBlob;
+    }
+
+    String config = '';
+    if (encryptedConfigBytes != null && encryptedConfigBytes.isNotEmpty) {
+      config = utf8.decode(encryptedConfigBytes);
+    }
+
+    final createdAtMs = map['created_at'] as int?;
+    final updatedAtMs = map['updated_at'] as int?;
+
+    return PasswordEntry(
+      id: map['id'] as int?,
+      profileId: map['profile_id'] as int?,
+      categoryId: map['category_id'] as int?,
+      service: (map['service'] as String?) ?? '',
+      login: map['login'] as String?,
+      encryptedPassword: encryptedPassword,
+      config: config,
+      createdAt: createdAtMs != null
+          ? DateTime.fromMillisecondsSinceEpoch(createdAtMs)
+          : DateTime.now(),
+      updatedAt: updatedAtMs != null
+          ? DateTime.fromMillisecondsSinceEpoch(updatedAtMs)
+          : null,
+    );
+  }
+
+  /// Преобразует PasswordEntry в Map для SQLite (таблица `password_entries`).
+  ///
+  /// `defaultProfileId` используется, если `profileId` не задан явно.
+  /// Поле `config` сюда НЕ попадает — оно хранится в отдельной таблице
+  /// `password_configs`; используйте [encryptedConfigBlob] для получения
+  /// байтов для записи в `password_configs.encrypted_config`.
+  ///
+  /// Колонка `nonce` в схеме объявлена как `BLOB NOT NULL`, но используется
+  /// мини-формат, в котором nonce уже встроен внутрь `encrypted_password`,
+  /// поэтому в `nonce` записывается пустой `Uint8List(0)`. Колонка
+  /// зарезервирована на следующий этап (полевое шифрование).
+  Map<String, Object?> toMap({int? defaultProfileId}) {
+    final encryptedPasswordBytes = encryptedPassword != null
+        ? Uint8List.fromList(utf8.encode(encryptedPassword!))
+        : Uint8List(0);
+    return <String, Object?>{
+      if (id != null) 'id': id,
+      'profile_id': profileId ?? defaultProfileId,
+      'category_id': categoryId,
+      'service': service,
+      'login': login,
+      'encrypted_password': encryptedPasswordBytes,
+      'nonce': Uint8List(0),
+      'created_at': createdAt.millisecondsSinceEpoch,
+      'updated_at': (updatedAt ?? createdAt).millisecondsSinceEpoch,
+    };
+  }
+
+  /// Возвращает зашифрованный `config` как байты для записи в
+  /// `password_configs.encrypted_config`. Если `config` пуст — `null`.
+  Uint8List? encryptedConfigBlob() {
+    if (config.isEmpty) return null;
+    return Uint8List.fromList(utf8.encode(config));
   }
 
   /// Преобразует список PasswordEntry в JSON строку
