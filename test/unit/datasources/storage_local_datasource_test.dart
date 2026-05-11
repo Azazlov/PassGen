@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pass_gen/core/errors/failures.dart';
+import 'package:pass_gen/core/security/vault_key_session.dart';
 import 'package:pass_gen/data/database/database_helper.dart';
 import 'package:pass_gen/data/database/database_schema.dart';
+import 'package:pass_gen/data/datasources/encryptor_local_datasource.dart';
 import 'package:pass_gen/data/datasources/storage_local_datasource.dart';
 import 'package:pass_gen/domain/entities/password_entry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -67,10 +70,12 @@ void main() {
     db = await _openFreshDb();
     DatabaseHelper.databaseForTesting = db;
     dataSource = StorageLocalDataSource();
+    VaultKeySession.clear();
   });
 
   tearDown(() async {
     DatabaseHelper.databaseForTesting = null;
+    VaultKeySession.clear();
     await db.close();
   });
 
@@ -324,6 +329,124 @@ void main() {
       final loaded = await dataSource.getPasswords();
       expect(loaded, hasLength(1));
       expect(loaded.single.encryptedPassword, 'bmV3LXBhc3N3b3Jk');
+    });
+  });
+
+  group('field encryption (схема v5)', () {
+    // 32 байта — длина vault-ключа (PBKDF2 → ChaCha20-Poly1305).
+    final keyA = List<int>.generate(32, (i) => i);
+    final keyB = List<int>.generate(32, (i) => 255 - i);
+
+    test('save→read round-trip с активным ключом возвращает plaintext', () async {
+      VaultKeySession.setForProfile(profileId: 1, keyBytes: keyA);
+
+      await dataSource.savePasswords([
+        _entry(service: 'github.com', login: 'user@example.com'),
+      ]);
+
+      // Под капотом plaintext-колонки должны быть забланкованы,
+      // а encrypted_service/_login — заполнены.
+      final raw = await db.query('password_entries');
+      expect(raw, hasLength(1));
+      expect(raw.single['service'], '');
+      expect(raw.single['login'], isNull);
+      expect(raw.single['encrypted_service'], isA<Uint8List>());
+      expect(raw.single['encrypted_login'], isA<Uint8List>());
+
+      // Чтение с тем же ключом возвращает plaintext.
+      final loaded = await dataSource.getPasswords();
+      expect(loaded, hasLength(1));
+      expect(loaded.single.service, 'github.com');
+      expect(loaded.single.login, 'user@example.com');
+    });
+
+    test('чтение без ключа отдаёт plaintext-fallback из старых записей', () async {
+      // Запись «старого» формата: plaintext в колонках, encrypted_* = null.
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db.insert('password_entries', {
+        'profile_id': 1,
+        'service': 'old.example',
+        'login': 'olduser',
+        'encrypted_password': Uint8List.fromList([1, 2, 3]),
+        'nonce': Uint8List.fromList([4, 5, 6]),
+        'created_at': now,
+        'updated_at': now,
+      });
+
+      // Без ключа в VaultKeySession.
+      final loaded = await dataSource.getPasswords();
+      expect(loaded, hasLength(1));
+      expect(loaded.single.service, 'old.example');
+      expect(loaded.single.login, 'olduser');
+    });
+
+    test('runLazyFieldEncryption шифрует существующие plaintext-записи', () async {
+      // Старая запись (без шифрования полей).
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db.insert('password_entries', {
+        'profile_id': 1,
+        'service': 'lazy.example',
+        'login': 'lazyuser',
+        'encrypted_password': Uint8List.fromList([1, 2, 3]),
+        'nonce': Uint8List.fromList([4, 5, 6]),
+        'created_at': now,
+        'updated_at': now,
+      });
+
+      VaultKeySession.setForProfile(profileId: 1, keyBytes: keyA);
+      final migrated = await dataSource.runLazyFieldEncryption(profileId: 1);
+      expect(migrated, 1);
+
+      final raw = await db.query('password_entries');
+      expect(raw.single['service'], '');
+      expect(raw.single['login'], isNull);
+      expect(raw.single['encrypted_service'], isA<Uint8List>());
+      expect(raw.single['encrypted_login'], isA<Uint8List>());
+
+      // Повторный запуск — идемпотентен, ничего не мигрирует.
+      final secondPass = await dataSource.runLazyFieldEncryption(profileId: 1);
+      expect(secondPass, 0);
+
+      // И всё ещё читается правильно.
+      final loaded = await dataSource.getPasswords();
+      expect(loaded.single.service, 'lazy.example');
+      expect(loaded.single.login, 'lazyuser');
+    });
+
+    test('чужой ключ не расшифровывает запись (криптоизоляция)', () async {
+      VaultKeySession.setForProfile(profileId: 1, keyBytes: keyA);
+      await dataSource.savePasswords([
+        _entry(service: 'isolated.example', login: 'me'),
+      ]);
+
+      // Подменяем ключ — это эмулирует попытку другого профиля
+      // прочитать чужие зашифрованные метаданные.
+      VaultKeySession.setForProfile(profileId: 1, keyBytes: keyB);
+
+      // MAC-проверка падает, метод не уронит весь список (см. _decryptEntry),
+      // но зашифрованные поля становятся недоступны: service пуст, login null.
+      // Главное — настоящий plaintext «isolated.example» не утекает.
+      final loaded = await dataSource.getPasswords();
+      expect(loaded, hasLength(1));
+      expect(loaded.single.service, isNot('isolated.example'));
+      expect(loaded.single.login, isNot('me'));
+    });
+
+    test('реальный PBKDF2-key из EncryptorLocalDataSource работает end-to-end', () async {
+      final encryptor = EncryptorLocalDataSource();
+      final keyBytes = await encryptor.deriveVaultKeyBytes(
+        pin: utf8.encode('1234'),
+        salt: List<int>.filled(32, 7),
+      );
+      VaultKeySession.setForProfile(profileId: 1, keyBytes: keyBytes);
+
+      await dataSource.savePasswords([
+        _entry(service: 'real-pbkdf2.example', login: 'realuser'),
+      ]);
+
+      final loaded = await dataSource.getPasswords();
+      expect(loaded.single.service, 'real-pbkdf2.example');
+      expect(loaded.single.login, 'realuser');
     });
   });
 }

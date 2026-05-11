@@ -25,6 +25,7 @@ import '../../domain/repositories/profile_repository.dart';
 import '../../domain/repositories/qr_transfer_repository.dart';
 import '../../domain/services/glitch_service.dart';
 import '../../domain/services/performance_benchmark_service.dart';
+import '../../domain/services/vault_unlock_service.dart';
 import '../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../domain/usecases/auth/get_auth_state_usecase.dart';
 import '../../domain/usecases/auth/remove_pin_usecase.dart';
@@ -364,6 +365,13 @@ class PasswordGeneratorApp extends StatelessWidget {
             logEventUseCase: logEventUseCase,
             biometricRepository: context.read<BiometricRepository>(),
             profileRepository: context.read<ProfileRepository>(),
+            vaultUnlockService: authDataSource != null
+                ? VaultUnlockService(
+                    authDataSource: authDataSource!,
+                    encryptor: EncryptorLocalDataSource(),
+                    storage: StorageLocalDataSource(),
+                  )
+                : null,
           ),
         ),
       ],

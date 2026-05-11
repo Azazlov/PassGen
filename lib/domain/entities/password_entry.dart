@@ -15,6 +15,8 @@ class PasswordEntry {
     this.login,
     required this.createdAt,
     this.updatedAt,
+    this.encryptedServiceBlob,
+    this.encryptedLoginBlob,
   });
 
   /// Создаёт PasswordEntry из JSON
@@ -48,6 +50,17 @@ class PasswordEntry {
   final String? login;
   final DateTime createdAt;
   final DateTime? updatedAt;
+
+  /// Зашифрованное имя сервиса (BLOB из SQLite, схема v5).
+  ///
+  /// Формат: `nonce(12) + ciphertext + mac(16)` из ChaCha20-Poly1305 на
+  /// vault-ключе профиля. `null` означает запись старого формата (до
+  /// схемы v5 или до первого unlock'а), тогда используется plaintext-
+  /// колонка [service].
+  final List<int>? encryptedServiceBlob;
+
+  /// Зашифрованный логин — аналогично [encryptedServiceBlob].
+  final List<int>? encryptedLoginBlob;
 
   /// Преобразует PasswordEntry в JSON (только зашифрованные данные!)
   Map<String, dynamic> toJson() {
@@ -103,6 +116,10 @@ class PasswordEntry {
     String? config,
     String? login,
     DateTime? updatedAt,
+    List<int>? encryptedServiceBlob,
+    List<int>? encryptedLoginBlob,
+    bool clearEncryptedServiceBlob = false,
+    bool clearEncryptedLoginBlob = false,
   }) {
     return PasswordEntry(
       id: id ?? this.id,
@@ -116,6 +133,12 @@ class PasswordEntry {
       login: login ?? this.login,
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
+      encryptedServiceBlob: clearEncryptedServiceBlob
+          ? null
+          : (encryptedServiceBlob ?? this.encryptedServiceBlob),
+      encryptedLoginBlob: clearEncryptedLoginBlob
+          ? null
+          : (encryptedLoginBlob ?? this.encryptedLoginBlob),
     );
   }
 
@@ -150,6 +173,17 @@ class PasswordEntry {
     final createdAtMs = map['created_at'] as int?;
     final updatedAtMs = map['updated_at'] as int?;
 
+    List<int>? readBlob(Object? raw) {
+      if (raw == null) return null;
+      if (raw is Uint8List) {
+        return raw.isEmpty ? null : raw;
+      }
+      if (raw is List<int>) {
+        return raw.isEmpty ? null : raw;
+      }
+      return null;
+    }
+
     return PasswordEntry(
       id: map['id'] as int?,
       profileId: map['profile_id'] as int?,
@@ -164,6 +198,8 @@ class PasswordEntry {
       updatedAt: updatedAtMs != null
           ? DateTime.fromMillisecondsSinceEpoch(updatedAtMs)
           : null,
+      encryptedServiceBlob: readBlob(map['encrypted_service']),
+      encryptedLoginBlob: readBlob(map['encrypted_login']),
     );
   }
 
@@ -182,14 +218,25 @@ class PasswordEntry {
     final encryptedPasswordBytes = encryptedPassword != null
         ? Uint8List.fromList(utf8.encode(encryptedPassword!))
         : Uint8List(0);
+
+    // Если значение зашифровано — в plaintext-колонку кладём пустую строку
+    // (колонка NOT NULL, поэтому null нельзя), чтобы на диске не оставалось
+    // подсказки о реальном сервисе.
+    final servicePlaintext = encryptedServiceBlob != null ? '' : service;
+    final loginPlaintext = encryptedLoginBlob != null ? null : login;
+
     return <String, Object?>{
       if (id != null) 'id': id,
       'profile_id': profileId ?? defaultProfileId,
       'category_id': categoryId,
-      'service': service,
-      'login': login,
+      'service': servicePlaintext,
+      'login': loginPlaintext,
       'encrypted_password': encryptedPasswordBytes,
       'nonce': Uint8List(0),
+      if (encryptedServiceBlob != null)
+        'encrypted_service': Uint8List.fromList(encryptedServiceBlob!),
+      if (encryptedLoginBlob != null)
+        'encrypted_login': Uint8List.fromList(encryptedLoginBlob!),
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': (updatedAt ?? createdAt).millisecondsSinceEpoch,
     };

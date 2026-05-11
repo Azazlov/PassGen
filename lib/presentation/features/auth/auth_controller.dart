@@ -9,6 +9,7 @@ import '../../../domain/entities/auth_result.dart';
 import '../../../domain/entities/auth_state.dart';
 import '../../../domain/repositories/biometric_repository.dart';
 import '../../../domain/repositories/profile_repository.dart';
+import '../../../domain/services/vault_unlock_service.dart';
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/get_auth_state_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
@@ -27,6 +28,7 @@ class AuthController extends ChangeNotifier {
     required this.logEventUseCase,
     this.biometricRepository,
     this.profileRepository,
+    this.vaultUnlockService,
   }) {
     _loadAuthState();
   }
@@ -38,6 +40,7 @@ class AuthController extends ChangeNotifier {
   final LogEventUseCase logEventUseCase;
   final BiometricRepository? biometricRepository;
   final ProfileRepository? profileRepository;
+  final VaultUnlockService? vaultUnlockService;
 
   // Таймер неактивности
   Timer? _inactivityTimer;
@@ -210,6 +213,14 @@ class AuthController extends ChangeNotifier {
               profileId: profileId,
               pin: pinForSession,
             );
+            // Разблокируем vault-ключ профиля и лениво дошифровываем
+            // старые plaintext-метаданные. Ошибки не блокируют вход.
+            unawaited(
+              vaultUnlockService
+                      ?.unlockWithPin(profileId: profileId, pin: pinForSession)
+                      .catchError((_) => 0) ??
+                  Future.value(0),
+            );
             _authState = _authState.copyWith(
               isAuthenticated: true,
               isLocked: false,
@@ -296,9 +307,16 @@ class AuthController extends ChangeNotifier {
         },
         (authResult) {
           if (authResult == AuthResult.success) {
+            final profileId = _authState.currentProfileId ?? 1;
             MasterPasswordSession.setForProfile(
-              profileId: _authState.currentProfileId ?? 1,
+              profileId: profileId,
               pin: retrievedPin,
+            );
+            unawaited(
+              vaultUnlockService
+                      ?.unlockWithPin(profileId: profileId, pin: retrievedPin)
+                      .catchError((_) => 0) ??
+                  Future.value(0),
             );
             _authState = _authState.copyWith(
               isAuthenticated: true,
@@ -488,6 +506,7 @@ class AuthController extends ChangeNotifier {
   /// Блокирует приложение
   void _lockApp() {
     MasterPasswordSession.clear();
+    vaultUnlockService?.lock();
     _authState = const AuthState(
       isAuthenticated: false,
       isPinSetup: true,
@@ -512,6 +531,7 @@ class AuthController extends ChangeNotifier {
   @override
   void dispose() {
     MasterPasswordSession.clear();
+    vaultUnlockService?.lock();
     _pinController.dispose();
     _confirmPinController.dispose();
     _enteredPin = '';

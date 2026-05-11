@@ -1,11 +1,14 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../../../core/security/vault_key_session.dart';
 import '../../domain/entities/password_entry.dart';
 import '../database/database_helper.dart';
+import 'encryptor_local_datasource.dart';
 
 /// Локальный источник данных для хранилища.
 ///
@@ -15,10 +18,20 @@ import '../database/database_helper.dart';
 /// Один раз при первом запуске после обновления выполняется миграция
 /// `SharedPreferences['saved_passwords']` → SQLite. Флаг `_migrationFlagKey`
 /// в `SharedPreferences` помечает успешное завершение.
+///
+/// Полевое шифрование (схема v5): если в [VaultKeySession] есть активный ключ
+/// для текущего профиля, `service`/`login` шифруются при записи и
+/// дешифруются при чтении. Без ключа (в тестах, до первого unlock'а)
+/// работаем с plaintext-колонками — функциональность не ломается.
 class StorageLocalDataSource {
-  StorageLocalDataSource({DatabaseHelper? db}) : _db = db ?? DatabaseHelper();
+  StorageLocalDataSource({
+    DatabaseHelper? db,
+    EncryptorLocalDataSource? encryptor,
+  })  : _db = db ?? DatabaseHelper(),
+        _encryptor = encryptor ?? EncryptorLocalDataSource();
 
   final DatabaseHelper _db;
+  final EncryptorLocalDataSource _encryptor;
 
   /// Старый ключ паролей в SharedPreferences (миграция → SQLite).
   static const String _legacyPasswordsKey = 'saved_passwords';
@@ -102,6 +115,13 @@ class StorageLocalDataSource {
     try {
       await _ensurePasswordsMigrated();
       final database = await _db.database;
+      final keyBytes = VaultKeySession.getForProfile(_defaultProfileId);
+      final entriesToInsert = <PasswordEntry>[];
+      for (final entry in passwords) {
+        entriesToInsert.add(
+          keyBytes != null ? await _encryptEntry(entry, keyBytes) : entry,
+        );
+      }
       await database.transaction((txn) async {
         await _ensureDefaultProfile(txn);
         await txn.delete(
@@ -114,7 +134,7 @@ class StorageLocalDataSource {
           where: 'profile_id = ?',
           whereArgs: [_defaultProfileId],
         );
-        for (final entry in passwords) {
+        for (final entry in entriesToInsert) {
           await _insertEntry(txn, entry);
         }
       });
@@ -125,6 +145,13 @@ class StorageLocalDataSource {
   }
 
   /// Получает список паролей профиля по умолчанию.
+  ///
+  /// Если в [VaultKeySession] есть активный ключ и у записи заполнено
+  /// `encrypted_service` / `encrypted_login`, поля расшифровываются в памяти
+  /// и в возвращаемом [PasswordEntry] попадают как обычный plaintext
+  /// (`service` / `login`). Без активного ключа возвращаются значения из
+  /// plaintext-колонок — это нужно для совместимости со старыми записями
+  /// и для работы тестов, не поднимающих сессию.
   Future<List<PasswordEntry>> getPasswords() async {
     try {
       await _ensurePasswordsMigrated();
@@ -157,14 +184,78 @@ class StorageLocalDataSource {
         configByEntryId[entryId] = bytes;
       }
 
-      return entryRows.map((row) {
+      final keyBytes = VaultKeySession.getForProfile(_defaultProfileId);
+      final result = <PasswordEntry>[];
+      for (final row in entryRows) {
         final entryId = row['id'] as int?;
         final cfg = entryId != null ? configByEntryId[entryId] : null;
-        return PasswordEntry.fromMap(row, encryptedConfigBytes: cfg);
-      }).toList();
+        final base = PasswordEntry.fromMap(row, encryptedConfigBytes: cfg);
+        result.add(
+          keyBytes != null ? await _decryptEntry(base, keyBytes) : base,
+        );
+      }
+      return result;
     } catch (e) {
       throw StorageFailure(message: 'Ошибка чтения паролей: $e');
     }
+  }
+
+  /// Лениво шифрует ранее записанные plaintext-метаданные текущего профиля.
+  ///
+  /// Идея: при первом успешном unlock'е профиля у нас впервые появляется
+  /// vault-ключ, и мы можем зашифровать строки, которые до v5 (или до этого
+  /// момента) лежали в plaintext-колонках `service`/`login`. Метод
+  /// идемпотентен — строки с уже не пустым `encrypted_service` пропускаются.
+  ///
+  /// Возвращает количество фактически зашифрованных строк.
+  Future<int> runLazyFieldEncryption({int? profileId}) async {
+    final pid = profileId ?? _defaultProfileId;
+    final keyBytes = VaultKeySession.getForProfile(pid);
+    if (keyBytes == null) return 0;
+
+    await _ensurePasswordsMigrated();
+    final database = await _db.database;
+    final rows = await database.query(
+      'password_entries',
+      where: 'profile_id = ? AND encrypted_service IS NULL',
+      whereArgs: [pid],
+    );
+    if (rows.isEmpty) return 0;
+
+    var migrated = 0;
+    await database.transaction((txn) async {
+      for (final row in rows) {
+        final id = row['id'] as int?;
+        if (id == null) continue;
+        final servicePlain = (row['service'] as String?) ?? '';
+        final loginPlain = row['login'] as String?;
+
+        final encryptedService = await _encryptor.encryptFieldWithKey(
+          message: utf8.encode(servicePlain),
+          keyBytes: keyBytes,
+        );
+        final values = <String, Object?>{
+          'service': '',
+          'encrypted_service': Uint8List.fromList(encryptedService),
+        };
+        if (loginPlain != null) {
+          final encryptedLogin = await _encryptor.encryptFieldWithKey(
+            message: utf8.encode(loginPlain),
+            keyBytes: keyBytes,
+          );
+          values['login'] = null;
+          values['encrypted_login'] = Uint8List.fromList(encryptedLogin);
+        }
+        await txn.update(
+          'password_entries',
+          values,
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        migrated++;
+      }
+    });
+    return migrated;
   }
 
   /// Удаляет пароль по индексу в списке (упорядоченном по `created_at, id`).
@@ -288,6 +379,74 @@ class StorageLocalDataSource {
     }
 
     return entryId;
+  }
+
+  /// Шифрует service/login в переданной записи (в памяти) и возвращает
+  /// копию, у которой заполнены `encryptedServiceBlob` / `encryptedLoginBlob`,
+  /// а plaintext-поля при записи в базу будут забланчены (см. [PasswordEntry.toMap]).
+  Future<PasswordEntry> _encryptEntry(
+    PasswordEntry entry,
+    List<int> keyBytes,
+  ) async {
+    final encryptedService = await _encryptor.encryptFieldWithKey(
+      message: utf8.encode(entry.service),
+      keyBytes: keyBytes,
+    );
+    List<int>? encryptedLogin;
+    if (entry.login != null) {
+      encryptedLogin = await _encryptor.encryptFieldWithKey(
+        message: utf8.encode(entry.login!),
+        keyBytes: keyBytes,
+      );
+    }
+    return entry.copyWith(
+      encryptedServiceBlob: encryptedService,
+      encryptedLoginBlob: encryptedLogin,
+    );
+  }
+
+  /// Дешифрует service/login, если у [entry] есть зашифрованные BLOB'ы.
+  /// Плайнтекст попадает в обычные поля результата.
+  Future<PasswordEntry> _decryptEntry(
+    PasswordEntry entry,
+    List<int> keyBytes,
+  ) async {
+    if (entry.encryptedServiceBlob == null &&
+        entry.encryptedLoginBlob == null) {
+      return entry;
+    }
+    String service = entry.service;
+    String? login = entry.login;
+    if (entry.encryptedServiceBlob != null) {
+      try {
+        final bytes = await _encryptor.decryptFieldWithKey(
+          blob: entry.encryptedServiceBlob!,
+          keyBytes: keyBytes,
+        );
+        service = utf8.decode(bytes);
+      } catch (_) {
+        // При ошибке дешифрования (неверный ключ, повреждённый BLOB)
+        // остаёмся на plaintext-колонке (она скорее всего пуста, но лучше
+        // показать пустое имя сервиса, чем уронить весь список).
+      }
+    }
+    if (entry.encryptedLoginBlob != null) {
+      try {
+        final bytes = await _encryptor.decryptFieldWithKey(
+          blob: entry.encryptedLoginBlob!,
+          keyBytes: keyBytes,
+        );
+        login = utf8.decode(bytes);
+      } catch (_) {
+        // см. выше
+      }
+    }
+    return entry.copyWith(
+      service: service,
+      login: login,
+      clearEncryptedServiceBlob: true,
+      clearEncryptedLoginBlob: true,
+    );
   }
 
   /// Гарантирует существование строки `profiles.id = 1`. Без неё
