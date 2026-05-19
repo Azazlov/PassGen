@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/event_types.dart';
 import '../../../core/errors/failures.dart';
+import '../../../core/security/master_password_session.dart';
 import '../../../domain/entities/password_entry.dart';
+import '../../../domain/entities/password_history_entry.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
+import '../../../domain/usecases/password/generate_password_usecase.dart';
+import '../../../domain/usecases/password/get_password_history_usecase.dart';
+import '../../../domain/usecases/password/save_password_usecase.dart';
 import '../../../domain/usecases/storage/delete_password_usecase.dart';
 import '../../../domain/usecases/storage/export_passgen_usecase.dart';
 import '../../../domain/usecases/storage/export_passwords_usecase.dart';
@@ -24,6 +29,9 @@ class StorageController extends ChangeNotifier {
     required this.importPassgenUseCase,
     required this.logEventUseCase,
     this.updateEntryUseCase,
+    this.getPasswordHistoryUseCase,
+    this.generatePasswordUseCase,
+    this.savePasswordUseCase,
   });
   final GetPasswordsUseCase getPasswordsUseCase;
   final DeletePasswordUseCase deletePasswordUseCase;
@@ -33,6 +41,9 @@ class StorageController extends ChangeNotifier {
   final ImportPassgenUseCase importPassgenUseCase;
   final LogEventUseCase logEventUseCase;
   final UpdateEntryUseCase? updateEntryUseCase;
+  final GetPasswordHistoryUseCase? getPasswordHistoryUseCase;
+  final GeneratePasswordUseCase? generatePasswordUseCase;
+  final SavePasswordUseCase? savePasswordUseCase;
 
   // Состояние
   List<PasswordEntry> _allPasswords = [];
@@ -276,6 +287,95 @@ class StorageController extends ChangeNotifier {
       );
     } catch (e) {
       _error = 'Ошибка обновления: $e';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Возвращает историю изменений пароля для записи [entryId] (новые сначала).
+  /// Возвращает пустой список, если history use case не подключен или запись
+  /// без id (до миграции на SQLite).
+  Future<List<PasswordHistoryEntry>> getHistoryForEntry(int? entryId) async {
+    if (entryId == null || getPasswordHistoryUseCase == null) {
+      return const [];
+    }
+    final result = await getPasswordHistoryUseCase!.execute(entryId);
+    return result.fold((_) => const [], (list) => list);
+  }
+
+  /// Регенерирует пароль для существующей записи, сохраняя предыдущую
+  /// версию в `password_history` (через `SavePasswordUseCase`).
+  ///
+  /// Использует настройки уровня «Сложный» (length 16, все классы символов)
+  /// чтобы не зависеть от прежней конфигурации, которая хранится зашифрованной.
+  /// Возвращает `true` при успехе.
+  Future<bool> regeneratePassword(PasswordEntry entry) async {
+    final generate = generatePasswordUseCase;
+    final save = savePasswordUseCase;
+    if (generate == null || save == null) {
+      _error = 'Регенерация недоступна';
+      notifyListeners();
+      return false;
+    }
+    final masterPassword = MasterPasswordSession.getAny();
+    if (masterPassword == null || masterPassword.isEmpty) {
+      _error = 'Сессия мастер-пароля не активна';
+      notifyListeners();
+      return false;
+    }
+
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final settings = GeneratePasswordUseCase.getSettingsByStrength(2);
+      final generated = await generate.execute(settings);
+      final newPassword = generated.fold<String?>((_) => null, (r) => r.password);
+      final newConfig = generated.fold<String?>((_) => null, (r) => r.config);
+      if (newPassword == null || newConfig == null) {
+        _error = 'Не удалось сгенерировать пароль';
+        return false;
+      }
+
+      final result = await save.execute(
+        service: entry.service,
+        password: newPassword,
+        config: newConfig,
+        categoryId: entry.categoryId,
+        login: entry.login,
+        entryId: entry.id,
+        encryptedPassword: entry.encryptedPassword,
+        nonce: entry.nonce,
+        reason: 'Регенерация',
+        masterPassword: masterPassword,
+      );
+
+      return await result.fold(
+        (failure) async {
+          _error = failure.message;
+          return false;
+        },
+        (_) async {
+          logEventUseCase.execute(
+            EventTypes.pwdUpdated,
+            details: {
+              'service': entry.service,
+              'reason': 'regenerate',
+            },
+          );
+          await loadPasswords();
+          if (entry.id != null) {
+            _selectedEntry = _allPasswords.firstWhere(
+              (e) => e.id == entry.id,
+              orElse: () => entry,
+            );
+          }
+          return true;
+        },
+      );
+    } catch (e) {
+      _error = 'Ошибка регенерации: $e';
       return false;
     } finally {
       _isLoading = false;
