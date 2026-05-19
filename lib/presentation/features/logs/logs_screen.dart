@@ -49,6 +49,7 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
           : Column(
               children: [
                 _buildFilterChips(controller),
+                _buildDateFilterRow(context, controller, theme),
                 Expanded(
                   child: controller.isEmpty
                       ? _buildEmptyState(theme)
@@ -62,7 +63,7 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
   Widget _buildFilterChips(LogsController controller) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
         children: [
           _buildFilterChip(controller, LogsFilter.all, 'Все'),
@@ -76,6 +77,73 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
       ),
     );
   }
+
+  Widget _buildDateFilterRow(
+    BuildContext context,
+    LogsController controller,
+    ThemeData theme,
+  ) {
+    String label;
+    if (!controller.hasDateFilter) {
+      label = 'Любая дата';
+    } else if (controller.fromDate != null && controller.toDate != null) {
+      label =
+          '${_formatRangeDate(controller.fromDate!)} – ${_formatRangeDate(controller.toDate!)}';
+    } else if (controller.fromDate != null) {
+      label = 'с ${_formatRangeDate(controller.fromDate!)}';
+    } else {
+      label = 'по ${_formatRangeDate(controller.toDate!)}';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.date_range, size: 18),
+              label: Text(label, overflow: TextOverflow.ellipsis),
+              onPressed: () => _pickDateRange(context, controller),
+            ),
+          ),
+          if (controller.hasDateFilter) ...[
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: 'Сбросить диапазон',
+              icon: const Icon(Icons.clear),
+              onPressed: controller.clearDateRange,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickDateRange(
+    BuildContext context,
+    LogsController controller,
+  ) async {
+    final now = DateTime.now();
+    final initial = (controller.fromDate != null && controller.toDate != null)
+        ? DateTimeRange(start: controller.fromDate!, end: controller.toDate!)
+        : null;
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year + 1),
+      initialDateRange: initial,
+      helpText: 'Выберите диапазон дат',
+      cancelText: 'Отмена',
+      confirmText: 'Применить',
+      saveText: 'Применить',
+    );
+    if (picked != null) {
+      controller.setDateRange(from: picked.start, to: picked.end);
+    }
+  }
+
+  String _formatRangeDate(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
 
   Widget _buildFilterChip(
     LogsController controller,

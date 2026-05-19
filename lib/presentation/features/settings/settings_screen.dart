@@ -164,6 +164,13 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
               settingKey: 'security.max_pin_attempts',
             ),
             _buildListTile(
+              icon: Icons.lock_clock,
+              title: 'Экстренная блокировка',
+              subtitle: 'Немедленно заблокировать и выйти на экран PIN',
+              onTap: () => _confirmEmergencyLock(context),
+              textColor: Colors.orange,
+            ),
+            _buildListTile(
               icon: Icons.history,
               title: 'Журнал безопасности',
               subtitle: 'Записей: $_logsCount',
@@ -604,6 +611,33 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     );
 
     pinController.dispose();
+  }
+
+  void _confirmEmergencyLock(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Заблокировать приложение?'),
+        content: const Text(
+          'Приложение будет немедленно заблокировано. '
+          'Для разблокировки потребуется ввести PIN-код.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Заблокировать'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+    context.read<AuthController>().lockApp(reason: 'manual_lock');
   }
 
   void _confirmResetAllData(

@@ -503,10 +503,15 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  /// Блокирует приложение
-  void _lockApp() {
+  /// Блокирует приложение (по таймеру неактивности).
+  void _lockApp() => lockApp(reason: 'inactivity_timeout');
+
+  /// Немедленно блокирует приложение. Используется кнопкой «Экстренная
+  /// блокировка» в настройках; [reason] попадает в журнал безопасности.
+  void lockApp({String reason = 'manual'}) {
     MasterPasswordSession.clear();
     vaultUnlockService?.lock();
+    final profileId = _authState.currentProfileId;
     _authState = const AuthState(
       isAuthenticated: false,
       isPinSetup: true,
@@ -517,11 +522,10 @@ class AuthController extends ChangeNotifier {
     _inactivityTimer?.cancel();
     notifyListeners();
 
-    // Логируем блокировку
     logEventUseCase.execute(
       EventTypes.authFailure,
-      details: {'reason': 'inactivity_timeout'},
-      profileId: _authState.currentProfileId,
+      details: {'reason': reason},
+      profileId: profileId,
     );
   }
 
