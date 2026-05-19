@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/event_types.dart';
+import '../../../core/security/master_password_session.dart';
+import '../../../data/database/database_helper.dart';
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
 import '../../../domain/usecases/log/clear_logs_usecase.dart';
@@ -19,13 +22,15 @@ class SettingsController extends ChangeNotifier {
     required GetLogsUseCase getLogsUseCase,
     required ClearLogsUseCase clearLogsUseCase,
     required LogEventUseCase logEventUseCase,
+    required DatabaseHelper databaseHelper,
   }) : _getSettingUseCase = getSettingUseCase,
        _setSettingUseCase = setSettingUseCase,
        _changePinUseCase = changePinUseCase,
        _removePinUseCase = removePinUseCase,
        _getLogsUseCase = getLogsUseCase,
        _clearLogsUseCase = clearLogsUseCase,
-       _logEventUseCase = logEventUseCase;
+       _logEventUseCase = logEventUseCase,
+       _databaseHelper = databaseHelper;
   final GetSettingUseCase _getSettingUseCase;
   final SetSettingUseCase _setSettingUseCase;
   final ChangePinUseCase _changePinUseCase;
@@ -33,6 +38,7 @@ class SettingsController extends ChangeNotifier {
   final GetLogsUseCase _getLogsUseCase;
   final ClearLogsUseCase _clearLogsUseCase;
   final LogEventUseCase _logEventUseCase;
+  final DatabaseHelper _databaseHelper;
 
   bool _isLoading = false;
   String? _error;
@@ -150,6 +156,27 @@ class SettingsController extends ChangeNotifier {
         EventTypes.logsCleared,
         details: {'success': true},
       );
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Полный сброс локальных данных приложения.
+  Future<bool> resetAllData() async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      MasterPasswordSession.clear();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      await _databaseHelper.resetAllDataForDevelopment();
       return true;
     } catch (e) {
       _error = e.toString();

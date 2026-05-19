@@ -65,6 +65,12 @@ class StorageController extends ChangeNotifier {
   /// Выбор записи
   void selectEntry(PasswordEntry? entry) {
     _selectedEntry = entry;
+    if (entry != null) {
+      final index = _passwords.indexOf(entry);
+      if (index != -1) {
+        _currentIndex = index;
+      }
+    }
     notifyListeners();
   }
 
@@ -175,12 +181,25 @@ class StorageController extends ChangeNotifier {
   /// Удаление текущего пароля
   Future<void> deleteCurrentPassword() async {
     if (_passwords.isEmpty || _currentIndex >= _passwords.length) return;
+    await deletePassword(_passwords[_currentIndex]);
+  }
+
+  /// Удаление указанного пароля.
+  Future<void> deletePassword(PasswordEntry entry) async {
+    final storageIndex = _allPasswords.indexWhere((password) {
+      if (entry.id != null && password.id == entry.id) return true;
+      return password.service == entry.service &&
+          password.login == entry.login &&
+          password.createdAt == entry.createdAt;
+    });
+
+    if (storageIndex == -1) return;
 
     _isLoading = true;
     notifyListeners();
 
     try {
-      final result = await deletePasswordUseCase.execute(_currentIndex);
+      final result = await deletePasswordUseCase.execute(storageIndex);
 
       result.fold(
         (failure) {
@@ -188,27 +207,21 @@ class StorageController extends ChangeNotifier {
         },
         (_) {
           // Логируем удаление пароля
-          final entry = _passwords.length > _currentIndex
-              ? _passwords[_currentIndex]
-              : null;
-
           logEventUseCase.execute(
             EventTypes.pwdDeleted,
             details: {
-              'service': entry?.service ?? 'unknown',
-              'category_id': entry?.categoryId,
+              'service': entry.service,
+              'category_id': entry.categoryId,
             },
           );
 
-          _passwords.removeAt(_currentIndex);
-          // Также удаляем из всех паролей
-          if (entry != null) {
-            _allPasswords.removeWhere(
-              (e) => e.service == entry.service && e.password == entry.password,
-            );
-          }
+          _allPasswords.removeAt(storageIndex);
+          _applyFilters();
           if (_currentIndex >= _passwords.length) {
             _currentIndex = _passwords.isEmpty ? 0 : _passwords.length - 1;
+          }
+          if (_selectedEntry == entry) {
+            _selectedEntry = null;
           }
         },
       );

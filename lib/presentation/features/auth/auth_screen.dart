@@ -188,6 +188,28 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
     }
   }
 
+  Future<bool> _isBiometricAvailable(AuthController controller) async {
+    final biometricRepo = controller.biometricRepository;
+    if (biometricRepo == null) return false;
+    final isAvailable = await biometricRepo.isAvailable();
+    if (!isAvailable) return false;
+    final profileId = controller.authState.currentProfileId ?? 1;
+    return biometricRepo.isEnabledForProfile(profileId);
+  }
+
+  Future<void> _authenticateWithBiometric(AuthController controller) async {
+    final result = await controller.authenticateWithBiometric();
+    if (!mounted) return;
+    if (result != AuthResult.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(controller.error ?? 'Ошибка биометрии'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -221,6 +243,23 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
     return _buildLoginScreen(controller, theme);
   }
 
+  Widget _buildAppLogo(ThemeData theme, {double size = 72}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Image.asset(
+        'assets/icons/app_icon_1024.png',
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (_, _, _) => Icon(
+          Icons.lock_outline,
+          size: size,
+          color: theme.colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
   /// Экран установки PIN
   Widget _buildSetupScreen(AuthController controller, ThemeData theme) {
     return SingleChildScrollView(
@@ -235,11 +274,7 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
             children: [
               const SizedBox(height: 16),
               // Заголовок
-              Icon(
-                Icons.lock_outline,
-                size: 64,
-                color: theme.colorScheme.primary,
-              ),
+              _buildAppLogo(theme),
               const SizedBox(height: 16),
 
               Text(
@@ -362,11 +397,7 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
                           fit: BoxFit.contain,
                         ),
                       )
-                    : Icon(
-                        Icons.lock,
-                        size: 64,
-                        color: theme.colorScheme.primary,
-                      ),
+                    : _buildAppLogo(theme),
               ),
               const SizedBox(height: 16),
 
@@ -378,12 +409,15 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
               ),
               const SizedBox(height: 8),
 
-              Text(
-                'Осталось попыток: ${controller.authState.remainingAttempts ?? 5}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              if (controller.error != null ||
+                  (controller.authState.remainingAttempts != null &&
+                      controller.authState.remainingAttempts! < 5))
+                Text(
+                  'Осталось попыток: ${controller.authState.remainingAttempts ?? 5}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
                 ),
-              ),
 
               const SizedBox(height: 32),
 
@@ -392,6 +426,29 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
                 pinLength: controller.pinLength,
                 maxLength: 8,
                 isError: controller.error != null,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Кнопка биометрической аутентификации
+              FutureBuilder<bool>(
+                future: _isBiometricAvailable(controller),
+                builder: (context, snapshot) {
+                  if (snapshot.data != true) return const SizedBox.shrink();
+                  return SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: controller.isLoading
+                          ? null
+                          : () => _authenticateWithBiometric(controller),
+                      icon: const Icon(Icons.fingerprint),
+                      label: const Text('Войти по отпечатку'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 24),

@@ -33,6 +33,7 @@ class GeneratorController extends ChangeNotifier {
     required this.getPasswordsUseCase,
   }) {
     _updateSettingsByStrength(_strength);
+    _updateControllersFromSettings();
   }
   final GeneratePasswordUseCase generatePasswordUseCase;
   final SavePasswordUseCase savePasswordUseCase;
@@ -50,6 +51,9 @@ class GeneratorController extends ChangeNotifier {
   // Rate limiting для защиты от DoS
   static const int _maxGenerationsPerMinute = 60;
   static const Duration _rateLimitWindow = Duration(minutes: 1);
+  static const Duration _minimumGenerationDuration = Duration(
+    milliseconds: 250,
+  );
   final List<DateTime> _generationTimestamps = [];
 
   // Текстовые контроллеры
@@ -76,6 +80,8 @@ class GeneratorController extends ChangeNotifier {
   String get password => _lastResult?.password ?? '';
   String get config => _lastResult?.config ?? '';
   double get strengthValue => _lastResult?.strength ?? 0.0;
+  double get evaluatedStrengthValue =>
+      (_lastResult?.strength ?? (_strength / 4.0)).clamp(0.0, 1.0);
 
   // Уровень сложности
   int _strength = AppConstants.defaultPasswordStrength;
@@ -87,6 +93,24 @@ class GeneratorController extends ChangeNotifier {
   Color get strengthColor {
     final colorIndex = strengthConfigs[_strength]!.colorIndex;
     return strengthColors[colorIndex];
+  }
+
+  String get evaluatedStrengthLabel {
+    final value = evaluatedStrengthValue;
+    if (value < 0.2) return 'Очень слабый';
+    if (value < 0.4) return 'Слабый';
+    if (value < 0.6) return 'Средний';
+    if (value < 0.8) return 'Надёжный';
+    return 'Очень надёжный';
+  }
+
+  Color get evaluatedStrengthColor {
+    final value = evaluatedStrengthValue;
+    if (value < 0.2) return strengthColors[0];
+    if (value < 0.4) return strengthColors[1];
+    if (value < 0.6) return strengthColors[2];
+    if (value < 0.8) return strengthColors[3];
+    return strengthColors[4];
   }
 
   // Переключатели обязательности символов
@@ -264,13 +288,16 @@ class GeneratorController extends ChangeNotifier {
       return;
     }
 
+    _error = null;
     _settings = _settings.copyWith(lengthRange: [min, max]);
+    _updateControllersFromSettings();
     notifyListeners();
   }
 
   /// Генерирует новый пароль
   Future<void> generatePassword() async {
     if (_isLoading) return;
+    final startedAt = DateTime.now();
 
     // Rate limiting check
     final now = DateTime.now();
@@ -300,12 +327,9 @@ class GeneratorController extends ChangeNotifier {
       // Валидация настроек в Domain слое
       final validationResult = validateSettingsUseCase.execute(_settings);
 
-      validationResult.fold(
-        (failure) {
+      await validationResult.fold<Future<void>>(
+        (failure) async {
           _error = failure.message;
-          _isLoading = false;
-          notifyListeners();
-          return;
         },
         (validatedSettings) async {
           final result = await generatePasswordUseCase.execute(
@@ -325,6 +349,10 @@ class GeneratorController extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     } finally {
+      final elapsed = DateTime.now().difference(startedAt);
+      if (elapsed < _minimumGenerationDuration) {
+        await Future<void>.delayed(_minimumGenerationDuration - elapsed);
+      }
       _isLoading = false;
       notifyListeners();
     }
@@ -409,6 +437,7 @@ class GeneratorController extends ChangeNotifier {
       return {'success': false, 'updated': false};
     } finally {
       _isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -421,7 +450,7 @@ class GeneratorController extends ChangeNotifier {
   }
 
   /// Валидирует ввод service/login
-  /// 
+  ///
   /// Защита от:
   /// - XSS (при отображении в WebView)
   /// - SQL injection (если в будущем будет DB)

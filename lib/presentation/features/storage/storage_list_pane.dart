@@ -19,7 +19,6 @@ class StorageListPane extends StatelessWidget {
 
     return Column(
       children: [
-        // Поиск
         Padding(
           padding: const EdgeInsets.all(16),
           child: TextField(
@@ -33,8 +32,6 @@ class StorageListPane extends StatelessWidget {
             onChanged: controller.setSearchQuery,
           ),
         ),
-
-        // Фильтр категорий
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: FutureBuilder<List<Category>>(
@@ -53,9 +50,9 @@ class StorageListPane extends StatelessWidget {
                     child: Text('Все категории'),
                   ),
                   ...categories.map(
-                    (cat) => DropdownMenuItem(
-                      value: cat.id,
-                      child: Text('${cat.icon} ${cat.name}'),
+                    (category) => DropdownMenuItem(
+                      value: category.id,
+                      child: Text('${category.icon ?? '📁'} ${category.name}'),
                     ),
                   ),
                 ],
@@ -64,10 +61,7 @@ class StorageListPane extends StatelessWidget {
             },
           ),
         ),
-
         const SizedBox(height: 16),
-
-        // Список паролей
         Expanded(
           child: controller.isFilterEmpty
               ? StorageFilterEmptyState(
@@ -75,92 +69,44 @@ class StorageListPane extends StatelessWidget {
                   searchQuery: controller.searchQuery,
                 )
               : ListView.builder(
-                  key: const PageStorageKey('storage_passwords_list'),
+                  key: const ValueKey('storage_passwords_list'),
                   itemCount: controller.passwordsCount,
                   itemBuilder: (context, index) {
                     final entry = controller.passwords[index];
                     final isSelected = controller.selectedEntry == entry;
+                    final key =
+                        entry.id ?? entry.createdAt.millisecondsSinceEpoch;
 
-                    return AnimatedContainer(
-                      key: ValueKey('password_${entry.id}'),
-                      duration: const Duration(milliseconds: 200),
-                      color: isSelected
-                          ? theme.colorScheme.primaryContainer
-                          : Colors.transparent,
-                      child: ListTile(
-                        leading: FutureBuilder<List<Category>>(
-                          future: context
-                              .read<GetCategoriesUseCase>()
-                              .execute(),
-                          builder: (context, snapshot) {
-                            final categories = snapshot.data ?? [];
-                            final category = entry.categoryId != null
-                                ? categories.cast<Category?>().firstWhere(
-                                    (c) => c?.id == entry.categoryId,
-                                    orElse: () => null,
-                                  )
-                                : null;
-                            return Text(
-                              category?.icon ?? '📁',
-                              style: const TextStyle(fontSize: 24),
-                            );
-                          },
-                        ),
-                        title: Text(
-                          entry.service,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          '${entry.login} • ${entry.categoryId ?? "Без категории"}',
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Semantics(
-                              label: 'Показать пароль для ${entry.service}',
-                              button: true,
-                              child: IconButton(
-                                icon: const Icon(Icons.visibility),
-                                onPressed: () => onEntrySelected?.call(entry),
-                                tooltip: 'Показать пароль',
-                              ),
-                            ),
-                            Semantics(
-                              label: 'Копировать пароль для ${entry.service}',
-                              button: true,
-                              child: IconButton(
-                                icon: const Icon(Icons.copy),
-                                onPressed: () {
-                                  // Копирование
-                                  final passwordText =
-                                      entry.displayPassword ?? '(зашифровано)';
-                                  Clipboard.setData(
-                                    ClipboardData(text: passwordText),
-                                  );
-
-                                  // Автоочистка буфера обмена через 60 секунд
-                                  Future.delayed(
-                                    const Duration(seconds: 60),
-                                    () {
-                                      Clipboard.setData(
-                                        const ClipboardData(text: ''),
-                                      );
-                                    },
-                                  );
-                                },
-                                tooltip: 'Копировать пароль',
-                              ),
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          // Выбираем запись в контроллере
-                          final controller = context.read<StorageController>();
-                          controller.selectEntry(entry);
-                        },
-                        onLongPress: () {
-                          _showDeleteConfirmation(context, entry);
-                        },
+                    return Dismissible(
+                      key: ValueKey('password_$key'),
+                      direction: DismissDirection.horizontal,
+                      background: _buildSwipeBackground(
+                        color: Colors.green,
+                        alignment: Alignment.centerLeft,
+                        icon: Icons.copy,
+                        label: 'Копировать',
+                      ),
+                      secondaryBackground: _buildSwipeBackground(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        icon: Icons.delete,
+                        label: 'Удалить',
+                      ),
+                      confirmDismiss: (direction) async {
+                        if (direction == DismissDirection.startToEnd) {
+                          await _copyPassword(context, entry);
+                          return false;
+                        }
+                        return _showDeleteConfirmationSwipe(context, entry);
+                      },
+                      onDismissed: (_) {
+                        context.read<StorageController>().deletePassword(entry);
+                      },
+                      child: _buildPasswordCard(
+                        context,
+                        controller,
+                        entry,
+                        isSelected,
                       ),
                     );
                   },
@@ -170,10 +116,163 @@ class StorageListPane extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, PasswordEntry entry) {
-    final controller = context.read<StorageController>();
+  Widget _buildSwipeBackground({
+    required Color color,
+    required Alignment alignment,
+    required IconData icon,
+    required String label,
+  }) {
+    final isLeft = alignment == Alignment.centerLeft;
 
-    showDialog(
+    return Container(
+      color: color,
+      alignment: alignment,
+      padding: EdgeInsets.only(left: isLeft ? 16 : 0, right: isLeft ? 0 : 16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isLeft) ...[
+            Icon(icon, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(label, style: const TextStyle(color: Colors.white)),
+          ] else ...[
+            Text(label, style: const TextStyle(color: Colors.white)),
+            const SizedBox(width: 8),
+            Icon(icon, color: Colors.white),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPasswordCard(
+    BuildContext context,
+    StorageController controller,
+    PasswordEntry entry,
+    bool isSelected,
+  ) {
+    final theme = Theme.of(context);
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      color: isSelected ? theme.colorScheme.primaryContainer : null,
+      child: ExpansionTile(
+        key: ValueKey('password_details_${entry.id ?? entry.service}'),
+        leading: FutureBuilder<List<Category>>(
+          future: context.read<GetCategoriesUseCase>().execute(),
+          builder: (context, snapshot) {
+            final category = _findCategory(snapshot.data ?? [], entry);
+            return Text(
+              category?.icon ?? '📁',
+              style: const TextStyle(fontSize: 24),
+            );
+          },
+        ),
+        title: Text(
+          entry.service,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: FutureBuilder<List<Category>>(
+          future: context.read<GetCategoriesUseCase>().execute(),
+          builder: (context, snapshot) {
+            final category = _findCategory(snapshot.data ?? [], entry);
+            final login = entry.login?.isNotEmpty == true
+                ? entry.login!
+                : 'Без логина';
+            return Text('$login • ${category?.name ?? 'Без категории'}');
+          },
+        ),
+        onExpansionChanged: (expanded) {
+          if (expanded) {
+            controller.selectEntry(entry);
+            onEntrySelected?.call(entry);
+          }
+        },
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        children: [_buildExpandedDetails(context, entry)],
+      ),
+    );
+  }
+
+  Widget _buildExpandedDetails(BuildContext context, PasswordEntry entry) {
+    final theme = Theme.of(context);
+    final passwordText = entry.displayPassword ?? '(зашифровано)';
+
+    return Column(
+      children: [
+        const Divider(height: 1),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.key),
+          title: const Text('Пароль'),
+          subtitle: SelectableText(
+            passwordText,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+            ),
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.copy),
+            tooltip: 'Копировать пароль',
+            onPressed: () => _copyPassword(context, entry),
+          ),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.person_outline),
+          title: const Text('Логин'),
+          subtitle: Text(
+            entry.login?.isNotEmpty == true ? entry.login! : 'Не указан',
+          ),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.tune),
+          title: const Text('Конфигурация'),
+          subtitle: SelectableText(
+            entry.config.isNotEmpty ? entry.config : 'Не указана',
+            maxLines: 2,
+          ),
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.calendar_today_outlined),
+          title: const Text('Создан'),
+          subtitle: Text(_formatDate(entry.createdAt)),
+        ),
+      ],
+    );
+  }
+
+  Category? _findCategory(List<Category> categories, PasswordEntry entry) {
+    if (entry.categoryId == null) return null;
+    return categories.cast<Category?>().firstWhere(
+      (category) => category?.id == entry.categoryId,
+      orElse: () => null,
+    );
+  }
+
+  Future<void> _copyPassword(BuildContext context, PasswordEntry entry) async {
+    final passwordText = entry.displayPassword ?? '(зашифровано)';
+    await Clipboard.setData(ClipboardData(text: passwordText));
+    Future.delayed(const Duration(seconds: 60), () {
+      Clipboard.setData(const ClipboardData(text: ''));
+    });
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Пароль скопирован'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<bool> _showDeleteConfirmationSwipe(
+    BuildContext context,
+    PasswordEntry entry,
+  ) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Удалить пароль?'),
@@ -182,20 +281,27 @@ class StorageListPane extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Отмена'),
           ),
           TextButton(
-            onPressed: () {
-              controller.deleteCurrentPassword();
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Удалить'),
           ),
         ],
       ),
     );
+
+    return confirmed ?? false;
+  }
+
+  String _formatDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$day.$month.${date.year} $hour:$minute';
   }
 }
 

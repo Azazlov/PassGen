@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../domain/entities/security_log.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
 
+enum LogsFilter { all, login, changes, export }
+
 /// Контроллер для просмотра логов
 class LogsController extends ChangeNotifier {
   LogsController({required GetLogsUseCase getLogsUseCase})
@@ -10,13 +12,22 @@ class LogsController extends ChangeNotifier {
   final GetLogsUseCase _getLogsUseCase;
 
   List<SecurityLog> _logs = [];
+  LogsFilter _selectedFilter = LogsFilter.all;
   bool _isLoading = false;
   String? _error;
 
   List<SecurityLog> get logs => _logs;
+  LogsFilter get selectedFilter => _selectedFilter;
+  List<SecurityLog> get filteredLogs =>
+      _logs.where(_matchesSelectedFilter).toList();
   bool get isLoading => _isLoading;
   String? get error => _error;
-  bool get isEmpty => _logs.isEmpty;
+  bool get isEmpty => filteredLogs.isEmpty;
+
+  void setFilter(LogsFilter filter) {
+    _selectedFilter = filter;
+    notifyListeners();
+  }
 
   /// Загрузка логов
   Future<void> loadLogs({int limit = 100}) async {
@@ -41,7 +52,7 @@ class LogsController extends ChangeNotifier {
   Map<String, List<SecurityLog>> getLogsByDate() {
     final Map<String, List<SecurityLog>> grouped = {};
 
-    for (final log in _logs) {
+    for (final log in filteredLogs) {
       final date = _formatDate(log.timestamp);
       if (!grouped.containsKey(date)) {
         grouped[date] = [];
@@ -50,6 +61,23 @@ class LogsController extends ChangeNotifier {
     }
 
     return grouped;
+  }
+
+  bool _matchesSelectedFilter(SecurityLog log) {
+    switch (_selectedFilter) {
+      case LogsFilter.all:
+        return true;
+      case LogsFilter.login:
+        return log.actionType.startsWith('AUTH_') ||
+            log.actionType.startsWith('PIN_') ||
+            log.actionType.startsWith('SESSION_');
+      case LogsFilter.changes:
+        return log.actionType.contains('PWD_') ||
+            log.actionType == 'SETTINGS_CHG';
+      case LogsFilter.export:
+        return log.actionType.contains('EXPORT') ||
+            log.actionType.contains('IMPORT');
+    }
   }
 
   String _formatDate(DateTime dateTime) {

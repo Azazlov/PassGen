@@ -46,9 +46,46 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
       ),
       body: controller.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : controller.isEmpty
-          ? _buildEmptyState(theme)
-          : _buildLogsList(controller, theme),
+          : Column(
+              children: [
+                _buildFilterChips(controller),
+                Expanded(
+                  child: controller.isEmpty
+                      ? _buildEmptyState(theme)
+                      : _buildLogsList(controller, theme),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildFilterChips(LogsController controller) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Row(
+        children: [
+          _buildFilterChip(controller, LogsFilter.all, 'Все'),
+          const SizedBox(width: 8),
+          _buildFilterChip(controller, LogsFilter.login, 'Вход'),
+          const SizedBox(width: 8),
+          _buildFilterChip(controller, LogsFilter.changes, 'Изменения'),
+          const SizedBox(width: 8),
+          _buildFilterChip(controller, LogsFilter.export, 'Экспорт'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(
+    LogsController controller,
+    LogsFilter filter,
+    String label,
+  ) {
+    return FilterChip(
+      label: Text(label),
+      selected: controller.selectedFilter == filter,
+      onSelected: (_) => controller.setFilter(filter),
     );
   }
 
@@ -82,6 +119,7 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
 
     return ListView.builder(
       key: const PageStorageKey('logs_list'),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       itemCount: groupedLogs.length,
       itemBuilder: (context, index) {
         final entry = groupedLogs.entries.elementAt(index);
@@ -129,6 +167,7 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
       key: ValueKey('log_${log.id}_${log.timestamp.millisecondsSinceEpoch}'),
       margin: const EdgeInsets.only(bottom: 4),
       child: ListTile(
+        onTap: () => _showLogDetails(context, log, controller, theme),
         leading: CircleAvatar(
           backgroundColor: color.withValues(alpha: 0.1),
           child: Icon(icon, color: color, size: 20),
@@ -154,6 +193,68 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
     );
   }
 
+  void _showLogDetails(
+    BuildContext context,
+    SecurityLog log,
+    LogsController controller,
+    ThemeData theme,
+  ) {
+    final icon = controller.getEventIcon(log.actionType);
+    final color = controller.getEventColor(log.actionType, theme);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withValues(alpha: 0.1),
+              child: Icon(icon, color: color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(_formatActionType(log.actionType))),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDetailRow('Время', _formatTimestamp(log.timestamp)),
+            if (log.profileId != null)
+              _buildDetailRow('Профиль', log.profileId.toString()),
+            _buildDetailRow('Тип', log.actionType),
+            _buildDetailRow(
+              'Детали',
+              log.details == null || log.details!.isEmpty
+                  ? 'Нет данных'
+                  : _formatDetails(log.details!),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Закрыть'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          SelectableText(value),
+        ],
+      ),
+    );
+  }
+
   String _formatActionType(String actionType) {
     return actionType
         .replaceAll('_', ' ')
@@ -172,5 +273,14 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
     } catch (_) {
       return details;
     }
+  }
+
+  String _formatTimestamp(DateTime dateTime) {
+    final day = dateTime.day.toString().padLeft(2, '0');
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final hour = dateTime.hour.toString().padLeft(2, '0');
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final second = dateTime.second.toString().padLeft(2, '0');
+    return '$day.$month.${dateTime.year} $hour:$minute:$second';
   }
 }

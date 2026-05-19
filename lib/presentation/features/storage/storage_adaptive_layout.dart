@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../../../core/constants/breakpoints.dart';
-import 'storage_controller.dart';
 import 'storage_detail_pane.dart';
 import 'storage_list_pane.dart';
 
@@ -14,18 +12,16 @@ class StorageAdaptiveLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
-    // Мобильный режим (< 600dp)
-    if (width < Breakpoints.tabletMin) {
-      return const StorageMobileLayout();
-    }
-
-    // Планшет (600-899dp) - двухпанельный макет
     if (width < Breakpoints.desktopMin) {
-      return const StorageTabletLayout();
+      return const StorageListPane();
     }
 
-    // Десктоп (≥ 900dp) - трёхпанельный макет с NavigationRail
-    return const StorageDesktopLayout();
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900),
+        child: const StorageListPane(),
+      ),
+    );
   }
 }
 
@@ -35,26 +31,7 @@ class StorageMobileLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Список паролей
-        Expanded(
-          child: StorageListPane(
-            onEntrySelected: (entry) {
-              // На мобильном переходим к деталям на отдельный экран
-              if (entry != null) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => StorageDetailScreen(entry: entry),
-                  ),
-                );
-              }
-            },
-          ),
-        ),
-      ],
-    );
+    return const StorageListPane();
   }
 }
 
@@ -64,43 +41,7 @@ class StorageTabletLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<StorageController>();
-
-    // Автовыбор первой записи при загрузке
-    if (controller.passwords.isNotEmpty && controller.selectedEntry == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (controller.selectedEntry == null &&
-            controller.passwords.isNotEmpty) {
-          controller.selectEntry(controller.passwords.first);
-        }
-      });
-    }
-
-    return Row(
-      children: [
-        // Левая панель: Список (40%)
-        SizedBox(
-          width: MediaQuery.of(context).size.width * 0.4,
-          child: StorageListPane(
-            onEntrySelected: (entry) {
-              controller.selectEntry(entry);
-            },
-          ),
-        ),
-        const VerticalDivider(thickness: 1, width: 1),
-        // Правая панель: Детали (60%)
-        Expanded(
-          flex: 6,
-          child: controller.selectedEntry != null
-              ? StorageDetailPane(entry: controller.selectedEntry!)
-              : const StorageEmptyDetailState(
-                  icon: Icons.touch_app,
-                  title: 'Выберите пароль',
-                  subtitle: 'или создайте новый',
-                ),
-        ),
-      ],
-    );
+    return const StorageListPane();
   }
 }
 
@@ -110,47 +51,11 @@ class StorageDesktopLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<StorageController>();
-
-    // Автовыбор первой записи при загрузке
-    if (controller.passwords.isNotEmpty && controller.selectedEntry == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (controller.selectedEntry == null &&
-            controller.passwords.isNotEmpty) {
-          controller.selectEntry(controller.passwords.first);
-        }
-      });
-    }
-
-    return Row(
-      children: [
-        // Список с фиксированной шириной (280dp)
-        const SizedBox(
-          width: 280,
-          child: StorageListPane(
-            onEntrySelected: null, // Выбор через controller
-          ),
-        ),
-        const VerticalDivider(thickness: 1, width: 1),
-        // Детали (расширяемая панель, макс 800dp)
-        Expanded(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 800),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: controller.selectedEntry != null
-                    ? StorageDetailPane(entry: controller.selectedEntry!)
-                    : const StorageEmptyDetailState(
-                        icon: Icons.touch_app,
-                        title: 'Выберите пароль',
-                        subtitle: 'или создайте новый',
-                      ),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900),
+        child: const StorageListPane(),
+      ),
     );
   }
 }

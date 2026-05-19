@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../domain/entities/category.dart';
@@ -10,7 +11,6 @@ import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
 import '../../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
-import '../../../presentation/widgets/app_switch.dart';
 import '../../../presentation/widgets/app_text_field.dart';
 import '../../../presentation/widgets/character_set_display.dart';
 import '../../../presentation/widgets/copyable_password.dart';
@@ -50,7 +50,27 @@ class _GeneratorScreenContent extends StatefulWidget {
 class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
   final _formKey = GlobalKey<FormState>();
 
-  Future<void> _handlePasswordTap() async {
+  Future<void> _handleCopyPassword() async {
+    final controller = context.read<GeneratorController>();
+
+    if (controller.password.isEmpty) {
+      showAppDialog(
+        context: context,
+        title: 'Нет пароля',
+        content: 'Сначала сгенерируйте пароль',
+      );
+      return;
+    }
+
+    await Clipboard.setData(ClipboardData(text: controller.password));
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Пароль скопирован')));
+  }
+
+  Future<void> _handleSavePassword() async {
     final controller = context.read<GeneratorController>();
     final storageController = context.read<StorageController>();
 
@@ -63,7 +83,6 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
       return;
     }
 
-    // Копируем пароль в буфер обмена
     showSavePasswordConfirmationDialog(
       context: context,
       service: controller.serviceController.text.isEmpty
@@ -72,16 +91,16 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
       onConfirm: () async {
         final result = await controller.savePassword();
 
-        if (!context.mounted) return;
+        if (!mounted) return;
 
         final success = result['success'] as bool? ?? false;
         final updated = result['updated'] as bool? ?? false;
 
-        if (success && context.mounted) {
+        if (success && mounted) {
           // Автообновление хранилища
           await storageController.loadPasswords();
 
-          if (context.mounted) {
+          if (mounted) {
             showAppDialog(
               context: context,
               title: 'Успешно',
@@ -92,7 +111,7 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
           }
         } else {
           final error = controller.error;
-          if (error != null && context.mounted) {
+          if (error != null && mounted) {
             showAppDialog(context: context, title: 'Ошибка', content: error);
           }
         }
@@ -146,9 +165,12 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                   label: 'Пароль',
                   text: controller.password,
                   isEmpty: controller.password.isEmpty,
-                  onTap: _handlePasswordTap,
                 ),
               ),
+
+              const SizedBox(height: 12),
+
+              _buildStrengthMeter(controller, theme),
 
               SizedBox(height: isSmallScreen ? 16 : 24),
 
@@ -221,119 +243,10 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              // Индикатор стойкости с Lottie анимацией
-              Row(
-                children: [
-                  Expanded(
-                    child: LinearProgressIndicator(
-                      value: controller.strength / 4,
-                      backgroundColor:
-                          theme.colorScheme.surfaceContainerHighest,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        controller.strengthColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  LottieStrengthPulse(
-                    size: 32,
-                    strength: controller.strengthValue / 100,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                controller.strengthLabel,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: controller.strengthColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
 
               const SizedBox(height: 24),
 
-              // Настройки длины
-              ExpansionTile(
-                title: const Text('Настройки длины пароля'),
-                children: [
-                  AppTextField(
-                    label: 'Мин. длина',
-                    hint: 'от 1 до 32',
-                    controller: controller.minLengthController,
-                    keyboardType: TextInputType.number,
-                    onSubmitted: (_) => controller.generatePassword(),
-                  ),
-                  AppTextField(
-                    label: 'Макс. длина',
-                    hint: 'от 1 до 64',
-                    controller: controller.maxLengthController,
-                    keyboardType: TextInputType.number,
-                    onSubmitted: (_) => controller.generatePassword(),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Настройки обязательности
-              ExpansionTile(
-                title: const Text('Настройки обязательности'),
-                children: [
-                  AppSwitch(
-                    label: 'Заглавные буквы',
-                    subtitle: 'В пароле будут заглавные буквы',
-                    value: controller.requireUppercase,
-                    icon: Icons.text_fields,
-                    onChanged: controller.toggleRequireUppercase,
-                  ),
-                  AppSwitch(
-                    label: 'Строчные буквы',
-                    subtitle: 'В пароле будут строчные буквы',
-                    value: controller.requireLowercase,
-                    icon: Icons.text_fields,
-                    onChanged: controller.toggleRequireLowercase,
-                  ),
-                  AppSwitch(
-                    label: 'Цифры',
-                    subtitle: 'В пароле будут цифры',
-                    value: controller.requireDigits,
-                    icon: Icons.dialpad,
-                    onChanged: controller.toggleRequireDigits,
-                  ),
-                  AppSwitch(
-                    label: 'Спец. символы',
-                    subtitle: 'В пароле будут спец. символы',
-                    value: controller.requireSymbols,
-                    icon: Icons.tag,
-                    onChanged: controller.toggleRequireSymbols,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Настройки для пресета "Свой+"
-              ExpansionTile(
-                title: const Text('Дополнительные настройки'),
-                children: [
-                  AppSwitch(
-                    label: 'Без повторяющихся символов',
-                    subtitle: 'Все символы уникальны',
-                    value: controller.allUnique,
-                    icon: Icons.tag,
-                    onChanged: controller.toggleAllUnique,
-                  ),
-                  const SizedBox(height: 8),
-                  AppSwitch(
-                    label: 'Исключить похожие символы',
-                    subtitle: '1, l, I, 0, O, o',
-                    value: controller.excludeSimilar,
-                    icon: Icons.block,
-                    onChanged: controller.toggleExcludeSimilar,
-                  ),
-                ],
-              ),
+              _buildGeneratorSettingsPanel(controller, theme),
 
               const SizedBox(height: 16),
 
@@ -361,28 +274,171 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
           ),
         ),
       ),
-      // Плавающая кнопка генерации
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: controller.isLoading ? null : controller.generatePassword,
-        icon: controller.isLoading
-            ? SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    theme.colorScheme.onPrimary,
-                  ),
-                ),
-              )
-            : const Icon(Icons.refresh),
-        label: Text(
-          controller.isLoading ? 'Генерация...' : 'Сгенерировать',
-          style: theme.textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.bold,
+      floatingActionButton: _buildFloatingActions(controller, theme),
+    );
+  }
+
+  Widget _buildStrengthMeter(GeneratorController controller, ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: LinearProgressIndicator(
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(8),
+            value: controller.evaluatedStrengthValue,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              controller.evaluatedStrengthColor,
+            ),
           ),
         ),
+        const SizedBox(width: 12),
+        LottieStrengthPulse(
+          size: 32,
+          strength: controller.evaluatedStrengthValue,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          controller.evaluatedStrengthLabel,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: controller.evaluatedStrengthColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGeneratorSettingsPanel(
+    GeneratorController controller,
+    ThemeData theme,
+  ) {
+    final range = controller.settings.lengthRange;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Настройки генерации', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 12),
+            Text(
+              'Длина: ${range.first}-${range.last}',
+              style: theme.textTheme.bodyMedium,
+            ),
+            RangeSlider(
+              values: RangeValues(
+                range.first.toDouble(),
+                range.last.toDouble(),
+              ),
+              min: 1,
+              max: 64,
+              divisions: 63,
+              labels: RangeLabels('${range.first}', '${range.last}'),
+              onChanged: (values) {
+                controller.updateLengthRange(
+                  values.start.round(),
+                  values.end.round(),
+                );
+              },
+            ),
+            _buildSettingCheckbox(
+              title: 'Заглавные буквы',
+              value: controller.requireUppercase,
+              onChanged: controller.toggleRequireUppercase,
+            ),
+            _buildSettingCheckbox(
+              title: 'Строчные буквы',
+              value: controller.requireLowercase,
+              onChanged: controller.toggleRequireLowercase,
+            ),
+            _buildSettingCheckbox(
+              title: 'Цифры',
+              value: controller.requireDigits,
+              onChanged: controller.toggleRequireDigits,
+            ),
+            _buildSettingCheckbox(
+              title: 'Спец. символы',
+              value: controller.requireSymbols,
+              onChanged: controller.toggleRequireSymbols,
+            ),
+            const Divider(height: 12),
+            _buildSettingCheckbox(
+              title: 'Без повторяющихся символов',
+              value: controller.allUnique,
+              onChanged: controller.toggleAllUnique,
+            ),
+            _buildSettingCheckbox(
+              title: 'Исключить похожие символы',
+              subtitle: '1, l, I, 0, O, o',
+              value: controller.excludeSimilar,
+              onChanged: controller.toggleExcludeSimilar,
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildSettingCheckbox({
+    required String title,
+    String? subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return CheckboxListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      controlAffinity: ListTileControlAffinity.leading,
+      title: Text(title),
+      subtitle: subtitle != null ? Text(subtitle) : null,
+      value: value,
+      onChanged: (next) => onChanged(next ?? false),
+    );
+  }
+
+  Widget _buildFloatingActions(
+    GeneratorController controller,
+    ThemeData theme,
+  ) {
+    final hasPassword = controller.password.isNotEmpty;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton.small(
+          heroTag: 'generate_password',
+          tooltip: 'Обновить',
+          onPressed: controller.isLoading ? null : controller.generatePassword,
+          child: controller.isLoading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.colorScheme.onPrimary,
+                    ),
+                  ),
+                )
+              : const Icon(Icons.refresh),
+        ),
+        const SizedBox(height: 12),
+        FloatingActionButton.small(
+          heroTag: 'copy_password',
+          tooltip: 'Копировать',
+          onPressed: hasPassword ? _handleCopyPassword : null,
+          child: const Icon(Icons.copy),
+        ),
+        const SizedBox(height: 12),
+        FloatingActionButton.small(
+          heroTag: 'save_password',
+          tooltip: 'Сохранить',
+          onPressed: hasPassword ? _handleSavePassword : null,
+          child: const Icon(Icons.save),
+        ),
+      ],
     );
   }
 
