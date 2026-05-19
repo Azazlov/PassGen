@@ -50,6 +50,7 @@ import '../../domain/usecases/settings/get_setting_usecase.dart';
 import '../../domain/usecases/settings/remove_setting_usecase.dart';
 import '../../domain/usecases/settings/set_setting_usecase.dart';
 import '../../domain/usecases/storage/delete_password_usecase.dart';
+import '../../domain/usecases/storage/update_entry_usecase.dart';
 import '../../domain/usecases/storage/export_passgen_usecase.dart';
 import '../../domain/usecases/storage/export_passwords_usecase.dart';
 import '../../domain/usecases/storage/get_passwords_usecase.dart';
@@ -227,6 +228,10 @@ class PasswordGeneratorApp extends StatelessWidget {
               DeletePasswordUseCase(context.read<StorageRepositoryImpl>()),
         ),
         Provider(
+          create: (context) =>
+              UpdateEntryUseCase(context.read<StorageRepositoryImpl>()),
+        ),
+        Provider(
           create: (context) => ExportPasswordsUseCase(
             context.read<PasswordDataRepositoryImpl>(),
           ),
@@ -353,6 +358,7 @@ class PasswordGeneratorApp extends StatelessWidget {
             exportPassgenUseCase: context.read<ExportPassgenUseCase>(),
             importPassgenUseCase: context.read<ImportPassgenUseCase>(),
             logEventUseCase: context.read<LogEventUseCase>(),
+            updateEntryUseCase: context.read<UpdateEntryUseCase>(),
           ),
         ),
         ChangeNotifierProvider<AuthController>(

@@ -10,6 +10,7 @@ class DatabaseMigrations {
     3: _migrateToV3,
     4: _migrateToV4,
     5: _migrateToV5,
+    6: _migrateToV6,
   };
 
   /// Получение списка миграций для применения
@@ -333,6 +334,39 @@ class DatabaseMigrations {
       await maybeAddColumn('password_entries', 'encrypted_login BLOB');
       await maybeAddColumn('password_history', 'encrypted_service BLOB');
       await maybeAddColumn('password_history', 'encrypted_login BLOB');
+    });
+  }
+
+  /// Миграция к версии 6
+  /// Добавление текстовых колонок `url` и `notes` в таблицы
+  /// `password_entries` и `password_history`. Значения хранятся в plaintext —
+  /// шифрование этих полей вынесено в отдельный этап.
+  static Future<void> _migrateToV6(Database db) async {
+    await db.transaction((txn) async {
+      Future<bool> tableExists(String name) async {
+        final res = await txn.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+          [name],
+        );
+        return res.isNotEmpty;
+      }
+
+      Future<bool> columnExists(String tableName, String columnName) async {
+        final cols = await txn.rawQuery('PRAGMA table_info($tableName)');
+        return cols.any((c) => (c['name'] as String) == columnName);
+      }
+
+      Future<void> maybeAddColumn(String tableName, String columnDef) async {
+        final columnName = columnDef.split(' ').first;
+        if (!await tableExists(tableName)) return;
+        if (await columnExists(tableName, columnName)) return;
+        await txn.execute('ALTER TABLE $tableName ADD COLUMN $columnDef');
+      }
+
+      await maybeAddColumn('password_entries', 'url TEXT');
+      await maybeAddColumn('password_entries', 'notes TEXT');
+      await maybeAddColumn('password_history', 'url TEXT');
+      await maybeAddColumn('password_history', 'notes TEXT');
     });
   }
 }

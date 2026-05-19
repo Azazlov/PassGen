@@ -305,6 +305,69 @@ class StorageLocalDataSource {
     }
   }
 
+  /// Обновляет метаданные существующей записи (id обязателен).
+  ///
+  /// Поля `service` / `login` шифруются, если для профиля доступен
+  /// vault-ключ (`VaultKeySession`). `url` / `notes` сохраняются как
+  /// plaintext (шифрование этих полей вынесено в отдельный этап).
+  ///
+  /// Поля `encrypted_password` / `nonce` / `config` не затрагиваются.
+  Future<bool> updateEntry(PasswordEntry updated) async {
+    if (updated.id == null) {
+      throw const StorageFailure(
+        message: 'Невозможно обновить запись без id',
+      );
+    }
+    try {
+      await _ensurePasswordsMigrated();
+      final database = await _db.database;
+      final keyBytes = VaultKeySession.getForProfile(_defaultProfileId);
+
+      List<int>? encryptedServiceBlob;
+      List<int>? encryptedLoginBlob;
+      if (keyBytes != null) {
+        encryptedServiceBlob = await _encryptor.encryptFieldWithKey(
+          message: utf8.encode(updated.service),
+          keyBytes: keyBytes,
+        );
+        if (updated.login != null) {
+          encryptedLoginBlob = await _encryptor.encryptFieldWithKey(
+            message: utf8.encode(updated.login!),
+            keyBytes: keyBytes,
+          );
+        }
+      }
+
+      final servicePlain = encryptedServiceBlob != null ? '' : updated.service;
+      final loginPlain = encryptedLoginBlob != null ? null : updated.login;
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      final values = <String, Object?>{
+        'service': servicePlain,
+        'login': loginPlain,
+        'url': updated.url,
+        'notes': updated.notes,
+        'category_id': updated.categoryId,
+        'updated_at': now,
+        if (encryptedServiceBlob != null)
+          'encrypted_service': Uint8List.fromList(encryptedServiceBlob),
+        if (encryptedLoginBlob != null)
+          'encrypted_login': Uint8List.fromList(encryptedLoginBlob),
+      };
+
+      final count = await database.update(
+        'password_entries',
+        values,
+        where: 'id = ? AND profile_id = ?',
+        whereArgs: [updated.id, _defaultProfileId],
+      );
+      return count > 0;
+    } catch (e) {
+      if (e is StorageFailure) rethrow;
+      throw StorageFailure(message: 'Ошибка обновления записи: $e');
+    }
+  }
+
   /// Экспортирует пароли в JSON строку (формат совместим с `importPasswords`).
   Future<String> exportPasswords() async {
     try {

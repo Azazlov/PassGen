@@ -13,6 +13,8 @@ class PasswordEntry {
     this.nonce, // ← Nonce для шифрования (Base64)
     required this.config,
     this.login,
+    this.url,
+    this.notes,
     required this.createdAt,
     this.updatedAt,
     this.encryptedServiceBlob,
@@ -31,6 +33,8 @@ class PasswordEntry {
       nonce: json['nonce'] as String?,
       config: json['config'] ?? '',
       login: json['login'] as String?,
+      url: json['url'] as String?,
+      notes: json['notes'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
@@ -48,6 +52,13 @@ class PasswordEntry {
   final String? nonce; // ← Nonce для шифрования (Base64)
   final String config;
   final String? login;
+
+  /// URL сервиса (опциональный, plaintext в v6).
+  final String? url;
+
+  /// Произвольные заметки пользователя (plaintext в v6).
+  final String? notes;
+
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -74,6 +85,8 @@ class PasswordEntry {
       if (nonce != null) 'nonce': nonce,
       'config': config,
       if (login != null) 'login': login,
+      if (url != null) 'url': url,
+      if (notes != null) 'notes': notes,
       'createdAt': createdAt.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };
@@ -115,11 +128,15 @@ class PasswordEntry {
     String? nonce,
     String? config,
     String? login,
+    String? url,
+    String? notes,
     DateTime? updatedAt,
     List<int>? encryptedServiceBlob,
     List<int>? encryptedLoginBlob,
     bool clearEncryptedServiceBlob = false,
     bool clearEncryptedLoginBlob = false,
+    bool clearUrl = false,
+    bool clearNotes = false,
   }) {
     return PasswordEntry(
       id: id ?? this.id,
@@ -131,6 +148,8 @@ class PasswordEntry {
       nonce: nonce ?? this.nonce,
       config: config ?? this.config,
       login: login ?? this.login,
+      url: clearUrl ? null : (url ?? this.url),
+      notes: clearNotes ? null : (notes ?? this.notes),
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       encryptedServiceBlob: clearEncryptedServiceBlob
@@ -190,6 +209,8 @@ class PasswordEntry {
       categoryId: map['category_id'] as int?,
       service: (map['service'] as String?) ?? '',
       login: map['login'] as String?,
+      url: map['url'] as String?,
+      notes: map['notes'] as String?,
       encryptedPassword: encryptedPassword,
       config: config,
       createdAt: createdAtMs != null
@@ -231,6 +252,8 @@ class PasswordEntry {
       'category_id': categoryId,
       'service': servicePlaintext,
       'login': loginPlaintext,
+      'url': url,
+      'notes': notes,
       'encrypted_password': encryptedPasswordBytes,
       'nonce': Uint8List(0),
       if (encryptedServiceBlob != null)

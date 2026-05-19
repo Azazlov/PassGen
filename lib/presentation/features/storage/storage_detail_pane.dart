@@ -76,6 +76,28 @@ class StorageDetailPane extends StatelessWidget {
           // Категория
           _buildCategoryField(context, theme),
 
+          if ((entry.url ?? '').isNotEmpty) ...[
+            const SizedBox(height: 24),
+            _buildPlainField(
+              context,
+              theme,
+              title: 'URL',
+              value: entry.url!,
+              icon: Icons.link,
+            ),
+          ],
+
+          if ((entry.notes ?? '').isNotEmpty) ...[
+            const SizedBox(height: 24),
+            _buildPlainField(
+              context,
+              theme,
+              title: 'Заметки',
+              value: entry.notes!,
+              icon: Icons.note_outlined,
+            ),
+          ],
+
           const SizedBox(height: 24),
 
           // Даты
@@ -156,10 +178,51 @@ class StorageDetailPane extends StatelessWidget {
           children: [
             Text('Категория', style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),
-            Text(
-              entry.categoryId?.toString() ?? 'Без категории',
-              style: theme.textTheme.bodyLarge,
+            FutureBuilder<List<Category>>(
+              future: context.read<GetCategoriesUseCase>().execute(),
+              builder: (context, snapshot) {
+                if (entry.categoryId == null) {
+                  return Text('Без категории',
+                      style: theme.textTheme.bodyLarge);
+                }
+                final categories = snapshot.data ?? [];
+                final match = categories.cast<Category?>().firstWhere(
+                      (c) => c?.id == entry.categoryId,
+                      orElse: () => null,
+                    );
+                final name = match?.name ?? '#${entry.categoryId}';
+                return Text(name, style: theme.textTheme.bodyLarge);
+              },
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlainField(
+    BuildContext context,
+    ThemeData theme, {
+    required String title,
+    required String value,
+    required IconData icon,
+  }) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 18,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
+                const SizedBox(width: 8),
+                Text(title, style: theme.textTheme.titleSmall),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SelectableText(value, style: theme.textTheme.bodyLarge),
           ],
         ),
       ),
@@ -322,56 +385,128 @@ class StorageDetailPane extends StatelessWidget {
   ) {
     final serviceController = TextEditingController(text: entry.service);
     final loginController = TextEditingController(text: entry.login ?? '');
+    final urlController = TextEditingController(text: entry.url ?? '');
+    final notesController = TextEditingController(text: entry.notes ?? '');
+    int? selectedCategoryId = entry.categoryId;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Редактировать пароль'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: serviceController,
-                decoration: const InputDecoration(
-                  labelText: 'Сервис',
-                  border: OutlineInputBorder(),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          title: const Text('Редактировать запись'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: serviceController,
+                  decoration: const InputDecoration(
+                    labelText: 'Сервис',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: loginController,
-                decoration: const InputDecoration(
-                  labelText: 'Логин',
-                  border: OutlineInputBorder(),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: loginController,
+                  decoration: const InputDecoration(
+                    labelText: 'Логин',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                TextField(
+                  controller: urlController,
+                  decoration: const InputDecoration(
+                    labelText: 'URL',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.url,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: notesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Заметки',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                FutureBuilder<List<Category>>(
+                  future: context.read<GetCategoriesUseCase>().execute(),
+                  builder: (context, snapshot) {
+                    final categories = snapshot.data ?? [];
+                    return DropdownButtonFormField<int?>(
+                      value: selectedCategoryId,
+                      decoration: const InputDecoration(
+                        labelText: 'Категория',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('Без категории'),
+                        ),
+                        ...categories.map(
+                          (c) => DropdownMenuItem<int?>(
+                            value: c.id,
+                            child: Text('${c.icon} ${c.name}'),
+                          ),
+                        ),
+                      ],
+                      onChanged: (v) => setState(() => selectedCategoryId = v),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Отмена'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final navigator = Navigator.of(dialogContext);
+                final messenger = ScaffoldMessenger.of(context);
+                final service = serviceController.text.trim();
+                if (service.isEmpty) {
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('Сервис не может быть пустым'),
+                    ),
+                  );
+                  return;
+                }
+                final loginText = loginController.text.trim();
+                final urlText = urlController.text.trim();
+                final notesText = notesController.text.trim();
+                final updated = entry.copyWith(
+                  service: service,
+                  login: loginText.isEmpty ? null : loginText,
+                  url: urlText.isEmpty ? null : urlText,
+                  notes: notesText.isEmpty ? null : notesText,
+                  categoryId: selectedCategoryId,
+                  clearUrl: urlText.isEmpty,
+                  clearNotes: notesText.isEmpty,
+                );
+                final ok = await controller.updateEntry(updated);
+                navigator.pop();
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      ok
+                          ? 'Запись обновлена'
+                          : (controller.error ?? 'Не удалось обновить'),
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Сохранить'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Отмена'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Реализовать обновление пароля через контроллер
-              // controller.updatePassword(
-              //   id: entry.id,
-              //   service: serviceController.text,
-              //   login: loginController.text,
-              // );
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Функция редактирования в разработке'),
-                ),
-              );
-            },
-            child: const Text('Сохранить'),
-          ),
-        ],
       ),
     );
   }

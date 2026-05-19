@@ -1,7 +1,7 @@
 /// Схема базы данных SQLite
 ///
-/// Версия схемы: 5 (v0.6.1)
-/// Версия приложения: 0.6.1
+/// Версия схемы: 6 (v0.6.2)
+/// Версия приложения: 0.6.2
 ///
 /// История изменений:
 /// - Version 1: Initial schema (5 таблиц)
@@ -13,12 +13,15 @@
 ///                       encrypted_login BLOB на password_entries и
 ///                       password_history). Plaintext колонки `service`/`login`
 ///                       сохранены для совместимости и будут удалены в v6.
+/// - Version 6 (v0.6.2): Добавлены поля `url` и `notes` в password_entries и
+///                       password_history (TEXT, nullable). Шифрование этих
+///                       полей планируется отдельным этапом.
 ///
 /// Текущие криптопараметры (см. [EncryptionParams.v2]): PBKDF2-HMAC-SHA256,
 /// 600 000 итераций (соответствует рекомендации OWASP 2024).
 class DatabaseSchema {
-  static const int version = 5;
-  static const String appVersion = '0.6.1';
+  static const int version = 6;
+  static const String appVersion = '0.6.2';
   static const String schemaInfo = '''
 Version 1: Initial schema (5 tables)
   - categories
@@ -53,7 +56,11 @@ Version 5 (v0.6.1): Field-level encryption
   - service / login plaintext колонки сохранены для совместимости и для
     fallback'а в случае отсутствия активного vault-ключа (тестовые сценарии,
     одноразовые миграционные сценарии)
-  - В v6 запланирован дроп plaintext-колонок
+
+Version 6 (v0.6.2): Additional metadata fields
+  - url (TEXT, nullable) — адрес сервиса
+  - notes (TEXT, nullable) — заметки пользователя
+  - Добавлены в password_entries и password_history
 ''';
 
   // ==================== ТАБЛИЦЫ ====================
@@ -94,6 +101,8 @@ Version 5 (v0.6.1): Field-level encryption
       category_id INTEGER REFERENCES categories(id),
       service TEXT NOT NULL,
       login TEXT,
+      url TEXT,
+      notes TEXT,
       encrypted_password BLOB NOT NULL,
       nonce BLOB NOT NULL,
       encrypted_service BLOB,
@@ -167,6 +176,8 @@ Version 5 (v0.6.1): Field-level encryption
       nonce BLOB NOT NULL,
       config TEXT NOT NULL,
       login TEXT,
+      url TEXT,
+      notes TEXT,
       encrypted_service BLOB,
       encrypted_login BLOB,
       created_at INTEGER NOT NULL,

@@ -15,6 +15,9 @@ abstract class StorageRepository {
   /// Удаляет пароль по индексу
   Future<Either<StorageFailure, bool>> removePasswordAt(int index);
 
+  /// Обновляет существующую запись (по `id`).
+  Future<Either<StorageFailure, bool>> updateEntry(PasswordEntry updated);
+
   /// Очищает всё хранилище
   Future<Either<StorageFailure, bool>> clearStorage();
 }

@@ -43,5 +43,6 @@ export 'usecases/storage/export_passwords_usecase.dart';
 export 'usecases/storage/get_passwords_usecase.dart';
 export 'usecases/storage/import_passgen_usecase.dart';
 export 'usecases/storage/import_passwords_usecase.dart';
+export 'usecases/storage/update_entry_usecase.dart';
 // Validators
 export 'validators/password_settings_validator.dart';
