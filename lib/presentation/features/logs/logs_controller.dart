@@ -13,19 +13,40 @@ class LogsController extends ChangeNotifier {
 
   List<SecurityLog> _logs = [];
   LogsFilter _selectedFilter = LogsFilter.all;
+  DateTime? _fromDate;
+  DateTime? _toDate;
   bool _isLoading = false;
   String? _error;
 
   List<SecurityLog> get logs => _logs;
   LogsFilter get selectedFilter => _selectedFilter;
-  List<SecurityLog> get filteredLogs =>
-      _logs.where(_matchesSelectedFilter).toList();
+  DateTime? get fromDate => _fromDate;
+  DateTime? get toDate => _toDate;
+  bool get hasDateFilter => _fromDate != null || _toDate != null;
+  List<SecurityLog> get filteredLogs => _logs
+      .where(_matchesSelectedFilter)
+      .where(_matchesDateRange)
+      .toList();
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isEmpty => filteredLogs.isEmpty;
 
   void setFilter(LogsFilter filter) {
     _selectedFilter = filter;
+    notifyListeners();
+  }
+
+  /// Устанавливает диапазон дат для фильтрации.
+  /// Любой из параметров может быть `null` (граница диапазона снимается).
+  void setDateRange({DateTime? from, DateTime? to}) {
+    _fromDate = from == null ? null : DateTime(from.year, from.month, from.day);
+    _toDate = to == null ? null : DateTime(to.year, to.month, to.day);
+    notifyListeners();
+  }
+
+  void clearDateRange() {
+    _fromDate = null;
+    _toDate = null;
     notifyListeners();
   }
 
@@ -61,6 +82,18 @@ class LogsController extends ChangeNotifier {
     }
 
     return grouped;
+  }
+
+  bool _matchesDateRange(SecurityLog log) {
+    if (_fromDate == null && _toDate == null) return true;
+    final logDate = DateTime(
+      log.timestamp.year,
+      log.timestamp.month,
+      log.timestamp.day,
+    );
+    if (_fromDate != null && logDate.isBefore(_fromDate!)) return false;
+    if (_toDate != null && logDate.isAfter(_toDate!)) return false;
+    return true;
   }
 
   bool _matchesSelectedFilter(SecurityLog log) {
