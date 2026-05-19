@@ -11,6 +11,7 @@ import '../../../domain/usecases/storage/export_passwords_usecase.dart';
 import '../../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../../domain/usecases/storage/import_passgen_usecase.dart';
 import '../../../domain/usecases/storage/import_passwords_usecase.dart';
+import '../../../domain/usecases/storage/update_entry_usecase.dart';
 
 /// Контроллер для экрана хранилища
 class StorageController extends ChangeNotifier {
@@ -22,6 +23,7 @@ class StorageController extends ChangeNotifier {
     required this.exportPassgenUseCase,
     required this.importPassgenUseCase,
     required this.logEventUseCase,
+    this.updateEntryUseCase,
   });
   final GetPasswordsUseCase getPasswordsUseCase;
   final DeletePasswordUseCase deletePasswordUseCase;
@@ -30,6 +32,7 @@ class StorageController extends ChangeNotifier {
   final ExportPassgenUseCase exportPassgenUseCase;
   final ImportPassgenUseCase importPassgenUseCase;
   final LogEventUseCase logEventUseCase;
+  final UpdateEntryUseCase? updateEntryUseCase;
 
   // Состояние
   List<PasswordEntry> _allPasswords = [];
@@ -227,6 +230,53 @@ class StorageController extends ChangeNotifier {
       );
     } catch (e) {
       _error = 'Ошибка удаления: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Обновляет метаданные существующей записи (service, login, url, notes,
+  /// category). Перезагружает список после успеха. Возвращает `true` при
+  /// успешном сохранении.
+  Future<bool> updateEntry(PasswordEntry updated) async {
+    if (updateEntryUseCase == null) {
+      _error = 'Обновление записей недоступно';
+      notifyListeners();
+      return false;
+    }
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final result = await updateEntryUseCase!.execute(updated);
+      return await result.fold(
+        (failure) async {
+          _error = failure.message;
+          return false;
+        },
+        (_) async {
+          logEventUseCase.execute(
+            EventTypes.pwdUpdated,
+            details: {
+              'service': updated.service,
+              'category_id': updated.categoryId,
+            },
+          );
+          await loadPasswords();
+          // Восстанавливаем выбор обновлённой записи (по id).
+          if (updated.id != null) {
+            final restored = _allPasswords.firstWhere(
+              (e) => e.id == updated.id,
+              orElse: () => updated,
+            );
+            _selectedEntry = restored;
+          }
+          return true;
+        },
+      );
+    } catch (e) {
+      _error = 'Ошибка обновления: $e';
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

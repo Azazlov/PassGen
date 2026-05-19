@@ -192,6 +192,11 @@ class _FakeStorageRepository implements StorageRepository {
   }
 
   @override
+  Future<Either<StorageFailure, bool>> updateEntry(PasswordEntry updated) async {
+    return const Right(true);
+  }
+
+  @override
   Future<Either<StorageFailure, bool>> clearStorage() async {
     return const Right(true);
   }

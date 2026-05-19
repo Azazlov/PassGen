@@ -51,6 +51,19 @@ class StorageRepositoryImpl implements StorageRepository {
   }
 
   @override
+  Future<Either<StorageFailure, bool>> updateEntry(PasswordEntry updated) async {
+    try {
+      final result = await dataSource.updateEntry(updated);
+      return Right(result);
+    } catch (e) {
+      if (e is StorageFailure) {
+        return Left(e);
+      }
+      return Left(StorageFailure(message: 'Ошибка обновления: $e'));
+    }
+  }
+
+  @override
   Future<Either<StorageFailure, bool>> clearStorage() async {
     try {
       final result = await dataSource.clearStorage('');

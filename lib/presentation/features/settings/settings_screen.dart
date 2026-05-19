@@ -48,6 +48,7 @@ class _SettingsScreenContent extends StatefulWidget {
 class _SettingsScreenContentState extends State<_SettingsScreenContent> {
   final _formKey = GlobalKey<FormState>();
   final _autoLockController = TextEditingController(text: '5');
+  final _maxAttemptsController = TextEditingController(text: '5');
   final _defaultLengthController = TextEditingController(text: '16');
   final _backupIntervalController = TextEditingController(text: '7');
 
@@ -67,6 +68,7 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
   @override
   void dispose() {
     _autoLockController.dispose();
+    _maxAttemptsController.dispose();
     _defaultLengthController.dispose();
     _backupIntervalController.dispose();
     super.dispose();
@@ -84,6 +86,7 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     final authController = context.read<AuthController>();
 
     final autoLock = await controller.getSetting('security.auto_lock_minutes');
+    final maxAttempts = await controller.getSetting('security.max_pin_attempts');
     final defaultLength = await controller.getSetting(
       'generator.default_length',
     );
@@ -98,6 +101,7 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
 
     setState(() {
       _autoLockController.text = autoLock ?? '5';
+      _maxAttemptsController.text = maxAttempts ?? '5';
       _defaultLengthController.text = defaultLength ?? '16';
       _backupIntervalController.text = backupInterval ?? '7';
       _biometricLogin = authController.authState.isBiometricEnabled;
@@ -147,8 +151,17 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
               suffix: 'мин',
               controller: _autoLockController,
               min: 1,
-              max: 120,
+              max: 10,
               settingKey: 'security.auto_lock_minutes',
+            ),
+            _buildNumberField(
+              icon: Icons.password,
+              title: 'Максимум попыток PIN до блокировки',
+              suffix: 'поп.',
+              controller: _maxAttemptsController,
+              min: 3,
+              max: 10,
+              settingKey: 'security.max_pin_attempts',
             ),
             _buildListTile(
               icon: Icons.history,
