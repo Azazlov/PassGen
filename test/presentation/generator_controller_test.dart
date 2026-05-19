@@ -3,15 +3,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pass_gen/core/errors/failures.dart';
 import 'package:pass_gen/domain/entities/character_set.dart';
 import 'package:pass_gen/domain/entities/password_config.dart';
+import 'package:pass_gen/domain/entities/password_entry.dart';
 import 'package:pass_gen/domain/entities/password_generation_settings.dart';
 import 'package:pass_gen/domain/entities/password_result.dart';
 import 'package:pass_gen/domain/entities/security_log.dart';
 import 'package:pass_gen/domain/repositories/password_generator_repository.dart';
 import 'package:pass_gen/domain/repositories/security_log_repository.dart';
+import 'package:pass_gen/domain/repositories/storage_repository.dart';
 import 'package:pass_gen/domain/usecases/generator/validate_generator_settings_usecase.dart';
 import 'package:pass_gen/domain/usecases/log/log_event_usecase.dart';
 import 'package:pass_gen/domain/usecases/password/generate_password_usecase.dart';
 import 'package:pass_gen/domain/usecases/password/save_password_usecase.dart';
+import 'package:pass_gen/domain/usecases/storage/get_passwords_usecase.dart';
 import 'package:pass_gen/domain/validators/password_settings_validator.dart';
 import 'package:pass_gen/presentation/features/generator/generator_controller.dart';
 
@@ -29,6 +32,7 @@ void main() {
       ),
       logEventUseCase: LogEventUseCase(_FakeSecurityLogRepository()),
       repository: passwordRepository,
+      getPasswordsUseCase: GetPasswordsUseCase(_FakeStorageRepository()),
     );
   });
 
@@ -166,5 +170,29 @@ class _FakeSecurityLogRepository implements SecurityLogRepository {
     int? profileId,
   }) async {
     return const [];
+  }
+}
+
+class _FakeStorageRepository implements StorageRepository {
+  @override
+  Future<Either<StorageFailure, List<PasswordEntry>>> getPasswords() async {
+    return const Right(<PasswordEntry>[]);
+  }
+
+  @override
+  Future<Either<StorageFailure, bool>> savePasswords(
+    List<PasswordEntry> passwords,
+  ) async {
+    return const Right(true);
+  }
+
+  @override
+  Future<Either<StorageFailure, bool>> removePasswordAt(int index) async {
+    return const Right(true);
+  }
+
+  @override
+  Future<Either<StorageFailure, bool>> clearStorage() async {
+    return const Right(true);
   }
 }
