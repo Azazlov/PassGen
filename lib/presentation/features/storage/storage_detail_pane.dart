@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../domain/entities/category.dart';
 import '../../../domain/entities/password_entry.dart';
+import '../../../domain/entities/password_history_entry.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import 'storage_controller.dart';
 
@@ -107,6 +108,106 @@ class StorageDetailPane extends StatelessWidget {
 
           // Кнопки действий
           _buildActionButtons(context, theme, controller),
+
+          const SizedBox(height: 24),
+
+          // История изменений пароля
+          _buildHistorySection(context, theme, controller),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistorySection(
+    BuildContext context,
+    ThemeData theme,
+    StorageController controller,
+  ) {
+    return FutureBuilder<List<PasswordHistoryEntry>>(
+      future: controller.getHistoryForEntry(entry.id),
+      builder: (context, snapshot) {
+        final history = snapshot.data ?? const <PasswordHistoryEntry>[];
+        return Card(
+          child: Theme(
+            // Убираем разделители ExpansionTile (визуальный шум).
+            data: theme.copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              tilePadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              childrenPadding:
+                  const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              leading: const Icon(Icons.history),
+              title: Text('История изменений',
+                  style: theme.textTheme.titleSmall),
+              subtitle: Text(
+                snapshot.connectionState == ConnectionState.waiting
+                    ? 'Загрузка...'
+                    : (history.isEmpty
+                        ? 'Изменений нет'
+                        : 'Версий: ${history.length}'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color:
+                      theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              children: history.isEmpty
+                  ? const [
+                      Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          'Предыдущие версии пароля не сохранены.',
+                        ),
+                      ),
+                    ]
+                  : history
+                      .map((h) => _buildHistoryTile(theme, h))
+                      .toList(growable: false),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHistoryTile(ThemeData theme, PasswordHistoryEntry h) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.lock_clock,
+            size: 18,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _formatDate(h.createdAt),
+                  style: theme.textTheme.bodyMedium,
+                ),
+                if ((h.reason ?? '').isNotEmpty)
+                  Text(
+                    h.reason!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color:
+                          theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                Text(
+                  '(пароль зашифрован)',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color:
+                        theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -287,33 +388,34 @@ class StorageDetailPane extends StatelessWidget {
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // На узких экранах (< 300px) располагаем кнопки вертикально
-        if (constraints.maxWidth < 300) {
+        final editBtn = ElevatedButton.icon(
+          onPressed: () => _showEditDialog(context, controller, entry),
+          icon: const Icon(Icons.edit),
+          label: const Text('Редактировать'),
+        );
+        final regenBtn = OutlinedButton.icon(
+          onPressed: () => _showRegenerateConfirmation(context, controller),
+          icon: const Icon(Icons.refresh),
+          label: const Text('Регенерировать'),
+        );
+        final deleteBtn = OutlinedButton.icon(
+          onPressed: () => _showDeleteConfirmation(context, controller),
+          icon: const Icon(Icons.delete),
+          label: const Text('Удалить'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: theme.colorScheme.error,
+          ),
+        );
+
+        // На узких экранах (< 480px) располагаем кнопки вертикально
+        if (constraints.maxWidth < 480) {
           return Column(
             children: [
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _showEditDialog(context, controller, entry),
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Редактировать'),
-                ),
-              ),
+              SizedBox(width: double.infinity, child: editBtn),
               const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // Удаление
-                    _showDeleteConfirmation(context, controller);
-                  },
-                  icon: const Icon(Icons.delete),
-                  label: const Text('Удалить'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.colorScheme.error,
-                  ),
-                ),
-              ),
+              SizedBox(width: double.infinity, child: regenBtn),
+              const SizedBox(height: 8),
+              SizedBox(width: double.infinity, child: deleteBtn),
             ],
           );
         }
@@ -321,30 +423,54 @@ class StorageDetailPane extends StatelessWidget {
         // На широких экранах - горизонтально
         return Row(
           children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _showEditDialog(context, controller, entry),
-                icon: const Icon(Icons.edit),
-                label: const Text('Редактировать'),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  // Удаление
-                  _showDeleteConfirmation(context, controller);
-                },
-                icon: const Icon(Icons.delete),
-                label: const Text('Удалить'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                ),
-              ),
-            ),
+            Expanded(child: editBtn),
+            const SizedBox(width: 12),
+            Expanded(child: regenBtn),
+            const SizedBox(width: 12),
+            Expanded(child: deleteBtn),
           ],
         );
       },
+    );
+  }
+
+  void _showRegenerateConfirmation(
+    BuildContext context,
+    StorageController controller,
+  ) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Регенерировать пароль?'),
+        content: const Text(
+          'Будет сгенерирован новый сложный пароль (длина 16, '
+          'все классы символов). Текущий пароль сохранится в истории.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final navigator = Navigator.of(dialogContext);
+              final messenger = ScaffoldMessenger.of(context);
+              final ok = await controller.regeneratePassword(entry);
+              navigator.pop();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    ok
+                        ? 'Пароль регенерирован'
+                        : (controller.error ?? 'Не удалось регенерировать'),
+                  ),
+                ),
+              );
+            },
+            child: const Text('Регенерировать'),
+          ),
+        ],
+      ),
     );
   }
 

@@ -359,6 +359,9 @@ class PasswordGeneratorApp extends StatelessWidget {
             importPassgenUseCase: context.read<ImportPassgenUseCase>(),
             logEventUseCase: context.read<LogEventUseCase>(),
             updateEntryUseCase: context.read<UpdateEntryUseCase>(),
+            getPasswordHistoryUseCase: context.read<GetPasswordHistoryUseCase>(),
+            generatePasswordUseCase: context.read<GeneratePasswordUseCase>(),
+            savePasswordUseCase: context.read<SavePasswordUseCase>(),
           ),
         ),
         ChangeNotifierProvider<AuthController>(
