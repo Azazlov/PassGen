@@ -16,6 +16,7 @@ import '../../../domain/usecases/auth/remove_pin_usecase.dart';
 import '../../../domain/usecases/auth/setup_pin_usecase.dart';
 import '../../../domain/usecases/auth/verify_pin_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
+import '../../../domain/usecases/settings/get_setting_usecase.dart';
 
 /// Контроллер для экрана аутентификации (v0.6 — per-profile + biometric)
 class AuthController extends ChangeNotifier {
@@ -29,8 +30,10 @@ class AuthController extends ChangeNotifier {
     this.biometricRepository,
     this.profileRepository,
     this.vaultUnlockService,
+    this.getSettingUseCase,
   }) {
     _loadAuthState();
+    _loadInactivityTimeout();
   }
   final SetupPinUseCase setupPinUseCase;
   final VerifyPinUseCase verifyPinUseCase;
@@ -41,10 +44,25 @@ class AuthController extends ChangeNotifier {
   final BiometricRepository? biometricRepository;
   final ProfileRepository? profileRepository;
   final VaultUnlockService? vaultUnlockService;
+  final GetSettingUseCase? getSettingUseCase;
 
   // Таймер неактивности
   Timer? _inactivityTimer;
-  static const Duration inactivityTimeout = Duration(minutes: 5);
+
+  /// По умолчанию 5 мин, может быть переопределен из `security.auto_lock_minutes`.
+  static const Duration defaultInactivityTimeout = Duration(minutes: 5);
+
+  /// Минимум автоблокировки (диплом: 30 сек – 10 мин).
+  static const Duration minInactivityTimeout = Duration(minutes: 1);
+
+  /// Максимум автоблокировки (диплом: 30 сек – 10 мин).
+  static const Duration maxInactivityTimeout = Duration(minutes: 10);
+
+  /// Для совместимости со старым кодом.
+  static const Duration inactivityTimeout = defaultInactivityTimeout;
+
+  Duration _inactivityTimeout = defaultInactivityTimeout;
+  Duration get currentInactivityTimeout => _inactivityTimeout;
 
   // Состояние
   AuthState _authState = const AuthState();
@@ -493,7 +511,32 @@ class AuthController extends ChangeNotifier {
   /// Запускает таймер неактивности
   void startInactivityTimer() {
     _inactivityTimer?.cancel();
-    _inactivityTimer = Timer(inactivityTimeout, _lockApp);
+    _inactivityTimer = Timer(_inactivityTimeout, _lockApp);
+  }
+
+  /// Перечитывает `security.auto_lock_minutes` из настроек
+  /// и применяет к текущему таймеру (если активен).
+  Future<void> reloadInactivityTimeout() async {
+    await _loadInactivityTimeout();
+    if (_inactivityTimer?.isActive == true) {
+      startInactivityTimer();
+    }
+  }
+
+  Future<void> _loadInactivityTimeout() async {
+    if (getSettingUseCase == null) return;
+    try {
+      final raw = await getSettingUseCase!.execute('security.auto_lock_minutes');
+      if (raw == null) return;
+      final minutes = int.tryParse(raw.trim());
+      if (minutes == null) return;
+      var dur = Duration(minutes: minutes);
+      if (dur < minInactivityTimeout) dur = minInactivityTimeout;
+      if (dur > maxInactivityTimeout) dur = maxInactivityTimeout;
+      _inactivityTimeout = dur;
+    } catch (_) {
+      // Остаёмся на значении по умолчанию.
+    }
   }
 
   /// Сбрасывает таймер неактивности

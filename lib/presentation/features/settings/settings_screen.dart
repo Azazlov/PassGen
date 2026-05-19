@@ -411,6 +411,11 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
       settingKey,
       controller.text,
     );
+
+    if (!mounted) return;
+    if (settingKey == 'security.auto_lock_minutes') {
+      await context.read<AuthController>().reloadInactivityTimeout();
+    }
   }
 
   Future<void> _saveSwitchSetting({
