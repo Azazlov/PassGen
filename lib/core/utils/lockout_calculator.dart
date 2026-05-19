@@ -23,8 +23,27 @@ class LockoutCalculator {
   /// Максимальная задержка — 7 суток (секунды)
   static const int maxLockoutSeconds = 7 * 24 * 3600;
 
-  /// Количество неудачных попыток в одной серии
-  static const int attemptsPerSeries = 5;
+  /// Значение по умолчанию: количество неудачных попыток в одной серии.
+  /// Может быть переопределено в настройках (`security.max_pin_attempts`,
+  /// диапазон 3–10) и пробрасывается через [attemptsNeededForLockout].
+  static const int defaultAttemptsPerSeries = 5;
+
+  /// Совместимая константа для существующего кода. Новые места должны
+  /// читать значение из настроек профиля.
+  static const int attemptsPerSeries = defaultAttemptsPerSeries;
+
+  /// Минимально допустимое число попыток (диплом: 3–10).
+  static const int minAttemptsPerSeries = 3;
+
+  /// Максимально допустимое число попыток (диплом: 3–10).
+  static const int maxAttemptsPerSeries = 10;
+
+  /// Нормализует значение, прочитанное из настроек, к допустимому диапазону.
+  static int clampAttempts(int value) {
+    if (value < minAttemptsPerSeries) return minAttemptsPerSeries;
+    if (value > maxAttemptsPerSeries) return maxAttemptsPerSeries;
+    return value;
+  }
 
   /// Вычисляет задержку блокировки по индексу серии.
   ///

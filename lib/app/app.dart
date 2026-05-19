@@ -378,6 +378,7 @@ class PasswordGeneratorApp extends StatelessWidget {
                     storage: StorageLocalDataSource(),
                   )
                 : null,
+            getSettingUseCase: context.read<GetSettingUseCase>(),
           ),
         ),
       ],

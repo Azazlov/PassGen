@@ -42,6 +42,31 @@ class AuthLocalDataSource {
     return List.generate(length, (_) => random.nextInt(256));
   }
 
+  /// Читает максимум попыток PIN из app_settings (3–10).
+  ///
+  /// Возвращает [LockoutCalculator.defaultAttemptsPerSeries] (5) если значение
+  /// не задано или таблица недоступна. Значение нормализуется к допустимому
+  /// диапазону через [LockoutCalculator.clampAttempts].
+  Future<int> _readMaxAttempts() async {
+    try {
+      final db = await _db;
+      final rows = await db.query(
+        'app_settings',
+        where: 'key = ?',
+        whereArgs: ['security.max_pin_attempts'],
+        limit: 1,
+      );
+      if (rows.isEmpty) return LockoutCalculator.defaultAttemptsPerSeries;
+      final raw = rows.first['value'] as String?;
+      if (raw == null) return LockoutCalculator.defaultAttemptsPerSeries;
+      final parsed = int.tryParse(raw.trim());
+      if (parsed == null) return LockoutCalculator.defaultAttemptsPerSeries;
+      return LockoutCalculator.clampAttempts(parsed);
+    } catch (_) {
+      return LockoutCalculator.defaultAttemptsPerSeries;
+    }
+  }
+
   // ==================== PER-PROFILE CRUD ====================
 
   Future<Map<String, dynamic>?> _getProfileAuthData(int profileId) async {
@@ -268,7 +293,8 @@ class AuthLocalDataSource {
         final currentSeries = (row['series_index'] as int?) ?? 0;
         final newFailed = currentFailed + 1;
 
-        if (newFailed >= LockoutCalculator.attemptsPerSeries) {
+        final maxAttempts = await _readMaxAttempts();
+        if (newFailed >= maxAttempts) {
           // Новая серия блокировки
           final newSeries = currentSeries + 1;
           final delay = LockoutCalculator.calculateDelay(newSeries);
@@ -294,7 +320,7 @@ class AuthLocalDataSource {
           return {
             'result': 'wrongPin',
             'isLocked': false,
-            'remainingAttempts': LockoutCalculator.attemptsPerSeries - newFailed,
+            'remainingAttempts': maxAttempts - newFailed,
             'seriesIndex': currentSeries,
           };
         }
@@ -384,11 +410,12 @@ class AuthLocalDataSource {
             DateTime.now().isBefore(DateTime.fromMillisecondsSinceEpoch(lockoutRaw));
         final failed = (row['failed_attempts'] as int?) ?? 0;
         final series = (row['series_index'] as int?) ?? 0;
+        final maxAttempts = await _readMaxAttempts();
         return {
           'isPinSetup': (row['pin_hash'] as String?)?.isNotEmpty == true,
           'isLocked': isLocked,
           'failedAttempts': failed,
-          'remainingAttempts': LockoutCalculator.attemptsPerSeries - failed,
+          'remainingAttempts': maxAttempts - failed,
           'lockoutUntil': isLocked ? DateTime.fromMillisecondsSinceEpoch(lockoutRaw) : null,
           'seriesIndex': series,
         };
