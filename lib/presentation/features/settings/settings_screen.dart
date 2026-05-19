@@ -438,16 +438,28 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     final authController = context.read<AuthController>();
 
     if (!value) {
-      final success = await authController.disableBiometric();
+      final pin = await _requestPinForBiometric(
+        context,
+        submitLabel: 'Отключить',
+      );
+      if (pin == null || pin.isEmpty) return;
+
+      final success = await authController.disableBiometric(pin);
       if (!mounted) return;
       setState(() => _biometricLogin = !success);
       if (!success) {
-        _showErrorDialog(context, 'Не удалось отключить биометрию');
+        _showErrorDialog(
+          context,
+          authController.error ?? 'Не удалось отключить биометрию',
+        );
       }
       return;
     }
 
-    final pin = await _requestPinForBiometric(context);
+    final pin = await _requestPinForBiometric(
+      context,
+      submitLabel: 'Включить',
+    );
     if (pin == null || pin.isEmpty) return;
 
     final success = await authController.enableBiometric(pin);
@@ -462,7 +474,10 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     }
   }
 
-  Future<String?> _requestPinForBiometric(BuildContext context) async {
+  Future<String?> _requestPinForBiometric(
+    BuildContext context, {
+    required String submitLabel,
+  }) async {
     final pinController = TextEditingController();
 
     final result = await showDialog<String>(
@@ -483,139 +498,71 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(pinController.text),
-            child: const Text('Включить'),
+            child: Text(submitLabel),
           ),
         ],
       ),
     );
 
-    pinController.dispose();
     return result;
   }
 
   void _showChangePinDialog(
     BuildContext context,
     SettingsController controller,
-  ) async {
-    final oldPinController = TextEditingController();
-    final newPinController = TextEditingController();
-
-    if (!context.mounted) return;
-
-    await showDialog(
+  ) {
+    showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Смена PIN-кода'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AppTextField(
-              controller: oldPinController,
-              label: 'Старый PIN',
-              hint: 'Введите старый PIN',
-              obscureText: true,
-              keyboardType: TextInputType.number,
+      builder: (ctx) => ChangePinDialog(
+        controller: controller,
+        onResult: (success) {
+          Navigator.of(ctx).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                success ? 'PIN-код успешно изменён' : 'Ошибка смены PIN-кода',
+              ),
+              backgroundColor:
+                  success ? null : Theme.of(context).colorScheme.error,
             ),
-            const SizedBox(height: 16),
-            AppTextField(
-              controller: newPinController,
-              label: 'Новый PIN',
-              hint: 'Введите новый PIN (4-8 цифр)',
-              obscureText: true,
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Отмена'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (oldPinController.text.length < 4 ||
-                  newPinController.text.length < 4) {
-                _showErrorDialog(ctx, 'PIN должен содержать минимум 4 цифры');
-                return;
-              }
-              Navigator.of(ctx).pop();
-              final success = await controller.changePin(
-                oldPinController.text,
-                newPinController.text,
-              );
-              if (context.mounted) {
-                if (success) {
-                  _showSuccessDialog(context, 'PIN-код успешно изменён');
-                } else {
-                  _showErrorDialog(context, 'Ошибка смены PIN-кода');
-                }
-              }
-            },
-            child: const Text('Сменить'),
-          ),
-        ],
+          );
+        },
       ),
     );
-
-    oldPinController.dispose();
-    newPinController.dispose();
   }
 
   void _showRemovePinDialog(
     BuildContext context,
     SettingsController controller,
-  ) async {
-    final pinController = TextEditingController();
-
-    if (!context.mounted) return;
-
-    await showDialog(
+  ) {
+    showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Удаление PIN-кода'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Это действие удалит защиту приложения. Вы уверены?'),
-            const SizedBox(height: 16),
-            AppTextField(
-              controller: pinController,
-              label: 'Подтвердите PIN',
-              hint: 'Введите текущий PIN',
-              obscureText: true,
-              keyboardType: TextInputType.number,
+      builder: (ctx) => RemovePinDialog(
+        controller: controller,
+        onResult: (success, pin) async {
+          Navigator.of(ctx).pop();
+          if (success) {
+            // При удалении PIN отключаем биометрию
+            final authController = context.read<AuthController>();
+            if (authController.authState.isBiometricEnabled) {
+              await authController.disableBiometric(pin);
+              if (mounted) {
+                setState(() => _biometricLogin = false);
+              }
+            }
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                success ? 'PIN-код удалён' : 'Ошибка удаления PIN-кода',
+              ),
+              backgroundColor:
+                  success ? null : Theme.of(context).colorScheme.error,
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Отмена'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              if (pinController.text.length < 4) {
-                _showErrorDialog(ctx, 'Введите PIN');
-                return;
-              }
-              Navigator.of(ctx).pop();
-              final success = await controller.removePin(pinController.text);
-              if (context.mounted) {
-                if (success) {
-                  _showSuccessDialog(context, 'PIN-код удалён');
-                } else {
-                  _showErrorDialog(context, 'Ошибка удаления PIN-кода');
-                }
-              }
-            },
-            child: const Text('Удалить'),
-          ),
-        ],
+          );
+        },
       ),
     );
-
-    pinController.dispose();
   }
 
   void _confirmEmergencyLock(BuildContext context) async {
@@ -752,7 +699,7 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
           children: [
             const Icon(Icons.check_circle, color: Colors.green),
             const SizedBox(width: 16),
-            Text(message),
+            Expanded(child: Text(message)),
           ],
         ),
         actions: [
@@ -773,7 +720,7 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
           children: [
             const Icon(Icons.error, color: Colors.red),
             const SizedBox(width: 16),
-            Text(message),
+            Expanded(child: Text(message)),
           ],
         ),
         actions: [
@@ -783,6 +730,142 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Диалог удаления PIN-кода (StatefulWidget для безопасного управления
+/// TextEditingController'ами).
+class RemovePinDialog extends StatefulWidget {
+  const RemovePinDialog({super.key, required this.controller, required this.onResult});
+  final SettingsController controller;
+  final void Function(bool success, String pin) onResult;
+
+  @override
+  State<RemovePinDialog> createState() => _RemovePinDialogState();
+}
+
+class _RemovePinDialogState extends State<RemovePinDialog> {
+  final _pinController = TextEditingController();
+
+  @override
+  void dispose() {
+    _pinController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Удаление PIN-кода'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Это действие удалит защиту приложения. Вы уверены?'),
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: _pinController,
+            label: 'Подтвердите PIN',
+            hint: 'Введите текущий PIN',
+            obscureText: true,
+            keyboardType: TextInputType.number,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Отмена'),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          onPressed: () async {
+            final pin = _pinController.text;
+            if (pin.length < 4) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Введите PIN')),
+              );
+              return;
+            }
+            final success = await widget.controller.removePin(pin);
+            widget.onResult(success, pin);
+          },
+          child: const Text('Удалить'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Диалог смены PIN-кода (StatefulWidget для безопасного управления
+/// TextEditingController'ами).
+class ChangePinDialog extends StatefulWidget {
+  const ChangePinDialog({super.key, required this.controller, required this.onResult});
+  final SettingsController controller;
+  final ValueChanged<bool> onResult;
+
+  @override
+  State<ChangePinDialog> createState() => _ChangePinDialogState();
+}
+
+class _ChangePinDialogState extends State<ChangePinDialog> {
+  final _oldPinController = TextEditingController();
+  final _newPinController = TextEditingController();
+
+  @override
+  void dispose() {
+    _oldPinController.dispose();
+    _newPinController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Смена PIN-кода'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppTextField(
+            controller: _oldPinController,
+            label: 'Старый PIN',
+            hint: 'Введите старый PIN',
+            obscureText: true,
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+          AppTextField(
+            controller: _newPinController,
+            label: 'Новый PIN',
+            hint: 'Введите новый PIN (4-8 цифр)',
+            obscureText: true,
+            keyboardType: TextInputType.number,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Отмена'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            final oldPin = _oldPinController.text;
+            final newPin = _newPinController.text;
+            if (oldPin.length < 4 || newPin.length < 4) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('PIN должен содержать минимум 4 цифры'),
+                ),
+              );
+              return;
+            }
+            final success = await widget.controller.changePin(oldPin, newPin);
+            widget.onResult(success);
+          },
+          child: const Text('Сменить'),
+        ),
+      ],
     );
   }
 }

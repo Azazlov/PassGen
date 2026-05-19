@@ -9,14 +9,46 @@ import '../../../domain/usecases/category/get_categories_usecase.dart';
 import 'storage_controller.dart';
 
 /// Панель деталей пароля
-class StorageDetailPane extends StatelessWidget {
-  const StorageDetailPane({super.key, required this.entry});
-  final PasswordEntry entry;
+class StorageDetailPane extends StatefulWidget {
+  const StorageDetailPane({super.key, this.entry});
+  final PasswordEntry? entry;
+
+  @override
+  State<StorageDetailPane> createState() => _StorageDetailPaneState();
+}
+
+class _StorageDetailPaneState extends State<StorageDetailPane> {
+  String? _decryptedPassword;
+  bool _isDecrypting = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controller = context.watch<StorageController>();
+    final effectiveEntry = controller.selectedEntry ?? widget.entry;
+    if (effectiveEntry == null) {
+      return const StorageEmptyDetailState();
+    }
+
+    // Запускаем расшифровку, если ещё не запущена
+    if (effectiveEntry.isEncrypted && !effectiveEntry.hasPlainText && !_isDecrypting) {
+      _isDecrypting = true;
+      controller.decryptEntryPassword(effectiveEntry).then((password) {
+        if (mounted) {
+          setState(() {
+            _decryptedPassword = password;
+            _isDecrypting = false;
+          });
+        }
+      });
+    }
+
+    // Если пароль уже расшифрован (в процессе текущей сессии)
+    final passwordText = effectiveEntry.hasPlainText
+        ? effectiveEntry.password!
+        : (_decryptedPassword ?? (effectiveEntry.isEncrypted
+            ? (_isDecrypting ? 'Расшифровка...' : '')
+            : effectiveEntry.password ?? ''));
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -30,9 +62,9 @@ class StorageDetailPane extends StatelessWidget {
                 future: context.read<GetCategoriesUseCase>().execute(),
                 builder: (context, snapshot) {
                   final categories = snapshot.data ?? [];
-                  final category = entry.categoryId != null
+                  final category = effectiveEntry.categoryId != null
                       ? categories.cast<Category?>().firstWhere(
-                          (c) => c?.id == entry.categoryId,
+                          (c) => c?.id == effectiveEntry.categoryId,
                           orElse: () => null,
                         )
                       : null;
@@ -48,13 +80,13 @@ class StorageDetailPane extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      entry.service,
+                      effectiveEntry.service,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      entry.login ?? 'Нет логина',
+                      effectiveEntry.login ?? 'Нет логина',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.6,
@@ -70,31 +102,31 @@ class StorageDetailPane extends StatelessWidget {
           const SizedBox(height: 32),
 
           // Пароль
-          _buildPasswordField(context, theme),
+          _buildPasswordField(context, theme, passwordText),
 
           const SizedBox(height: 24),
 
           // Категория
-          _buildCategoryField(context, theme),
+          _buildCategoryField(context, theme, effectiveEntry),
 
-          if ((entry.url ?? '').isNotEmpty) ...[
+          if ((effectiveEntry.url ?? '').isNotEmpty) ...[
             const SizedBox(height: 24),
             _buildPlainField(
               context,
               theme,
               title: 'URL',
-              value: entry.url!,
+              value: effectiveEntry.url!,
               icon: Icons.link,
             ),
           ],
 
-          if ((entry.notes ?? '').isNotEmpty) ...[
+          if ((effectiveEntry.notes ?? '').isNotEmpty) ...[
             const SizedBox(height: 24),
             _buildPlainField(
               context,
               theme,
               title: 'Заметки',
-              value: entry.notes!,
+              value: effectiveEntry.notes!,
               icon: Icons.note_outlined,
             ),
           ],
@@ -102,17 +134,17 @@ class StorageDetailPane extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Даты
-          _buildDatesFields(theme),
+          _buildDatesFields(theme, effectiveEntry),
 
           const SizedBox(height: 32),
 
           // Кнопки действий
-          _buildActionButtons(context, theme, controller),
+          _buildActionButtons(context, theme, controller, effectiveEntry),
 
           const SizedBox(height: 24),
 
           // История изменений пароля
-          _buildHistorySection(context, theme, controller),
+          _buildHistorySection(context, theme, controller, effectiveEntry),
         ],
       ),
     );
@@ -122,9 +154,10 @@ class StorageDetailPane extends StatelessWidget {
     BuildContext context,
     ThemeData theme,
     StorageController controller,
+    PasswordEntry effectiveEntry,
   ) {
     return FutureBuilder<List<PasswordHistoryEntry>>(
-      future: controller.getHistoryForEntry(entry.id),
+      future: controller.getHistoryForEntry(effectiveEntry.id),
       builder: (context, snapshot) {
         final history = snapshot.data ?? const <PasswordHistoryEntry>[];
         return Card(
@@ -213,7 +246,20 @@ class StorageDetailPane extends StatelessWidget {
     );
   }
 
-  Widget _buildPasswordField(BuildContext context, ThemeData theme) {
+  Widget _buildPasswordField(
+    BuildContext context,
+    ThemeData theme,
+    String displayText,
+  ) {
+    return _passwordCard(context, theme, displayText);
+  }
+
+  /// Карточка отображения пароля
+  Widget _passwordCard(
+    BuildContext context,
+    ThemeData theme,
+    String displayText,
+  ) {
     return Card(
       color: theme.colorScheme.primaryContainer,
       child: Padding(
@@ -232,11 +278,10 @@ class StorageDetailPane extends StatelessWidget {
               children: [
                 Expanded(
                   child: Semantics(
-                    label:
-                        'Пароль: ${entry.displayPassword ?? '(зашифровано)'}',
-                    value: entry.displayPassword ?? '(зашифровано)',
+                    label: 'Пароль: $displayText',
+                    value: displayText,
                     child: Text(
-                      entry.displayPassword ?? '(зашифровано)',
+                      displayText,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontFamily: 'monospace',
                         fontWeight: FontWeight.w500,
@@ -249,12 +294,11 @@ class StorageDetailPane extends StatelessWidget {
                   button: true,
                   child: IconButton(
                     icon: const Icon(Icons.copy),
-                    onPressed: () {
-                      Clipboard.setData(
-                        ClipboardData(
-                          text: entry.displayPassword ?? '(зашифровано)',
-                        ),
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        ClipboardData(text: displayText),
                       );
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Пароль скопирован')),
                       );
@@ -270,7 +314,11 @@ class StorageDetailPane extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryField(BuildContext context, ThemeData theme) {
+  Widget _buildCategoryField(
+    BuildContext context,
+    ThemeData theme,
+    PasswordEntry effectiveEntry,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -282,16 +330,16 @@ class StorageDetailPane extends StatelessWidget {
             FutureBuilder<List<Category>>(
               future: context.read<GetCategoriesUseCase>().execute(),
               builder: (context, snapshot) {
-                if (entry.categoryId == null) {
+                if (effectiveEntry.categoryId == null) {
                   return Text('Без категории',
                       style: theme.textTheme.bodyLarge);
                 }
                 final categories = snapshot.data ?? [];
                 final match = categories.cast<Category?>().firstWhere(
-                      (c) => c?.id == entry.categoryId,
+                      (c) => c?.id == effectiveEntry.categoryId,
                       orElse: () => null,
                     );
-                final name = match?.name ?? '#${entry.categoryId}';
+                final name = match?.name ?? '#${effectiveEntry.categoryId}';
                 return Text(name, style: theme.textTheme.bodyLarge);
               },
             ),
@@ -330,7 +378,7 @@ class StorageDetailPane extends StatelessWidget {
     );
   }
 
-  Widget _buildDatesFields(ThemeData theme) {
+  Widget _buildDatesFields(ThemeData theme, PasswordEntry effectiveEntry) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -346,7 +394,7 @@ class StorageDetailPane extends StatelessWidget {
                       Text('Создан', style: theme.textTheme.titleSmall),
                       const SizedBox(height: 4),
                       Text(
-                        _formatDate(entry.createdAt),
+                        _formatDate(effectiveEntry.createdAt),
                         style: theme.textTheme.bodyMedium,
                       ),
                     ],
@@ -354,7 +402,7 @@ class StorageDetailPane extends StatelessWidget {
                 ),
               ),
             ),
-            if (entry.updatedAt != null) ...[
+            if (effectiveEntry.updatedAt != null) ...[
               const SizedBox(width: 16),
               Expanded(
                 child: Card(
@@ -366,7 +414,7 @@ class StorageDetailPane extends StatelessWidget {
                         Text('Обновлено', style: theme.textTheme.titleSmall),
                         const SizedBox(height: 4),
                         Text(
-                          _formatRelativeDate(entry.updatedAt!),
+                          _formatRelativeDate(effectiveEntry.updatedAt!),
                           style: theme.textTheme.bodyMedium,
                         ),
                       ],
@@ -385,16 +433,17 @@ class StorageDetailPane extends StatelessWidget {
     BuildContext context,
     ThemeData theme,
     StorageController controller,
+    PasswordEntry effectiveEntry,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final editBtn = ElevatedButton.icon(
-          onPressed: () => _showEditDialog(context, controller, entry),
+          onPressed: () => _showEditDialog(context, controller, effectiveEntry),
           icon: const Icon(Icons.edit),
           label: const Text('Редактировать'),
         );
         final regenBtn = OutlinedButton.icon(
-          onPressed: () => _showRegenerateConfirmation(context, controller),
+          onPressed: () => _showRegenerateConfirmation(context, controller, effectiveEntry),
           icon: const Icon(Icons.refresh),
           label: const Text('Регенерировать'),
         );
@@ -437,6 +486,7 @@ class StorageDetailPane extends StatelessWidget {
   void _showRegenerateConfirmation(
     BuildContext context,
     StorageController controller,
+    PasswordEntry entryForRegen,
   ) {
     showDialog(
       context: context,
@@ -455,7 +505,7 @@ class StorageDetailPane extends StatelessWidget {
             onPressed: () async {
               final navigator = Navigator.of(dialogContext);
               final messenger = ScaffoldMessenger.of(context);
-              final ok = await controller.regeneratePassword(entry);
+              final ok = await controller.regeneratePassword(entryForRegen);
               navigator.pop();
               messenger.showSnackBar(
                 SnackBar(

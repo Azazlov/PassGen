@@ -203,7 +203,7 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
     if (result != AuthResult.success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(controller.error ?? 'Ошибка биометрии'),
+          content: const Text('Не удалось войти'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );

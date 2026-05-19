@@ -13,19 +13,65 @@ class BiometricRepositoryImpl implements BiometricRepository {
   Future<bool> isAvailable() => _dataSource.isAvailable();
 
   @override
-  Future<bool> authenticate({String localizedReason = 'Подтвердите личность'}) {
-    return _dataSource.authenticate(localizedReason: localizedReason);
+  Future<bool> authenticate({
+    String localizedReason = 'Подтвердите личность',
+    bool biometricOnly = true,
+  }) {
+    return _dataSource.authenticate(
+      localizedReason: localizedReason,
+      biometricOnly: biometricOnly,
+    );
   }
 
   @override
   Future<bool> enableForProfile(int profileId, String pin) async {
+    if (!await isAvailable()) {
+      throw const AuthFailure(
+        message: 'Биометрия недоступна на устройстве',
+        type: AuthFailureType.general,
+      );
+    }
+
+    // 1) Биометрическая авторизация
+    bool authorized;
+    try {
+      authorized = await authenticate(
+        localizedReason:
+            'Подтвердите биометрией или кодом устройства включение входа в приложение',
+        biometricOnly: false,
+      );
+    } on StorageFailure catch (e) {
+      // Теоретически сюда StorageFailure не должен попадать (т.к. это auth),
+      // но оставляем для полноты.
+      throw AuthFailure(message: e.message, type: AuthFailureType.general);
+    } on AuthFailure {
+      rethrow;
+    } catch (e) {
+      throw AuthFailure(
+        message: 'Ошибка биометрической аутентификации: $e',
+        type: AuthFailureType.general,
+      );
+    }
+
+    if (!authorized) return false;
+
+    // 2) Запись PIN под биометрическим гейтом ОС
     try {
       await _dataSource.enableForProfile(profileId, pin);
       return true;
     } on StorageFailure catch (e) {
-      throw AuthFailure(message: e.message, type: AuthFailureType.general);
+      // Важно: показываем, что именно упало при сохранении.
+      throw AuthFailure(
+        message: 'Ошибка сохранения PIN для биометрии: ${e.message}',
+        type: AuthFailureType.general,
+      );
+    } on AuthFailure {
+      rethrow;
     } catch (e) {
-      throw const AuthFailure(message: 'Ошибка включения биометрии');
+      throw AuthFailure(
+        message: 'Ошибка сохранения PIN для биометрии: $e',
+        type: AuthFailureType.general,
+      );
     }
   }
 
@@ -38,6 +84,18 @@ class BiometricRepositoryImpl implements BiometricRepository {
       throw AuthFailure(message: e.message, type: AuthFailureType.general);
     } catch (e) {
       throw const AuthFailure(message: 'Ошибка отключения биометрии');
+    }
+  }
+
+  @override
+  Future<bool> updatePinForProfile(int profileId, String pin) async {
+    try {
+      await _dataSource.updatePinForProfile(profileId, pin);
+      return true;
+    } on StorageFailure catch (e) {
+      throw AuthFailure(message: e.message, type: AuthFailureType.general);
+    } catch (e) {
+      throw const AuthFailure(message: 'Ошибка обновления PIN для биометрии');
     }
   }
 

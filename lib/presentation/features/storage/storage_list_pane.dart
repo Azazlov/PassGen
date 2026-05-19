@@ -196,7 +196,9 @@ class StorageListPane extends StatelessWidget {
 
   Widget _buildExpandedDetails(BuildContext context, PasswordEntry entry) {
     final theme = Theme.of(context);
-    final passwordText = entry.displayPassword ?? '(зашифровано)';
+    final passwordText = entry.hasPlainText
+        ? entry.password!
+        : (entry.isEncrypted ? '(нажмите "Копировать")' : (entry.password ?? '(зашифровано)'));
 
     return Column(
       children: [
@@ -253,7 +255,14 @@ class StorageListPane extends StatelessWidget {
   }
 
   Future<void> _copyPassword(BuildContext context, PasswordEntry entry) async {
-    final passwordText = entry.displayPassword ?? '(зашифровано)';
+    final controller = context.read<StorageController>();
+    String passwordText;
+    if (entry.isEncrypted && !entry.hasPlainText) {
+      final decrypted = await controller.decryptEntryPassword(entry);
+      passwordText = decrypted ?? '(ошибка)';
+    } else {
+      passwordText = entry.password ?? '(зашифровано)';
+    }
     await Clipboard.setData(ClipboardData(text: passwordText));
     Future.delayed(const Duration(seconds: 60), () {
       Clipboard.setData(const ClipboardData(text: ''));

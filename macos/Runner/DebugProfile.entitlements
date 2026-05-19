@@ -2,14 +2,26 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Для диагностики Keychain/flutter_secure_storage: временно отключаем sandbox -->
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<!-- Разрешение на использование Touch ID (биометрия) -->
+	<key>com.apple.security.device.face-id</key>
+	<true/>
+	<!-- Разрешение на доступ к Keychain для flutter_secure_storage -->
+	<key>com.apple.security.keychain-access-groups</key>
+	<array>
+		<string>$(TeamIdentifierPrefix)$(CFBundleIdentifier)</string>
+	</array>
 	<key>com.apple.security.cs.allow-jit</key>
 	<true/>
 	<key>com.apple.security.network.server</key>
 	<true/>
 	<!-- Разрешение на доступ к файлам через dialog выбора -->
 	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+	<!-- Разрешение на использование Touch ID (биометрия) -->
+	<key>com.apple.security.device.face-id</key>
 	<true/>
 </dict>
 </plist>

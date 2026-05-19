@@ -10,14 +10,14 @@ void showAppDialog({
 }) {
   showDialog(
     context: context,
-    builder: (_) => AlertDialog(
+    builder: (ctx) => AlertDialog(
       title: Text(title),
       content: Text(content),
       actions: [
         TextButton(
           child: Text(actionLabel),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
             onAction?.call();
           },
         ),
@@ -38,24 +38,24 @@ void showConfirmationDialog({
 }) {
   showDialog(
     context: context,
-    builder: (_) => AlertDialog(
+    builder: (ctx) => AlertDialog(
       title: Text(title),
       content: Text(content),
       actions: [
         TextButton(
           child: Text(cancelLabel),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
             onCancel?.call();
           },
         ),
         TextButton(
           child: Text(
             confirmLabel,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
+            style: TextStyle(color: Theme.of(ctx).colorScheme.error),
           ),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
             onConfirm();
           },
         ),
@@ -77,28 +77,28 @@ void showTripleOptionDialog({
 }) {
   showDialog(
     context: context,
-    builder: (_) => AlertDialog(
+    builder: (ctx) => AlertDialog(
       title: Text(title),
       content: Text(content),
       actions: [
         TextButton(
           child: Text(option1Label),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
             onOption1();
           },
         ),
         TextButton(
           child: Text(option2Label),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
             onOption2();
           },
         ),
         TextButton(
           child: Text(cancelLabel),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
           },
         ),
       ],
@@ -115,24 +115,24 @@ void showSavePasswordConfirmationDialog({
 }) {
   showDialog(
     context: context,
-    builder: (_) => AlertDialog(
+    builder: (ctx) => AlertDialog(
       title: const Text('Сохранить пароль?'),
       content: Text('Сохранить пароль для сервиса "$service" в хранилище?'),
       actions: [
         TextButton(
           child: const Text('Отмена'),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
             onCancel?.call();
           },
         ),
         TextButton(
           child: Text(
             'Сохранить',
-            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            style: TextStyle(color: Theme.of(ctx).colorScheme.primary),
           ),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
             onConfirm();
           },
         ),

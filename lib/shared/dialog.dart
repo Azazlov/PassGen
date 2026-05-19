@@ -3,14 +3,14 @@ import 'package:flutter/cupertino.dart';
 void showDialogWindow1(String label, String text, BuildContext context) {
   showCupertinoDialog(
     context: context,
-    builder: (_) => CupertinoAlertDialog(
+    builder: (ctx) => CupertinoAlertDialog(
       title: Text(label),
       content: Text(text),
       actions: [
         CupertinoDialogAction(
           child: const Text('Ок'),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
           },
         ),
       ],
@@ -29,21 +29,21 @@ void showDialogWindow2(
 ) {
   showCupertinoDialog(
     context: context,
-    builder: (_) => CupertinoAlertDialog(
+    builder: (ctx) => CupertinoAlertDialog(
       title: Text(label),
       content: Text(text),
       actions: [
         CupertinoDialogAction(
           child: Text(text1),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
             function1();
           },
         ),
         CupertinoDialogAction(
           child: Text(text2),
           onPressed: () {
-            Navigator.of(context, rootNavigator: true).pop();
+            Navigator.of(ctx).pop();
             function2();
           },
         ),

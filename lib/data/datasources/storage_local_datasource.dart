@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/errors/failures.dart';
+import '../../../../core/security/master_password_session.dart';
 import '../../../../core/security/vault_key_session.dart';
 import '../../domain/entities/password_entry.dart';
 import '../database/database_helper.dart';
@@ -189,10 +190,14 @@ class StorageLocalDataSource {
       for (final row in entryRows) {
         final entryId = row['id'] as int?;
         final cfg = entryId != null ? configByEntryId[entryId] : null;
-        final base = PasswordEntry.fromMap(row, encryptedConfigBytes: cfg);
-        result.add(
-          keyBytes != null ? await _decryptEntry(base, keyBytes) : base,
-        );
+        var base = PasswordEntry.fromMap(row, encryptedConfigBytes: cfg);
+        base = keyBytes != null ? await _decryptEntry(base, keyBytes) : base;
+
+        // Пароль НЕ расшифровывается здесь — это дорогая операция (PBKDF2).
+        // Он будет расшифрован лениво при обращении к конкретной записи
+        // через метод decryptPassword().
+
+        result.add(base);
       }
       return result;
     } catch (e) {

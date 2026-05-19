@@ -418,6 +418,7 @@ class AuthLocalDataSource {
           'remainingAttempts': maxAttempts - failed,
           'lockoutUntil': isLocked ? DateTime.fromMillisecondsSinceEpoch(lockoutRaw) : null,
           'seriesIndex': series,
+          'biometricEnabled': (row['biometric_enabled'] as int?) == 1,
         };
       }
 

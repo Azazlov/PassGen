@@ -11,53 +11,55 @@ import '../../../core/errors/failures.dart';
 ///
 /// Обёртка над `local_auth` (сигнал да/нет) + `flutter_secure_storage`
 /// (хранение PIN под биометрическим гейтом ОС).
-/// На desktop (Windows/Linux/macOS) и web биометрия недоступна.
+/// На desktop (Windows/Linux) и web биометрия недоступна. macOS
+/// поддерживает Touch ID через `local_auth`.
 class BiometricLocalDataSource {
   BiometricLocalDataSource({
     la.LocalAuthentication? localAuth,
     FlutterSecureStorage? secureStorage,
   })  : _localAuth = localAuth ?? la.LocalAuthentication(),
-        _secureStorage = secureStorage ?? const FlutterSecureStorage(
-          aOptions: AndroidOptions(
-            encryptedSharedPreferences: true,
-          ),
-        );
+        // Явно указываем Keychain access group (kSecAttrAccessGroup).
+        _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   final la.LocalAuthentication _localAuth;
   final FlutterSecureStorage _secureStorage;
 
   static const String _pinKeyPrefix = 'biometric_pin_';
 
-  /// Возвращает true только на Android/iOS с доступной биометрией
+  /// Возвращает true только на Android/iOS/macOS с доступной биометрией
   Future<bool> isAvailable() async {
     if (kIsWeb) return false;
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    if (Platform.isWindows || Platform.isLinux) {
       return false;
     }
     try {
       final canCheck = await _localAuth.canCheckBiometrics;
       final isDeviceSupported = await _localAuth.isDeviceSupported();
-      return canCheck && isDeviceSupported;
+      final availableBiometrics = await _localAuth.getAvailableBiometrics();
+      return canCheck && isDeviceSupported && availableBiometrics.isNotEmpty;
     } catch (e) {
       return false;
     }
   }
 
   /// Выполняет биометрическую аутентификацию
-  Future<bool> authenticate({required String localizedReason}) async {
+  Future<bool> authenticate({
+    required String localizedReason,
+    bool biometricOnly = true,
+  }) async {
     if (!await isAvailable()) return false;
     try {
       return await _localAuth.authenticate(
         localizedReason: localizedReason,
-        options: const la.AuthenticationOptions(
+        options: la.AuthenticationOptions(
           useErrorDialogs: true,
           stickyAuth: true,
-          biometricOnly: true,
+          biometricOnly: biometricOnly,
         ),
       );
     } catch (e) {
-      throw const AuthFailure(
-        message: 'Ошибка биометрической аутентификации',
+      throw AuthFailure(
+        message: 'Ошибка биометрической аутентификации: $e',
         type: AuthFailureType.general,
       );
     }
@@ -71,7 +73,10 @@ class BiometricLocalDataSource {
         value: pin,
       );
     } catch (e) {
-      throw const StorageFailure(message: 'Ошибка включения биометрии');
+      // Сохраняем первопричину для диагностики Keychain/secure storage на macOS
+      throw StorageFailure(
+        message: 'Ошибка включения биометрии: $e',
+      );
     }
   }
 
@@ -97,6 +102,18 @@ class BiometricLocalDataSource {
     }
   }
 
+  /// Перезаписывает PIN профиля в secure storage без повторной биометрической авторизации
+  Future<void> updatePinForProfile(int profileId, String pin) async {
+    try {
+      await _secureStorage.write(
+        key: '$_pinKeyPrefix$profileId',
+        value: pin,
+      );
+    } catch (e) {
+      throw const StorageFailure(message: 'Ошибка обновления PIN для биометрии');
+    }
+  }
+
   /// Проверяет, сохранён ли PIN для профиля
   Future<bool> isEnabledForProfile(int profileId) async {
     try {
@@ -117,7 +134,13 @@ class BiometricLocalDataSource {
       if (biometrics.contains(la.BiometricType.face)) {
         return app.BiometricType.face;
       }
-      if (biometrics.contains(la.BiometricType.fingerprint)) {
+      if (biometrics.contains(la.BiometricType.fingerprint) ||
+          biometrics.contains(la.BiometricType.strong)) {
+        return app.BiometricType.fingerprint;
+      }
+      // weak — это любая биометрия, не прошедшая строгие проверки,
+      // но для пользователя это всё равно полезная опция.
+      if (biometrics.contains(la.BiometricType.weak)) {
         return app.BiometricType.fingerprint;
       }
       return app.BiometricType.unknown;

@@ -115,7 +115,8 @@ class AuthRepositoryImpl implements AuthRepository {
       remainingAttempts: state['remainingAttempts'] as int?,
       lockoutUntil: state['lockoutUntil'] as DateTime?,
       lockoutSeriesIndex: (state['seriesIndex'] as int?) ?? 0,
-      currentProfileId: _currentProfileId,
+      currentProfileId: _profileId,
+      isBiometricEnabled: state['biometricEnabled'] as bool? ?? false,
     );
   }
 

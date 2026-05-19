@@ -8,6 +8,7 @@ import '../../../core/security/master_password_session.dart';
 import '../../../domain/entities/auth_result.dart';
 import '../../../domain/entities/auth_state.dart';
 import '../../../domain/repositories/biometric_repository.dart';
+import '../../../core/errors/failures.dart';
 import '../../../domain/repositories/profile_repository.dart';
 import '../../../domain/services/vault_unlock_service.dart';
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
@@ -101,6 +102,18 @@ class AuthController extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 100));
 
       _authState = await getAuthStateUseCase.execute();
+      if (biometricRepository != null) {
+        final isAvailable = await biometricRepository!.isAvailable();
+        final isEnabled = _authState.currentProfileId != null &&
+            isAvailable &&
+            await biometricRepository!.isEnabledForProfile(
+              _authState.currentProfileId!,
+            );
+        _authState = _authState.copyWith(
+          isBiometricAvailable: isAvailable,
+          isBiometricEnabled: isEnabled,
+        );
+      }
       _isSetupMode = !_authState.isPinSetup;
     } catch (e) {
       _error = 'Ошибка загрузки состояния: $e';
@@ -216,58 +229,63 @@ class AuthController extends ChangeNotifier {
 
     try {
       final result = await verifyPinUseCase.execute(_enteredPin);
-
       final authResult = result.fold(
         (failure) {
           _error = failure.message;
           notifyListeners();
           return AuthResult.wrongPin;
         },
-        (authResult) {
-          if (authResult == AuthResult.success) {
-            final profileId = _authState.currentProfileId ?? 1;
-            final pinForSession = _enteredPin;
-            MasterPasswordSession.setForProfile(
-              profileId: profileId,
-              pin: pinForSession,
-            );
-            // Разблокируем vault-ключ профиля и лениво дошифровываем
-            // старые plaintext-метаданные. Ошибки не блокируют вход.
-            unawaited(
-              vaultUnlockService
-                      ?.unlockWithPin(profileId: profileId, pin: pinForSession)
-                      .catchError((_) => 0) ??
-                  Future.value(0),
-            );
-            _authState = _authState.copyWith(
-              isAuthenticated: true,
-              isLocked: false,
-            );
-            _enteredPin = '';
-
-            logEventUseCase.execute(
-              EventTypes.authSuccess,
-              profileId: _authState.currentProfileId,
-            );
-          } else if (authResult == AuthResult.wrongPin) {
-            _refreshStateSilent();
-            logEventUseCase.execute(
-              EventTypes.authFailure,
-              details: {'attempt': _authState.remainingAttempts},
-              profileId: _authState.currentProfileId,
-            );
-          } else if (authResult == AuthResult.locked) {
-            _refreshStateSilent();
-            logEventUseCase.execute(
-              EventTypes.authLockout,
-              profileId: _authState.currentProfileId,
-            );
-          }
-          notifyListeners();
-          return authResult;
-        },
+        (authResult) => authResult,
       );
 
+      if (authResult == AuthResult.success) {
+        final profileId = _authState.currentProfileId ?? 1;
+        final pinForSession = _enteredPin;
+        MasterPasswordSession.setForProfile(
+          profileId: profileId,
+          pin: pinForSession,
+        );
+        // Разблокируем vault-ключ профиля и лениво дошифровывать
+        // старые plaintext-метаданные. Ошибки не блокируют вход.
+        unawaited(
+          vaultUnlockService
+                  ?.unlockWithPin(profileId: profileId, pin: pinForSession)
+                  .catchError((_) => 0) ??
+              Future.value(0),
+        );
+        final isAvailable = biometricRepository != null &&
+            await biometricRepository!.isAvailable();
+        final isEnabled = biometricRepository != null &&
+            isAvailable &&
+            await biometricRepository!.isEnabledForProfile(profileId);
+        _authState = _authState.copyWith(
+          isAuthenticated: true,
+          isLocked: false,
+          isBiometricAvailable: isAvailable,
+          isBiometricEnabled: isEnabled,
+        );
+        _enteredPin = '';
+
+        logEventUseCase.execute(
+          EventTypes.authSuccess,
+          profileId: _authState.currentProfileId,
+        );
+      } else if (authResult == AuthResult.wrongPin) {
+        _refreshStateSilent();
+        logEventUseCase.execute(
+          EventTypes.authFailure,
+          details: {'attempt': _authState.remainingAttempts},
+          profileId: _authState.currentProfileId,
+        );
+      } else if (authResult == AuthResult.locked) {
+        _refreshStateSilent();
+        logEventUseCase.execute(
+          EventTypes.authLockout,
+          profileId: _authState.currentProfileId,
+        );
+      }
+
+      notifyListeners();
       return authResult;
     } catch (e) {
       _error = 'Ошибка проверки PIN: $e';
@@ -308,7 +326,6 @@ class AuthController extends ChangeNotifier {
       );
 
       if (retrievedPin == null || retrievedPin.isEmpty) {
-        _error = 'PIN не найден в защищённом хранилище';
         _isLoading = false;
         notifyListeners();
         return AuthResult.wrongPin;
@@ -319,8 +336,6 @@ class AuthController extends ChangeNotifier {
 
       final authResult = result.fold(
         (failure) {
-          _error = failure.message;
-          notifyListeners();
           return AuthResult.wrongPin;
         },
         (authResult) {
@@ -353,7 +368,7 @@ class AuthController extends ChangeNotifier {
 
       return authResult;
     } catch (e) {
-      _error = 'Ошибка биометрической аутентификации: $e';
+      _error = null;
       notifyListeners();
       return AuthResult.wrongPin;
     } finally {
@@ -363,14 +378,35 @@ class AuthController extends ChangeNotifier {
 
   /// Включает биометрию для текущего профиля
   Future<bool> enableBiometric(String pin) async {
-    if (biometricRepository == null) return false;
-    if (_authState.currentProfileId == null) return false;
+    if (biometricRepository == null) {
+      _error = 'Сервис биометрии недоступен';
+      notifyListeners();
+      return false;
+    }
+    if (_authState.currentProfileId == null) {
+      _error = 'Не выбран профиль для биометрической аутентификации';
+      notifyListeners();
+      return false;
+    }
 
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
+      if (!await biometricRepository!.isAvailable()) {
+        _error = 'Биометрия недоступна на устройстве';
+        notifyListeners();
+        return false;
+      }
+
+      final isPinValid = await verifyPinUseCase.execute(pin).then((result) => result.isRight());
+      if (!isPinValid) {
+        _error = 'Неверный PIN';
+        notifyListeners();
+        return false;
+      }
+
       final success = await biometricRepository!.enableForProfile(
         _authState.currentProfileId!,
         pin,
@@ -382,11 +418,19 @@ class AuthController extends ChangeNotifier {
           details: {'action': 'enable_biometric'},
           profileId: _authState.currentProfileId,
         );
+      } else {
+        _error = 'Биометрическая проверка не пройдена';
       }
       notifyListeners();
       return success;
     } catch (e) {
-      _error = 'Ошибка включения биометрии: $e';
+      // Чтобы не терять исходное сообщение AuthFailure (и не показывать
+      // вложенный/обобщённый текст вроде "AuthFailure (message: ... )").
+      if (e is AuthFailure) {
+        _error = e.message;
+      } else {
+        _error = 'Ошибка включения биометрии: $e';
+      }
       notifyListeners();
       return false;
     } finally {
@@ -395,15 +439,32 @@ class AuthController extends ChangeNotifier {
   }
 
   /// Отключает биометрию для текущего профиля
-  Future<bool> disableBiometric() async {
-    if (biometricRepository == null) return false;
-    if (_authState.currentProfileId == null) return false;
+  Future<bool> disableBiometric(String pin) async {
+    if (biometricRepository == null) {
+      _error = 'Сервис биометрии недоступен';
+      notifyListeners();
+      return false;
+    }
+    if (_authState.currentProfileId == null) {
+      _error = 'Не выбран профиль для биометрической аутентификации';
+      notifyListeners();
+      return false;
+    }
 
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
+      final isPinValid = await verifyPinUseCase.execute(pin).then(
+        (result) => result.isRight(),
+      );
+      if (!isPinValid) {
+        _error = 'Неверный PIN';
+        notifyListeners();
+        return false;
+      }
+
       await biometricRepository!.disableForProfile(_authState.currentProfileId!);
       _authState = _authState.copyWith(isBiometricEnabled: false);
       await logEventUseCase.execute(
@@ -430,18 +491,31 @@ class AuthController extends ChangeNotifier {
 
     try {
       final result = await changePinUseCase.execute(oldPin, newPin);
-
-      return result.fold(
+      final success = result.fold(
         (failure) {
           _error = failure.message;
           notifyListeners();
           return false;
         },
-        (success) {
-          notifyListeners();
-          return success;
-        },
+        (success) => success,
       );
+
+      if (success && biometricRepository != null &&
+          _authState.isBiometricEnabled &&
+          _authState.currentProfileId != null) {
+        try {
+          await biometricRepository!.updatePinForProfile(
+            _authState.currentProfileId!,
+            newPin,
+          );
+        } catch (_) {
+          _error = 'PIN изменён, но обновление биометрии не удалось';
+          notifyListeners();
+        }
+      }
+
+      notifyListeners();
+      return success;
     } catch (e) {
       _error = 'Ошибка смены PIN: $e';
       notifyListeners();

@@ -6,10 +6,16 @@ abstract class BiometricRepository {
   Future<bool> isAvailable();
 
   /// Выполняет биометрическую аутентификацию
-  Future<bool> authenticate({String localizedReason = 'Подтвердите личность'});
+  Future<bool> authenticate({
+    String localizedReason = 'Подтвердите личность',
+    bool biometricOnly = true,
+  });
 
   /// Включает биометрию для профиля
   Future<bool> enableForProfile(int profileId, String pin);
+
+  /// Перезаписывает PIN профиля в secure storage
+  Future<bool> updatePinForProfile(int profileId, String pin);
 
   /// Отключает биометрию для профиля
   Future<bool> disableForProfile(int profileId);

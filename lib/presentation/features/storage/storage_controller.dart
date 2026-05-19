@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/event_types.dart';
 import '../../../core/errors/failures.dart';
 import '../../../core/security/master_password_session.dart';
+import '../../../data/datasources/encryptor_local_datasource.dart';
 import '../../../domain/entities/password_entry.dart';
 import '../../../domain/entities/password_history_entry.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
@@ -303,6 +306,29 @@ class StorageController extends ChangeNotifier {
     }
     final result = await getPasswordHistoryUseCase!.execute(entryId);
     return result.fold((_) => const [], (list) => list);
+  }
+
+  /// Расшифровывает пароль для указанной записи.
+  ///
+  /// Возвращает расшифрованный пароль или `null` при ошибке.
+  /// НЕ вызывает notifyListeners() — чтобы не сбрасывать виджеты,
+  /// использующие FutureBuilder.
+  Future<String?> decryptEntryPassword(PasswordEntry entry) async {
+    final masterPassword = MasterPasswordSession.getAny();
+    if (masterPassword == null || masterPassword.isEmpty ||
+        !entry.isEncrypted) {
+      return entry.password;
+    }
+    try {
+      final encryptor = EncryptorLocalDataSource();
+      final decryptedBytes = await encryptor.decryptFromMini(
+        miniEncrypted: entry.encryptedPassword!,
+        password: utf8.encode(masterPassword),
+      );
+      return utf8.decode(decryptedBytes);
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Регенерирует пароль для существующей записи, сохраняя предыдущую
