@@ -23,5 +23,7 @@
 	<!-- Разрешение на использование Touch ID (биометрия) -->
 	<key>com.apple.security.device.face-id</key>
 	<true/>
+
 </dict>
 </plist>
+
