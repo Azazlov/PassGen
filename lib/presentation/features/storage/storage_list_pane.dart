@@ -170,9 +170,16 @@ class StorageListPane extends StatelessWidget {
             );
           },
         ),
-        title: Text(
-          entry.service,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        title: FutureBuilder<String>(
+          future: controller.getDisplayService(entry),
+          builder: (context, snapshot) {
+            final text = snapshot.data ??
+                (entry.service.trim().isNotEmpty ? entry.service : 'Загрузка...');
+            return Text(
+              text,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            );
+          },
         ),
         subtitle: FutureBuilder<List<Category>>(
           future: context.read<GetCategoriesUseCase>().execute(),

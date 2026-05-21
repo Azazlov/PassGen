@@ -313,6 +313,34 @@ class StorageController extends ChangeNotifier {
   /// Возвращает расшифрованный пароль или `null` при ошибке.
   /// НЕ вызывает notifyListeners() — чтобы не сбрасывать виджеты,
   /// использующие FutureBuilder.
+  Future<String> getDisplayService(PasswordEntry entry) async {
+    // Если plaintext service уже есть — показываем его без дешифрования.
+    if (entry.service.trim().isNotEmpty) return entry.service;
+
+    // Если есть зашифрованный blob — пытаемся дешифровать.
+    if (entry.encryptedServiceBlob == null || entry.encryptedServiceBlob!.isEmpty) {
+      return entry.service.trim().isNotEmpty ? entry.service : 'Неизвестный сервис';
+    }
+
+    final masterPassword = MasterPasswordSession.getAny();
+    if (masterPassword == null || masterPassword.isEmpty) {
+      return 'Неизвестный сервис';
+    }
+
+    try {
+      // Используем тот же encryptor, что и для decryptEntryPassword.
+      final encryptor = EncryptorLocalDataSource();
+      final decryptedBytes = await encryptor.decryptFieldWithKey(
+        blob: entry.encryptedServiceBlob!,
+        keyBytes: utf8.encode(masterPassword),
+      );
+      final decryptedService = utf8.decode(decryptedBytes).trim();
+      return decryptedService.isNotEmpty ? decryptedService : 'Неизвестный сервис';
+    } catch (_) {
+      return 'Неизвестный сервис';
+    }
+  }
+
   Future<String?> decryptEntryPassword(PasswordEntry entry) async {
     final masterPassword = MasterPasswordSession.getAny();
     if (masterPassword == null || masterPassword.isEmpty ||

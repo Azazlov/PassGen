@@ -1,0 +1,3 @@
+- [ ] Update StorageController: add `getDisplayService(PasswordEntry entry)` for decrypted/visible service title
+- [ ] Update StorageListPane: replace `title: Text(entry.service, ...)` with UI that uses `getDisplayService(entry)` (FutureBuilder)
+- [ ] Run `flutter analyze` / `flutter test` if available
