@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/event_types.dart';
 import '../../../core/errors/failures.dart';
 import '../../../core/security/master_password_session.dart';
+import '../../../core/security/vault_key_session.dart';
 import '../../../data/datasources/encryptor_local_datasource.dart';
 import '../../../domain/entities/password_entry.dart';
 import '../../../domain/entities/password_history_entry.dart';
@@ -312,27 +313,29 @@ class StorageController extends ChangeNotifier {
   ///
   /// Возвращает расшифрованный пароль или `null` при ошибке.
   /// НЕ вызывает notifyListeners() — чтобы не сбрасывать виджеты,
-  /// использующие FutureBuilder.
   Future<String> getDisplayService(PasswordEntry entry) async {
-    // Если plaintext service уже есть — показываем его без дешифрования.
-    if (entry.service.trim().isNotEmpty) return entry.service;
-
-    // Если есть зашифрованный blob — пытаемся дешифровать.
-    if (entry.encryptedServiceBlob == null || entry.encryptedServiceBlob!.isEmpty) {
-      return entry.service.trim().isNotEmpty ? entry.service : 'Неизвестный сервис';
+    final plaintextService = entry.service.trim();
+    if (plaintextService.isNotEmpty) {
+      return plaintextService;
     }
 
-    final masterPassword = MasterPasswordSession.getAny();
-    if (masterPassword == null || masterPassword.isEmpty) {
+    final encryptedBlob = entry.encryptedServiceBlob;
+    if (encryptedBlob == null || encryptedBlob.isEmpty) {
+      return 'Неизвестный сервис';
+    }
+
+    // decryptFieldWithKey ожидает vault-key bytes (а не PIN).
+    // Профиль = 1, как в StorageLocalDataSource.
+    final keyBytes = VaultKeySession.getForProfile(1);
+    if (keyBytes == null || keyBytes.isEmpty) {
       return 'Неизвестный сервис';
     }
 
     try {
-      // Используем тот же encryptor, что и для decryptEntryPassword.
       final encryptor = EncryptorLocalDataSource();
       final decryptedBytes = await encryptor.decryptFieldWithKey(
-        blob: entry.encryptedServiceBlob!,
-        keyBytes: utf8.encode(masterPassword),
+        blob: encryptedBlob,
+        keyBytes: keyBytes,
       );
       final decryptedService = utf8.decode(decryptedBytes).trim();
       return decryptedService.isNotEmpty ? decryptedService : 'Неизвестный сервис';
