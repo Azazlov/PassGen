@@ -11,12 +11,16 @@ import '../../../core/services/navigation_service.dart';
 import '../../../domain/entities/category.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
+import '../../../domain/usecases/password/generate_password_usecase.dart';
+import '../../../domain/usecases/password/get_password_history_usecase.dart';
+import '../../../domain/usecases/password/save_password_usecase.dart';
 import '../../../domain/usecases/storage/delete_password_usecase.dart';
 import '../../../domain/usecases/storage/export_passgen_usecase.dart';
 import '../../../domain/usecases/storage/export_passwords_usecase.dart';
 import '../../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../../domain/usecases/storage/import_passgen_usecase.dart';
 import '../../../domain/usecases/storage/import_passwords_usecase.dart';
+import '../../../domain/usecases/storage/update_entry_usecase.dart';
 import '../../../presentation/widgets/app_dialogs.dart';
 import '../../../presentation/widgets/shimmer_effect.dart';
 import 'storage_adaptive_layout.dart';
@@ -29,7 +33,7 @@ class StorageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => StorageController(
+      create: (context) => StorageController(
         getPasswordsUseCase: context.read<GetPasswordsUseCase>(),
         deletePasswordUseCase: context.read<DeletePasswordUseCase>(),
         exportPasswordsUseCase: context.read<ExportPasswordsUseCase>(),
@@ -37,6 +41,10 @@ class StorageScreen extends StatelessWidget {
         exportPassgenUseCase: context.read<ExportPassgenUseCase>(),
         importPassgenUseCase: context.read<ImportPassgenUseCase>(),
         logEventUseCase: context.read<LogEventUseCase>(),
+        updateEntryUseCase: context.read<UpdateEntryUseCase>(),
+        getPasswordHistoryUseCase: context.read<GetPasswordHistoryUseCase>(),
+        generatePasswordUseCase: context.read<GeneratePasswordUseCase>(),
+        savePasswordUseCase: context.read<SavePasswordUseCase>(),
       ),
       child: const _StorageScreenContent(),
     );

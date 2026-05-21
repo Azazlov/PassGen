@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(du *)"
+      "Bash(du *)",
+      "Bash(mkdir *)",
+      "Bash(find *)",
+      "Bash(mv *)",
+      "Bash(rm *)",
+      "Bash(flutter *)",
+      "Bash(sed *)",
+      "Bash(git checkout *)",
+      "Bash(python3 *)",
+      "WebSearch",
+      "Bash(taskkill *)",
+      "mcp__dart__dart_format",
+      "mcp__dart__dart_fix",
+      "Bash(timeout *)"
     ]
-  }
+  },
+  "$version": 3
 }

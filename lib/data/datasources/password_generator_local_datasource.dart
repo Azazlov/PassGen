@@ -360,6 +360,12 @@ class PasswordGeneratorLocalDataSource {
 
       CryptoUtils.secureWipePassword(masterPasswordBytes);
 
+      // Извлекаем PBKDF2-nonce из мини-формата (первые 32 байта до декодирования).
+      // This nonce is stored separately in the entry so that
+      // `save_password_usecase` can pass it to `saveHistoryEntry` and record a
+      // history entry before overwriting the password.
+      final pbkdf2Nonce = _extractPbkdf2Nonce(miniEncrypted);
+
       final existingIndex = passwords.indexWhere(
         (e) => e.service.toLowerCase() == service.toLowerCase(),
       );
@@ -368,7 +374,7 @@ class PasswordGeneratorLocalDataSource {
         final existingEntry = passwords[existingIndex];
         final updatedEntry = existingEntry.copyWith(
           encryptedPassword: miniEncrypted,
-          nonce: null,
+          nonce: pbkdf2Nonce,
           config: encryptedConfig,
           login: login ?? existingEntry.login,
           categoryId: categoryId ?? existingEntry.categoryId,
@@ -379,7 +385,7 @@ class PasswordGeneratorLocalDataSource {
         final newEntry = PasswordEntry(
           service: service,
           encryptedPassword: miniEncrypted,
-          nonce: null,
+          nonce: pbkdf2Nonce,
           config: encryptedConfig,
           login: login,
           categoryId: categoryId,
@@ -394,5 +400,14 @@ class PasswordGeneratorLocalDataSource {
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
+  }
+
+  /// Извлекает PBKDF2-nonce из мини-формата.
+  ///
+  /// Мини-формат: Base64(32-байтовый_nonce) + rest. Возвращает Base64-encoded nonce.
+  static String _extractPbkdf2Nonce(String miniEncrypted) {
+    final bytes = CryptoUtils.decodeBytesBase64(miniEncrypted);
+    final nonceBytes = bytes.sublist(0, 32);
+    return CryptoUtils.encodeBytesBase64(nonceBytes);
   }
 }

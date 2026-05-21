@@ -203,6 +203,20 @@ class PasswordEntry {
       return null;
     }
 
+    // Восстанавливает строковый nonce из Uint8List (колонка BLOB SQLite).
+    // Используется для поля [nonce], которое хранится как Base64-строка, но
+    // записывается/читается через BLOB, поэтому нужен явный UTF-8 декодинг.
+    String? readNonceBlob(Object? raw) {
+      if (raw == null) return null;
+      if (raw is Uint8List) {
+        return raw.isEmpty ? null : utf8.decode(raw);
+      }
+      if (raw is List<int>) {
+        return raw.isEmpty ? null : utf8.decode(raw);
+      }
+      return null;
+    }
+
     return PasswordEntry(
       id: map['id'] as int?,
       profileId: map['profile_id'] as int?,
@@ -212,6 +226,7 @@ class PasswordEntry {
       url: map['url'] as String?,
       notes: map['notes'] as String?,
       encryptedPassword: encryptedPassword,
+      nonce: readNonceBlob(map['nonce']),
       config: config,
       createdAt: createdAtMs != null
           ? DateTime.fromMillisecondsSinceEpoch(createdAtMs)
@@ -231,10 +246,9 @@ class PasswordEntry {
   /// `password_configs`; используйте [encryptedConfigBlob] для получения
   /// байтов для записи в `password_configs.encrypted_config`.
   ///
-  /// Колонка `nonce` в схеме объявлена как `BLOB NOT NULL`, но используется
-  /// мини-формат, в котором nonce уже встроен внутрь `encrypted_password`,
-  /// поэтому в `nonce` записывается пустой `Uint8List(0)`. Колонка
-  /// зарезервирована на следующий этап (полевое шифрование).
+  /// Колонка `nonce` хранит Base64-encoded PBKDF2 nonce (первые 32 байта из
+  /// мини-формата), который нужен `save_password_usecase` для записи старого
+  /// пароля в `password_history` перед обновлением.
   Map<String, Object?> toMap({int? defaultProfileId}) {
     final encryptedPasswordBytes = encryptedPassword != null
         ? Uint8List.fromList(utf8.encode(encryptedPassword!))
@@ -255,7 +269,9 @@ class PasswordEntry {
       'url': url,
       'notes': notes,
       'encrypted_password': encryptedPasswordBytes,
-      'nonce': Uint8List(0),
+      'nonce': nonce != null
+          ? Uint8List.fromList(utf8.encode(nonce!))
+          : Uint8List(0),
       if (encryptedServiceBlob != null)
         'encrypted_service': Uint8List.fromList(encryptedServiceBlob!),
       if (encryptedLoginBlob != null)

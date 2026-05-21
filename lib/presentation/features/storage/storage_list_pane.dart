@@ -6,6 +6,8 @@ import '../../../domain/entities/category.dart';
 import '../../../domain/entities/password_entry.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
 import 'storage_controller.dart';
+import 'storage_detail_pane.dart';
+
 
 /// Панель списка паролей
 class StorageListPane extends StatelessWidget {
@@ -201,8 +203,35 @@ class StorageListPane extends StatelessWidget {
         : (entry.isEncrypted ? '(нажмите "Копировать")' : (entry.password ?? '(зашифровано)'));
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Divider(height: 1),
+
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: OutlinedButton.icon(
+              onPressed: () {
+                // используем тот же диалог редактирования, что и в detail-pane
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    fullscreenDialog: true,
+                    builder: (_) => Scaffold(
+                      appBar: AppBar(
+                        title: const Text('Редактировать запись'),
+                      ),
+                      body: StorageDetailPane(entry: entry),
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.edit),
+              label: const Text('Редактировать'),
+            ),
+          ),
+        ),
+
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.key),
@@ -219,6 +248,7 @@ class StorageListPane extends StatelessWidget {
             onPressed: () => _copyPassword(context, entry),
           ),
         ),
+
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.person_outline),
