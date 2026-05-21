@@ -58,8 +58,10 @@ class GeneratorController extends ChangeNotifier {
 
   // Текстовые контроллеры
   final TextEditingController serviceController = TextEditingController();
+  final TextEditingController loginController = TextEditingController();
   final TextEditingController minLengthController = TextEditingController();
   final TextEditingController maxLengthController = TextEditingController();
+
 
   // Выбор категории
   int? _selectedCategoryId;
@@ -379,18 +381,30 @@ class GeneratorController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Ищем существующую запись по названию сервиса, чтобы передать в use case
+      // Ищем существующую запись по (service, login), чтобы передать в use case
       // entryId и старые крипто-поля — это включит запись в password_history.
-      // До миграции с SharedPreferences на SQLite идентификатор записи может быть null,
-      // в этом случае история не фиксируется (FK в password_history требует реальный id).
+      final loginText = loginController.text.trim();
+
       PasswordEntry? existingEntry;
       try {
         final passwordsResult = await getPasswordsUseCase.execute();
         existingEntry = passwordsResult.fold((_) => null, (entries) {
-          final lower = serviceController.text.toLowerCase();
+          final lowerService = serviceController.text.toLowerCase();
           for (final entry in entries) {
-            if (entry.service.toLowerCase() == lower) {
-              return entry;
+            final matchesService = entry.service.toLowerCase() == lowerService;
+            if (!matchesService) continue;
+
+            if (loginText.isNotEmpty) {
+              final entryLogin = entry.login;
+              if (entryLogin != null &&
+                  entryLogin.toLowerCase() == loginText.toLowerCase()) {
+                return entry;
+              }
+            } else {
+              // если логин не задан — ищем запись без логина
+              if (entry.login == null || entry.login!.isEmpty) {
+                return entry;
+              }
             }
           }
           return null;
@@ -405,11 +419,13 @@ class GeneratorController extends ChangeNotifier {
         password: _lastResult!.password,
         config: _lastResult!.config,
         categoryId: _selectedCategoryId,
+        login: loginText.isEmpty ? null : loginText,
         entryId: existingEntry?.id,
         encryptedPassword: existingEntry?.encryptedPassword,
         nonce: existingEntry?.nonce,
         masterPassword: masterPassword,
       );
+
 
       return result.fold(
         (failure) {
@@ -444,10 +460,12 @@ class GeneratorController extends ChangeNotifier {
   @override
   void dispose() {
     serviceController.dispose();
+    loginController.dispose();
     minLengthController.dispose();
     maxLengthController.dispose();
     super.dispose();
   }
+
 
   /// Валидирует ввод service/login
   ///

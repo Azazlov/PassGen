@@ -184,6 +184,17 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
 
               const SizedBox(height: 16),
 
+              // Поле логина
+              AppTextField(
+                label: 'Логин (опционально)',
+                hint: 'Например: user@gmail.com',
+                controller: controller.loginController,
+                keyboardType: TextInputType.text,
+              ),
+
+
+              const SizedBox(height: 16),
+
               // Выбор категории
               _buildCategorySelector(controller, theme),
 
