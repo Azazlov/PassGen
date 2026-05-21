@@ -38,6 +38,11 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
         title: const Text('Журнал событий'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.file_download),
+            tooltip: 'Экспорт CSV',
+            onPressed: () => controller.exportToCsv(),
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Обновить',
             onPressed: () => controller.loadLogs(limit: 100),

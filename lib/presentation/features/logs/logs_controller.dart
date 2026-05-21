@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../domain/entities/security_log.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
@@ -179,6 +183,60 @@ class LogsController extends ChangeNotifier {
   /// Форматирование времени
   String formatTime(DateTime dateTime) {
     return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// Форматирует дату-время для CSV
+  String _formatCsvDateTime(DateTime dt) {
+    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}';
+  }
+
+  /// Экранирует строковое значение для CSV
+  String _csvEscape(String value) {
+    if (value.contains('"') || value.contains(';') || value.contains('\n')) {
+      return '"${value.replaceAll('"', '""')}"';
+    }
+    return value;
+  }
+
+  /// Экспорт журнала безопасности в CSV-файл и открытие системного Share-листа.
+  Future<void> exportToCsv() async {
+    try {
+      final logs = filteredLogs;
+      final buffer = StringBuffer();
+
+      // BOM для корректного отображения кириллицы в Excel
+      buffer.write('\uFEFF');
+
+      // Заголовки
+      buffer.writeln('ID;Profile ID;Action Type;Timestamp;Details');
+
+      for (final log in logs) {
+        buffer.writeln(
+          '${log.id ?? ""};'
+          '${log.profileId ?? ""};'
+          '${_csvEscape(log.actionType)};'
+          '${_formatCsvDateTime(log.timestamp)};'
+          '${_csvEscape(log.details ?? "")}',
+        );
+      }
+
+      final dir = await getTemporaryDirectory();
+      final file = File(
+        '${dir.path}/passgen_logs_export_${DateTime.now().millisecondsSinceEpoch}.csv',
+      );
+      await file.writeAsString(buffer.toString());
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          subject: 'PassGen — журнал событий',
+        ),
+      );
+    } catch (e) {
+      _error = 'Ошибка экспорта: $e';
+      notifyListeners();
+    }
   }
 
   void clearError() {

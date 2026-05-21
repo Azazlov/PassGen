@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../../../core/constants/event_types.dart';
 import '../../../core/security/master_password_session.dart';
@@ -20,7 +21,7 @@ import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/settings/get_setting_usecase.dart';
 
 /// Контроллер для экрана аутентификации (v0.6 — per-profile + biometric)
-class AuthController extends ChangeNotifier {
+class AuthController extends ChangeNotifier with WidgetsBindingObserver {
   AuthController({
     required this.setupPinUseCase,
     required this.verifyPinUseCase,
@@ -35,6 +36,7 @@ class AuthController extends ChangeNotifier {
   }) {
     _loadAuthState();
     _loadInactivityTimeout();
+    WidgetsBinding.instance.addObserver(this);
   }
   final SetupPinUseCase setupPinUseCase;
   final VerifyPinUseCase verifyPinUseCase;
@@ -64,6 +66,9 @@ class AuthController extends ChangeNotifier {
 
   Duration _inactivityTimeout = defaultInactivityTimeout;
   Duration get currentInactivityTimeout => _inactivityTimeout;
+
+  /// Временная метка последнего взаимодействия пользователя (для AppLifecycleObserver).
+  DateTime? _lastActiveTimestamp;
 
   // Состояние
   AuthState _authState = const AuthState();
@@ -585,6 +590,7 @@ class AuthController extends ChangeNotifier {
   /// Запускает таймер неактивности
   void startInactivityTimer() {
     _inactivityTimer?.cancel();
+    _lastActiveTimestamp = DateTime.now();
     _inactivityTimer = Timer(_inactivityTimeout, _lockApp);
   }
 
@@ -620,6 +626,30 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  // ==================== AppLifecycleObserver ====================
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_authState.isAuthenticated) return;
+
+    if (state == AppLifecycleState.paused) {
+      // Приложение свернули — запоминаем время
+      _lastActiveTimestamp = DateTime.now();
+      _inactivityTimer?.cancel();
+    } else if (state == AppLifecycleState.resumed) {
+      // Вернулись в приложение — проверяем, не превышен ли лимит
+      if (_lastActiveTimestamp != null) {
+        final elapsed = DateTime.now().difference(_lastActiveTimestamp!);
+        if (elapsed >= _inactivityTimeout) {
+          lockApp(reason: 'lifecycle_timeout');
+          return;
+        }
+      }
+      // Если лимит не превышен — перезапускаем таймер неактивности
+      startInactivityTimer();
+    }
+  }
+
   /// Блокирует приложение (по таймеру неактивности).
   void _lockApp() => lockApp(reason: 'inactivity_timeout');
 
@@ -651,6 +681,7 @@ class AuthController extends ChangeNotifier {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     MasterPasswordSession.clear();
     vaultUnlockService?.lock();
     _pinController.dispose();
