@@ -611,9 +611,20 @@ class _StorageDetailPaneState extends State<StorageDetailPane> {
                 FutureBuilder<List<Category>>(
                   future: context.read<GetCategoriesUseCase>().execute(),
                   builder: (context, snapshot) {
-                    final categories = snapshot.data ?? [];
+                    if (!snapshot.hasData) {
+                      return const SizedBox.shrink();
+                    }
+                    final categories = snapshot.data!;
+                    final validValue = categories.any((c) => c.id == selectedCategoryId)
+                        ? selectedCategoryId
+                        : null;
+                    if (validValue != selectedCategoryId) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) setState(() => selectedCategoryId = null);
+                      });
+                    }
                     return DropdownButtonFormField<int?>(
-                      value: selectedCategoryId,
+                      initialValue: validValue,
                       decoration: const InputDecoration(
                         labelText: 'Категория',
                         border: OutlineInputBorder(),
