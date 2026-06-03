@@ -13,6 +13,7 @@ import '../../../domain/entities/password_history_entry.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/get_password_history_usecase.dart';
+import '../../../domain/usecases/password/save_password_history_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
 import '../../../domain/usecases/storage/delete_password_usecase.dart';
 import '../../../domain/usecases/storage/export_passgen_usecase.dart';
@@ -34,6 +35,7 @@ class StorageController extends ChangeNotifier {
     required this.logEventUseCase,
     this.updateEntryUseCase,
     this.getPasswordHistoryUseCase,
+    this.savePasswordHistoryUseCase,
     this.generatePasswordUseCase,
     this.savePasswordUseCase,
   });
@@ -46,6 +48,7 @@ class StorageController extends ChangeNotifier {
   final LogEventUseCase logEventUseCase;
   final UpdateEntryUseCase? updateEntryUseCase;
   final GetPasswordHistoryUseCase? getPasswordHistoryUseCase;
+  final SavePasswordHistoryUseCase? savePasswordHistoryUseCase;
   final GeneratePasswordUseCase? generatePasswordUseCase;
   final SavePasswordUseCase? savePasswordUseCase;
 
@@ -252,8 +255,9 @@ class StorageController extends ChangeNotifier {
   }
 
   /// Обновляет метаданные существующей записи (service, login, url, notes,
-  /// category). Перезагружает список после успеха. Возвращает `true` при
-  /// успешном сохранении.
+  /// category). Сохраняет старую версию в историю перед изменением.
+  /// Перезагружает список после успеха. Возвращает `true` при успешном
+  /// сохранении.
   Future<bool> updateEntry(PasswordEntry updated) async {
     if (updateEntryUseCase == null) {
       _error = 'Обновление записей недоступно';
@@ -263,6 +267,30 @@ class StorageController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
+      final oldEntry = updated.id != null
+          ? _allPasswords.cast<PasswordEntry?>().firstWhere(
+                (e) => e?.id == updated.id,
+                orElse: () => null,
+              )
+          : null;
+
+      if (oldEntry != null &&
+          savePasswordHistoryUseCase != null &&
+          oldEntry.encryptedPassword != null &&
+          oldEntry.encryptedPassword!.isNotEmpty &&
+          oldEntry.nonce != null &&
+          oldEntry.nonce!.isNotEmpty) {
+        await savePasswordHistoryUseCase!.execute(
+          entryId: oldEntry.id!,
+          service: oldEntry.service,
+          encryptedPassword: oldEntry.encryptedPassword!,
+          nonce: oldEntry.nonce!,
+          config: oldEntry.config,
+          login: oldEntry.login,
+          reason: 'Обновление записи',
+        );
+      }
+
       final result = await updateEntryUseCase!.execute(updated);
       return await result.fold(
         (failure) async {
@@ -277,6 +305,7 @@ class StorageController extends ChangeNotifier {
               'category_id': updated.categoryId,
             },
           );
+          _isLoading = false;
           await loadPasswords();
           // Восстанавливаем выбор обновлённой записи (по id).
           if (updated.id != null) {

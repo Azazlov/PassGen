@@ -224,11 +224,14 @@ class StorageListPane extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     fullscreenDialog: true,
-                    builder: (_) => Scaffold(
-                      appBar: AppBar(
-                        title: const Text('Редактировать запись'),
+                    builder: (_) => ChangeNotifierProvider.value(
+                      value: context.read<StorageController>(),
+                      child: Scaffold(
+                        appBar: AppBar(
+                          title: const Text('Редактировать запись'),
+                        ),
+                        body: StorageDetailPane(entry: entry),
                       ),
-                      body: StorageDetailPane(entry: entry),
                     ),
                   ),
                 );

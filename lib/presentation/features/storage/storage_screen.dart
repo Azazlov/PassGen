@@ -13,6 +13,7 @@ import '../../../domain/usecases/category/get_categories_usecase.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
 import '../../../domain/usecases/password/get_password_history_usecase.dart';
+import '../../../domain/usecases/password/save_password_history_usecase.dart';
 import '../../../domain/usecases/password/save_password_usecase.dart';
 import '../../../domain/usecases/storage/delete_password_usecase.dart';
 import '../../../domain/usecases/storage/export_passgen_usecase.dart';
@@ -43,6 +44,7 @@ class StorageScreen extends StatelessWidget {
         logEventUseCase: context.read<LogEventUseCase>(),
         updateEntryUseCase: context.read<UpdateEntryUseCase>(),
         getPasswordHistoryUseCase: context.read<GetPasswordHistoryUseCase>(),
+        savePasswordHistoryUseCase: context.read<SavePasswordHistoryUseCase>(),
         generatePasswordUseCase: context.read<GeneratePasswordUseCase>(),
         savePasswordUseCase: context.read<SavePasswordUseCase>(),
       ),
