@@ -507,26 +507,37 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     return result;
   }
 
-  void _showChangePinDialog(
+  Future<void> _showChangePinDialog(
     BuildContext context,
     SettingsController controller,
-  ) {
-    showDialog(
+  ) async {
+    final result = await showDialog<Map<String, String>>(
       context: context,
-      builder: (ctx) => ChangePinDialog(
-        controller: controller,
-        onResult: (success) {
-          Navigator.of(ctx).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                success ? 'PIN-код успешно изменён' : 'Ошибка смены PIN-кода',
-              ),
-              backgroundColor:
-                  success ? null : Theme.of(context).colorScheme.error,
-            ),
-          );
-        },
+      builder: (ctx) => const ChangePinDialog(),
+    );
+
+    if (result == null || !context.mounted) return;
+
+    final oldPin = result['oldPin']!;
+    final newPin = result['newPin']!;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('PIN-код изменяется...'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+
+    final success = await controller.changePin(oldPin, newPin);
+
+    if (!context.mounted) return;
+    messenger.hideCurrentSnackBar();
+    final errorColor = Theme.of(context).colorScheme.error;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(success ? 'PIN-код успешно изменён' : 'Ошибка смены PIN-кода'),
+        backgroundColor: success ? null : errorColor,
       ),
     );
   }
@@ -800,9 +811,7 @@ class _RemovePinDialogState extends State<RemovePinDialog> {
 /// Диалог смены PIN-кода (StatefulWidget для безопасного управления
 /// TextEditingController'ами).
 class ChangePinDialog extends StatefulWidget {
-  const ChangePinDialog({super.key, required this.controller, required this.onResult});
-  final SettingsController controller;
-  final ValueChanged<bool> onResult;
+  const ChangePinDialog({super.key});
 
   @override
   State<ChangePinDialog> createState() => _ChangePinDialogState();
@@ -849,7 +858,7 @@ class _ChangePinDialogState extends State<ChangePinDialog> {
           child: const Text('Отмена'),
         ),
         ElevatedButton(
-          onPressed: () async {
+          onPressed: () {
             final oldPin = _oldPinController.text;
             final newPin = _newPinController.text;
             if (oldPin.length < 4 || newPin.length < 4) {
@@ -860,8 +869,7 @@ class _ChangePinDialogState extends State<ChangePinDialog> {
               );
               return;
             }
-            final success = await widget.controller.changePin(oldPin, newPin);
-            widget.onResult(success);
+            Navigator.of(context).pop({'oldPin': oldPin, 'newPin': newPin});
           },
           child: const Text('Сменить'),
         ),
