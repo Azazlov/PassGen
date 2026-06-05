@@ -157,7 +157,8 @@ class StorageController extends ChangeNotifier {
     try {
       final result = await getPasswordsUseCase.execute();
 
-      result.fold(
+      final either = result;
+      either.fold(
         (failure) {
           _error = failure.message;
           _allPasswords = [];
@@ -166,12 +167,22 @@ class StorageController extends ChangeNotifier {
         },
         (passwordsList) {
           _allPasswords = passwordsList;
-          _applyFilters(notify: false);
-          if (_selectedEntry == null && _passwords.isNotEmpty) {
-            _selectedEntry = _passwords.first;
-          }
         },
       );
+      // Расшифровываем названия сервисов для записей с шифрованием
+      for (var i = 0; i < _allPasswords.length; i++) {
+        final entry = _allPasswords[i];
+        if (entry.service.trim().isEmpty && entry.encryptedServiceBlob != null && entry.encryptedServiceBlob!.isNotEmpty) {
+          final decrypted = await getDisplayService(entry);
+          if (decrypted != 'Неизвестный сервис') {
+            _allPasswords[i] = entry.copyWith(service: decrypted);
+          }
+        }
+      }
+      _applyFilters(notify: false);
+      if (_selectedEntry == null && _passwords.isNotEmpty) {
+        _selectedEntry = _passwords.first;
+      }
     } catch (e) {
       _error = 'Ошибка загрузки: $e';
       _allPasswords = [];
