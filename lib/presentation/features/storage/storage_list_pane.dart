@@ -158,47 +158,79 @@ class StorageListPane extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       color: isSelected ? theme.colorScheme.primaryContainer : null,
-      child: ExpansionTile(
-        key: ValueKey('password_details_${entry.id ?? entry.service}'),
-        leading: FutureBuilder<List<Category>>(
-          future: context.read<GetCategoriesUseCase>().execute(),
-          builder: (context, snapshot) {
-            final category = _findCategory(snapshot.data ?? [], entry);
-            return Text(
-              category?.icon ?? '📁',
-              style: const TextStyle(fontSize: 24),
-            );
-          },
-        ),
-        title: FutureBuilder<String>(
-          future: controller.getDisplayService(entry),
-          builder: (context, snapshot) {
-            final text = snapshot.data ??
-                (entry.service.trim().isNotEmpty ? entry.service : 'Загрузка...');
-            return Text(
-              text,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            );
-          },
-        ),
-        subtitle: FutureBuilder<List<Category>>(
-          future: context.read<GetCategoriesUseCase>().execute(),
-          builder: (context, snapshot) {
-            final category = _findCategory(snapshot.data ?? [], entry);
-            final login = entry.login?.isNotEmpty == true
-                ? entry.login!
-                : 'Без логина';
-            return Text('$login • ${category?.name ?? 'Без категории'}');
-          },
-        ),
-        onExpansionChanged: (expanded) {
-          if (expanded) {
-            controller.selectEntry(entry);
-            onEntrySelected?.call(entry);
-          }
-        },
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        children: [_buildExpandedDetails(context, entry)],
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: () {
+              controller.selectEntry(entry);
+              onEntrySelected?.call(entry);
+            },
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                children: [
+                  FutureBuilder<List<Category>>(
+                    future: context.read<GetCategoriesUseCase>().execute(),
+                    builder: (context, snapshot) {
+                      final category = _findCategory(snapshot.data ?? [], entry);
+                      return Text(
+                        category?.icon ?? '📁',
+                        style: const TextStyle(fontSize: 24),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        FutureBuilder<String>(
+                          future: controller.getDisplayService(entry),
+                          builder: (context, snapshot) {
+                            final text = snapshot.data ??
+                                (entry.service.trim().isNotEmpty ? entry.service : 'Загрузка...');
+                            return Text(
+                              text,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            );
+                          },
+                        ),
+                        FutureBuilder<List<Category>>(
+                          future: context.read<GetCategoriesUseCase>().execute(),
+                          builder: (context, snapshot) {
+                            final category = _findCategory(snapshot.data ?? [], entry);
+                            final login = entry.login?.isNotEmpty == true
+                                ? entry.login!
+                                : 'Без логина';
+                            return Text('$login • ${category?.name ?? 'Без категории'}');
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: isSelected ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(Icons.expand_more),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: _buildExpandedDetails(context, entry),
+            ),
+            crossFadeState: isSelected
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
       ),
     );
   }
