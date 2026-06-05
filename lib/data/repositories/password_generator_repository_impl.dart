@@ -17,6 +17,23 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
     PasswordGenerationSettings settings,
   ) async {
     try {
+      // Глитч-генерация (leet-трансформация)
+      if (settings.glitchSource != null && settings.glitchSource!.isNotEmpty) {
+        final result = dataSource.generateGlitch(settings.glitchSource!);
+
+        if (result['error'] != null) {
+          return Left(PasswordGenerationFailure(message: result['error']!));
+        }
+
+        return Right(
+          PasswordResult(
+            password: result['password'] ?? '',
+            strength: double.tryParse(result['strength'] ?? '0') ?? 0.0,
+            config: result['config'] ?? '',
+          ),
+        );
+      }
+
       final result = dataSource.generate(
         lengthRange: settings.lengthRange,
         flags: settings.flags,

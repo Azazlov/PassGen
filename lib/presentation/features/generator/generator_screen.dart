@@ -233,7 +233,7 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                 children: [
                   FilterChip(
                     label: const Text('Стандартный'),
-                    selected: controller.strength == 2,
+                    selected: controller.strength == 2 && !controller.isGlitchMode,
                     onSelected: (_) => controller.updateStrength(2),
                     avatar: Semantics(
                       label: 'Стандартный профиль генерации пароля',
@@ -242,7 +242,7 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                   ),
                   FilterChip(
                     label: const Text('Надёжный'),
-                    selected: controller.strength == 3,
+                    selected: controller.strength == 3 && !controller.isGlitchMode,
                     onSelected: (_) => controller.updateStrength(3),
                     avatar: Semantics(
                       label: 'Надёжный профиль генерации пароля',
@@ -251,7 +251,7 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                   ),
                   FilterChip(
                     label: const Text('Максимальный'),
-                    selected: controller.strength == 4,
+                    selected: controller.strength == 4 && !controller.isGlitchMode,
                     onSelected: (_) => controller.updateStrength(4),
                     avatar: Semantics(
                       label: 'Максимальный профиль генерации пароля',
@@ -260,7 +260,7 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                   ),
                   FilterChip(
                     label: const Text('PIN'),
-                    selected: controller.strength == 0,
+                    selected: controller.strength == 0 && !controller.isGlitchMode,
                     onSelected: (_) => controller.updateStrength(0),
                     avatar: Semantics(
                       label: 'PIN код профиль',
@@ -269,11 +269,20 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                   ),
                   FilterChip(
                     label: const Text('Свой+'),
-                    selected: controller.strength == 1,
+                    selected: controller.strength == 1 && !controller.isGlitchMode,
                     onSelected: (_) => controller.updateStrength(1),
                     avatar: Semantics(
                       label: 'Пользовательский профиль генерации пароля',
                       child: const Icon(Icons.tune, size: 18),
+                    ),
+                  ),
+                  FilterChip(
+                    label: const Text('Глитч'),
+                    selected: controller.isGlitchMode,
+                    onSelected: (_) => controller.toggleGlitchMode(),
+                    avatar: Semantics(
+                      label: 'Глитч-генерация пароля',
+                      child: const Icon(Icons.auto_fix_high, size: 18),
                     ),
                   ),
                 ],
@@ -281,12 +290,13 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
 
               const SizedBox(height: 24),
 
-              _buildGeneratorSettingsPanel(controller, theme),
-
-              const SizedBox(height: 16),
-
-              // Отображение используемых символов
-              CharacterSetDisplay(settings: controller.settings),
+              if (controller.isGlitchMode)
+                _buildGlitchInput(controller, theme)
+              else ...[
+                _buildGeneratorSettingsPanel(controller, theme),
+                const SizedBox(height: 16),
+                CharacterSetDisplay(settings: controller.settings),
+              ],
 
               const SizedBox(height: 16),
 
@@ -297,6 +307,42 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
         ),
       ),
       floatingActionButton: _buildFloatingActions(controller, theme),
+    );
+  }
+
+  Widget _buildGlitchInput(
+    GeneratorController controller,
+    ThemeData theme,
+  ) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Глитч-генерация', style: theme.textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(
+              'Введите исходную строку для преобразования в leet-пароль',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller.glitchSourceController,
+              decoration: const InputDecoration(
+                labelText: 'Исходная строка',
+                hintText: 'Например: Elliot Alderson',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+              minLines: 1,
+              textInputAction: TextInputAction.done,
+            ),
+          ],
+        ),
+      ),
     );
   }
 

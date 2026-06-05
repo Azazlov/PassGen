@@ -64,6 +64,11 @@ class PasswordSettingsValidator {
   Either<PasswordGenerationFailure, PasswordGenerationSettings> _validateFlags(
     PasswordGenerationSettings settings,
   ) {
+    // Глитч-режим не требует флагов символов
+    if (settings.glitchSource != null && settings.glitchSource!.isNotEmpty) {
+      return Right(settings);
+    }
+
     final flags = settings.flags;
 
     // Проверка что хотя бы одна категория выбрана

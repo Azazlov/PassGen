@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:uuid/uuid.dart';
 
@@ -80,6 +81,88 @@ class PasswordGeneratorLocalDataSource {
         'error': e.toString(),
       };
     }
+  }
+
+  /// Leet-таблица подстановок для глитч-генерации
+  static const Map<String, List<String>> _leetMap = {
+    'a': ['4', '@'],
+    'b': ['8', '6'],
+    'e': ['3'],
+    'g': ['9', '6'],
+    'i': ['1', '!', '|'],
+    'l': ['1', '7'],
+    'o': ['0', '()'],
+    's': ['5', '\$'],
+    't': ['7', '+'],
+    'z': ['2'],
+    'A': ['4', '@'],
+    'B': ['8', '6'],
+    'E': ['3'],
+    'G': ['9', '6'],
+    'I': ['1', '!', '|'],
+    'L': ['1', '7'],
+    'O': ['0', '()'],
+    'S': ['5', '\$'],
+    'T': ['7', '+'],
+    'Z': ['2'],
+  };
+
+  /// Генерирует глитч-пароль из исходной строки (leet-трансформация)
+  Map<String, String> generateGlitch(String input) {
+    try {
+      if (input.isEmpty) {
+        return {
+          'password': '',
+          'strength': '0',
+          'config': '',
+          'error': 'Исходная строка не может быть пустой',
+        };
+      }
+      final password = _leetTransform(input);
+      final strength = PasswordUtils.evaluateStrength(password);
+      return {
+        'password': password,
+        'strength': strength.toString(),
+        'config': input,
+      };
+    } catch (e) {
+      return {
+        'password': '',
+        'strength': '0',
+        'config': '',
+        'error': e.toString(),
+      };
+    }
+  }
+
+  /// Применяет leet-подстановки к входной строке
+  static String _leetTransform(String input) {
+    final random = Random();
+    final result = StringBuffer();
+
+    for (final char in input.split('')) {
+      if (char == ' ') {
+        result.write(' ');
+        continue;
+      }
+
+      final substitutions = _leetMap[char];
+      if (substitutions != null && random.nextDouble() < 0.7) {
+        result.write(substitutions[random.nextInt(substitutions.length)]);
+      } else {
+        if (random.nextDouble() < 0.3) {
+          result.write(
+            char == char.toUpperCase()
+                ? char.toLowerCase()
+                : char.toUpperCase(),
+          );
+        } else {
+          result.write(char);
+        }
+      }
+    }
+
+    return result.toString();
   }
 
   /// Восстанавливает пароль из конфига (URL-safe Base64)
@@ -292,7 +375,7 @@ class PasswordGeneratorLocalDataSource {
   }
 
   /// Расшифровывает конфигурацию пароля
-  /// 
+  ///
   /// Поддерживает обратную совместимость: если дешифровка не удалась,
   /// проверяет, является ли config открытым текстом (старый формат).
   Future<String> decryptConfig({
@@ -311,9 +394,7 @@ class PasswordGeneratorLocalDataSource {
       if (encryptedConfig.contains('.') && !encryptedConfig.contains(' ')) {
         return encryptedConfig;
       }
-      throw const PasswordGenerationFailure(
-        message: 'Неверный формат конфига',
-      );
+      throw const PasswordGenerationFailure(message: 'Неверный формат конфига');
     }
   }
 
@@ -338,7 +419,8 @@ class PasswordGeneratorLocalDataSource {
     if (masterPassword == null || masterPassword.isEmpty) {
       return {
         'success': false,
-        'error': 'Мастер-пароль не предоставлен. Невозможно зашифровать пароль.',
+        'error':
+            'Мастер-пароль не предоставлен. Невозможно зашифровать пароль.',
       };
     }
 

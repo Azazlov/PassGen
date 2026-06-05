@@ -17,6 +17,7 @@ class PasswordGenerationSettings {
     this.useCustomUppercase = true,
     this.useCustomDigits = true,
     this.useCustomSymbols = true,
+    this.glitchSource,
   });
   final int strength;
   final List<int> lengthRange;
@@ -35,6 +36,9 @@ class PasswordGenerationSettings {
   final bool useCustomDigits; // Использовать цифры
   final bool useCustomSymbols;
 
+  /// Исходная строка для глитч-генерации (leet-трансформация)
+  final String? glitchSource;
+
   PasswordGenerationSettings copyWith({
     int? strength,
     List<int>? lengthRange,
@@ -50,6 +54,7 @@ class PasswordGenerationSettings {
     bool? useCustomUppercase,
     bool? useCustomDigits,
     bool? useCustomSymbols,
+    String? glitchSource,
   }) {
     return PasswordGenerationSettings(
       strength: strength ?? this.strength,
@@ -66,6 +71,7 @@ class PasswordGenerationSettings {
       useCustomUppercase: useCustomUppercase ?? this.useCustomUppercase,
       useCustomDigits: useCustomDigits ?? this.useCustomDigits,
       useCustomSymbols: useCustomSymbols ?? this.useCustomSymbols,
+      glitchSource: glitchSource ?? this.glitchSource,
     );
   }
 

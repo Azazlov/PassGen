@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_constants.dart';
@@ -61,6 +63,7 @@ class GeneratorController extends ChangeNotifier {
   final TextEditingController loginController = TextEditingController();
   final TextEditingController minLengthController = TextEditingController();
   final TextEditingController maxLengthController = TextEditingController();
+  final TextEditingController glitchSourceController = TextEditingController();
 
   // Выбор категории
   int? _selectedCategoryId;
@@ -83,6 +86,29 @@ class GeneratorController extends ChangeNotifier {
   double get strengthValue => _lastResult?.strength ?? 0.0;
   double get evaluatedStrengthValue =>
       (_lastResult?.strength ?? (_strength / 4.0)).clamp(0.0, 1.0);
+
+  // Режим глитч-генерации
+  bool _isGlitchMode = false;
+  bool get isGlitchMode => _isGlitchMode;
+  Timer? _glitchDebounce;
+
+  void _onGlitchSourceChanged() {
+    _glitchDebounce?.cancel();
+    _glitchDebounce = Timer(const Duration(milliseconds: 300), () {
+      generatePassword();
+    });
+  }
+
+  void toggleGlitchMode() {
+    _isGlitchMode = !_isGlitchMode;
+    if (_isGlitchMode) {
+      glitchSourceController.addListener(_onGlitchSourceChanged);
+    } else {
+      glitchSourceController.removeListener(_onGlitchSourceChanged);
+      _glitchDebounce?.cancel();
+    }
+    generatePassword();
+  }
 
   // Уровень сложности
   int _strength = AppConstants.defaultPasswordStrength;
@@ -146,6 +172,11 @@ class GeneratorController extends ChangeNotifier {
 
   /// Обновляет уровень сложности
   void updateStrength(int value) {
+    if (_isGlitchMode) {
+      _isGlitchMode = false;
+      glitchSourceController.removeListener(_onGlitchSourceChanged);
+      _glitchDebounce?.cancel();
+    }
     _strength = value;
     _updateSettingsByStrength(value);
     _updateControllersFromSettings();
@@ -336,7 +367,10 @@ class GeneratorController extends ChangeNotifier {
       final max =
           int.tryParse(maxLengthController.text) ?? _settings.lengthRange.last;
 
-      _settings = _settings.copyWith(lengthRange: [min, max]);
+      _settings = _settings.copyWith(
+        lengthRange: [min, max],
+        glitchSource: _isGlitchMode ? glitchSourceController.text : null,
+      );
 
       // Валидация настроек в Domain слое
       final validationResult = validateSettingsUseCase.execute(_settings);
@@ -474,6 +508,9 @@ class GeneratorController extends ChangeNotifier {
     loginController.dispose();
     minLengthController.dispose();
     maxLengthController.dispose();
+    glitchSourceController.removeListener(_onGlitchSourceChanged);
+    glitchSourceController.dispose();
+    _glitchDebounce?.cancel();
     super.dispose();
   }
 
