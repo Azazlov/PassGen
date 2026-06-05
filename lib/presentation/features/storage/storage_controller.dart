@@ -147,8 +147,8 @@ class StorageController extends ChangeNotifier {
   }
 
   /// Инициализация - загрузка паролей
-  Future<void> loadPasswords() async {
-    if (_isLoading) return;
+  Future<void> loadPasswords({bool force = false}) async {
+    if (_isLoading && !force) return;
 
     _isLoading = true;
     _error = null;
@@ -449,7 +449,7 @@ class StorageController extends ChangeNotifier {
               'reason': 'regenerate',
             },
           );
-          await loadPasswords();
+          await loadPasswords(force: true);
           if (entry.id != null) {
             _selectedEntry = _allPasswords.firstWhere(
               (e) => e.id == entry.id,

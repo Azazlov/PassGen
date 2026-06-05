@@ -20,6 +20,7 @@ class StorageDetailPane extends StatefulWidget {
 class _StorageDetailPaneState extends State<StorageDetailPane> {
   String? _decryptedPassword;
   bool _isDecrypting = false;
+  int? _decryptingEntryId;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +29,14 @@ class _StorageDetailPaneState extends State<StorageDetailPane> {
     final effectiveEntry = controller.selectedEntry ?? widget.entry;
     if (effectiveEntry == null) {
       return const StorageEmptyDetailState();
+    }
+
+    // Сбрасываем расшифровку если изменилась запись
+    final entryId = effectiveEntry.id ?? effectiveEntry.createdAt.millisecondsSinceEpoch;
+    if (_decryptingEntryId != entryId) {
+      _decryptingEntryId = entryId;
+      _decryptedPassword = null;
+      _isDecrypting = false;
     }
 
     // Запускаем расшифровку, если ещё не запущена
@@ -508,20 +517,28 @@ class _StorageDetailPaneState extends State<StorageDetailPane> {
             child: const Text('Отмена'),
           ),
           ElevatedButton(
-            onPressed: () async {
-              final navigator = Navigator.of(dialogContext);
+            onPressed: () {
               final messenger = ScaffoldMessenger.of(context);
-              final ok = await controller.regeneratePassword(entryForRegen);
-              navigator.pop();
+              Navigator.pop(dialogContext);
               messenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    ok
-                        ? 'Пароль регенерирован'
-                        : (controller.error ?? 'Не удалось регенерировать'),
-                  ),
+                const SnackBar(
+                  content: Text('Генерация нового пароля...'),
+                  duration: Duration(seconds: 1),
                 ),
               );
+              controller.regeneratePassword(entryForRegen).then((ok) {
+                if (!context.mounted) return;
+                messenger.hideCurrentSnackBar();
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      ok
+                          ? 'Пароль регенерирован'
+                          : (controller.error ?? 'Не удалось регенерировать'),
+                    ),
+                  ),
+                );
+              });
             },
             child: const Text('Регенерировать'),
           ),
