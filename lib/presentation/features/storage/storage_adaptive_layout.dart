@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/constants/breakpoints.dart';
+import 'storage_controller.dart';
 import 'storage_detail_pane.dart';
 import 'storage_list_pane.dart';
 
@@ -12,16 +14,18 @@ class StorageAdaptiveLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
-    if (width < Breakpoints.desktopMin) {
-      return const StorageListPane();
+    // Мобильный режим (< 600dp)
+    if (width < Breakpoints.tabletMin) {
+      return const StorageMobileLayout();
     }
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 900),
-        child: const StorageListPane(),
-      ),
-    );
+    // Планшет (600-899dp) - двухпанельный макет
+    if (width < Breakpoints.desktopMin) {
+      return const StorageTabletLayout();
+    }
+
+    // Десктоп (≥ 900dp) - двухпанельный макет (третья панель — NavigationRail в app.dart)
+    return const StorageDesktopLayout();
   }
 }
 
@@ -41,21 +45,73 @@ class StorageTabletLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const StorageListPane();
+    final controller = context.watch<StorageController>();
+
+    if (controller.passwords.isNotEmpty && controller.selectedEntry == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (controller.selectedEntry == null &&
+            controller.passwords.isNotEmpty) {
+          controller.selectEntry(controller.passwords.first);
+        }
+      });
+    }
+
+    return Row(
+      children: [
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.4,
+          child: const StorageListPane(showInlineDetails: false),
+        ),
+        const VerticalDivider(thickness: 1, width: 1),
+        Expanded(
+          flex: 6,
+          child: controller.selectedEntry != null
+              ? StorageDetailPane(entry: controller.selectedEntry!)
+              : const StorageEmptyDetailState(),
+        ),
+      ],
+    );
   }
 }
 
-/// Десктопный макет (три панели)
+/// Десктопный макет (две панели)
 class StorageDesktopLayout extends StatelessWidget {
   const StorageDesktopLayout({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 900),
-        child: const StorageListPane(),
-      ),
+    final controller = context.watch<StorageController>();
+
+    if (controller.passwords.isNotEmpty && controller.selectedEntry == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (controller.selectedEntry == null &&
+            controller.passwords.isNotEmpty) {
+          controller.selectEntry(controller.passwords.first);
+        }
+      });
+    }
+
+    return Row(
+      children: [
+        const SizedBox(
+          width: 280,
+          child: StorageListPane(showInlineDetails: false),
+        ),
+        const VerticalDivider(thickness: 1, width: 1),
+        Expanded(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: controller.selectedEntry != null
+                    ? StorageDetailPane(entry: controller.selectedEntry!)
+                    : const StorageEmptyDetailState(),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -95,7 +151,6 @@ class StorageDetailScreen extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              // Удаление
               Navigator.pop(context);
               Navigator.pop(context);
             },

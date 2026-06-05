@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/breakpoints.dart';
 import '../../../domain/entities/category.dart';
 import '../../../domain/repositories/password_generator_repository.dart';
 import '../../../domain/usecases/category/get_categories_usecase.dart';
@@ -134,179 +135,248 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
     final theme = Theme.of(context);
     final controller = context.watch<GeneratorController>();
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 600;
+    final isSmallScreen = screenWidth < Breakpoints.tabletMin;
 
     return Scaffold(
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
-            // Добавляем отступ снизу для плавающей кнопки
-            padding: EdgeInsets.only(
-              left: isSmallScreen ? 12 : 16,
-              right: isSmallScreen ? 12 : 16,
-              top: isSmallScreen ? 12 : 16,
-              bottom: 100, // Отступ для плавающей кнопки
-            ),
-            children: [
-              SizedBox(height: isSmallScreen ? 8 : 16),
-
-              // Заголовок
-              Text(
-                'Генератор паролей',
-                textAlign: TextAlign.center,
-                style: isSmallScreen
-                    ? theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      )
-                    : theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-              ),
-
-              SizedBox(height: isSmallScreen ? 16 : 32),
-
-              if (controller.error != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    controller.error!,
-                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
-                  ),
-                ),
-
-              SizedBox(height: isSmallScreen ? 16 : 32),
-
-              // Отображение пароля - приоритетный элемент
-              Container(
-                constraints: BoxConstraints(
-                  minHeight: isSmallScreen ? 100 : 120,
-                ),
-                child: CopyablePassword(
-                  label: 'Пароль',
-                  text: controller.password,
-                  isEmpty: controller.password.isEmpty,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              _buildStrengthMeter(controller, theme),
-
-              SizedBox(height: isSmallScreen ? 16 : 24),
-
-              // Поле сервиса
-              AppTextField(
-                label: 'Сервис',
-                hint: 'Например: gmail.com',
-                controller: controller.serviceController,
-                keyboardType: TextInputType.text,
-              ),
-
-              const SizedBox(height: 16),
-
-              // Поле логина
-              AppTextField(
-                label: 'Логин (опционально)',
-                hint: 'Например: user@gmail.com',
-                controller: controller.loginController,
-                keyboardType: TextInputType.text,
-              ),
-
-              const SizedBox(height: 16),
-
-              // Выбор категории
-              _buildCategorySelector(controller, theme),
-
-              const SizedBox(height: 24),
-
-              // Пресеты сложности (FilterChip согласно ТЗ)
-              Text('Сложность пароля', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  FilterChip(
-                    label: const Text('Стандартный'),
-                    selected: controller.strength == 2 && !controller.isGlitchMode,
-                    onSelected: (_) => controller.updateStrength(2),
-                    avatar: Semantics(
-                      label: 'Стандартный профиль генерации пароля',
-                      child: const Icon(Icons.star, size: 18),
-                    ),
-                  ),
-                  FilterChip(
-                    label: const Text('Надёжный'),
-                    selected: controller.strength == 3 && !controller.isGlitchMode,
-                    onSelected: (_) => controller.updateStrength(3),
-                    avatar: Semantics(
-                      label: 'Надёжный профиль генерации пароля',
-                      child: const Icon(Icons.verified, size: 18),
-                    ),
-                  ),
-                  FilterChip(
-                    label: const Text('Максимальный'),
-                    selected: controller.strength == 4 && !controller.isGlitchMode,
-                    onSelected: (_) => controller.updateStrength(4),
-                    avatar: Semantics(
-                      label: 'Максимальный профиль генерации пароля',
-                      child: const Icon(Icons.shield, size: 18),
-                    ),
-                  ),
-                  FilterChip(
-                    label: const Text('PIN'),
-                    selected: controller.strength == 0 && !controller.isGlitchMode,
-                    onSelected: (_) => controller.updateStrength(0),
-                    avatar: Semantics(
-                      label: 'PIN код профиль',
-                      child: const Icon(Icons.pin, size: 18),
-                    ),
-                  ),
-                  FilterChip(
-                    label: const Text('Свой+'),
-                    selected: controller.strength == 1 && !controller.isGlitchMode,
-                    onSelected: (_) => controller.updateStrength(1),
-                    avatar: Semantics(
-                      label: 'Пользовательский профиль генерации пароля',
-                      child: const Icon(Icons.tune, size: 18),
-                    ),
-                  ),
-                  FilterChip(
-                    label: const Text('Глитч'),
-                    selected: controller.isGlitchMode,
-                    onSelected: (_) => controller.toggleGlitchMode(),
-                    avatar: Semantics(
-                      label: 'Глитч-генерация пароля',
-                      child: const Icon(Icons.auto_fix_high, size: 18),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              if (controller.isGlitchMode)
-                _buildGlitchInput(controller, theme)
-              else ...[
-                _buildGeneratorSettingsPanel(controller, theme),
-                const SizedBox(height: 16),
-                CharacterSetDisplay(settings: controller.settings),
-              ],
-
-              const SizedBox(height: 16),
-
-              // Отображение ошибки
-              const SizedBox(height: 32),
-            ],
-          ),
+          child: isSmallScreen
+              ? _buildMobileContent(theme, controller, screenWidth)
+              : _buildDesktopContent(theme, controller),
         ),
       ),
       floatingActionButton: _buildFloatingActions(controller, theme),
+    );
+  }
+
+  Widget _buildMobileContent(
+    ThemeData theme,
+    GeneratorController controller,
+    double screenWidth,
+  ) {
+    final isSmallScreen = screenWidth < 600;
+
+    return ListView(
+      padding: EdgeInsets.only(
+        left: isSmallScreen ? 12 : 16,
+        right: isSmallScreen ? 12 : 16,
+        top: isSmallScreen ? 12 : 16,
+        bottom: 100,
+      ),
+      children: [
+        SizedBox(height: isSmallScreen ? 8 : 16),
+        _buildTitle(theme, isSmallScreen),
+        SizedBox(height: isSmallScreen ? 16 : 32),
+        if (controller.error != null) _buildErrorBox(controller, theme),
+        if (controller.error != null) SizedBox(height: isSmallScreen ? 16 : 32),
+        _buildPasswordDisplay(theme, isSmallScreen, controller),
+        const SizedBox(height: 12),
+        _buildStrengthMeter(controller, theme),
+        SizedBox(height: isSmallScreen ? 16 : 24),
+        _buildSaveFields(controller, theme),
+        const SizedBox(height: 24),
+        _buildStrengthChips(controller, theme),
+        const SizedBox(height: 24),
+        if (controller.isGlitchMode)
+          _buildGlitchInput(controller, theme)
+        else ...[
+          _buildGeneratorSettingsPanel(controller, theme),
+          const SizedBox(height: 16),
+          CharacterSetDisplay(settings: controller.settings),
+        ],
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildDesktopContent(
+    ThemeData theme,
+    GeneratorController controller,
+  ) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 320,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStrengthChips(controller, theme),
+                const SizedBox(height: 24),
+                if (controller.isGlitchMode)
+                  _buildGlitchInput(controller, theme)
+                else ...[
+                  _buildGeneratorSettingsPanel(controller, theme),
+                  const SizedBox(height: 16),
+                  CharacterSetDisplay(settings: controller.settings),
+                ],
+              ],
+            ),
+          ),
+        ),
+        const VerticalDivider(thickness: 1, width: 1),
+        Expanded(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 100),
+                child: Column(
+                  children: [
+                    _buildTitle(theme, false),
+                    const SizedBox(height: 16),
+                    if (controller.error != null) _buildErrorBox(controller, theme),
+                    if (controller.error != null) const SizedBox(height: 16),
+                    _buildPasswordDisplay(theme, false, controller),
+                    const SizedBox(height: 12),
+                    _buildStrengthMeter(controller, theme),
+                    const SizedBox(height: 24),
+                    _buildSaveFields(controller, theme),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTitle(ThemeData theme, bool isSmallScreen) {
+    return Text(
+      'Генератор паролей',
+      textAlign: TextAlign.center,
+      style: isSmallScreen
+          ? theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)
+          : theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildErrorBox(GeneratorController controller, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        controller.error!,
+        style: TextStyle(color: theme.colorScheme.onErrorContainer),
+      ),
+    );
+  }
+
+  Widget _buildPasswordDisplay(
+    ThemeData theme,
+    bool isSmallScreen,
+    GeneratorController controller,
+  ) {
+    return Container(
+      constraints: BoxConstraints(
+        minHeight: isSmallScreen ? 100 : 120,
+      ),
+      child: CopyablePassword(
+        label: 'Пароль',
+        text: controller.password,
+        isEmpty: controller.password.isEmpty,
+      ),
+    );
+  }
+
+  Widget _buildSaveFields(
+    GeneratorController controller,
+    ThemeData theme,
+  ) {
+    return Column(
+      children: [
+        AppTextField(
+          label: 'Сервис',
+          hint: 'Например: gmail.com',
+          controller: controller.serviceController,
+          keyboardType: TextInputType.text,
+        ),
+        const SizedBox(height: 16),
+        AppTextField(
+          label: 'Логин (опционально)',
+          hint: 'Например: user@gmail.com',
+          controller: controller.loginController,
+          keyboardType: TextInputType.text,
+        ),
+        const SizedBox(height: 16),
+        _buildCategorySelector(controller, theme),
+      ],
+    );
+  }
+
+  Widget _buildStrengthChips(GeneratorController controller, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Сложность пароля', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilterChip(
+              label: const Text('Стандартный'),
+              selected: controller.strength == 2 && !controller.isGlitchMode,
+              onSelected: (_) => controller.updateStrength(2),
+              avatar: Semantics(
+                label: 'Стандартный профиль генерации пароля',
+                child: const Icon(Icons.star, size: 18),
+              ),
+            ),
+            FilterChip(
+              label: const Text('Надёжный'),
+              selected: controller.strength == 3 && !controller.isGlitchMode,
+              onSelected: (_) => controller.updateStrength(3),
+              avatar: Semantics(
+                label: 'Надёжный профиль генерации пароля',
+                child: const Icon(Icons.verified, size: 18),
+              ),
+            ),
+            FilterChip(
+              label: const Text('Максимальный'),
+              selected: controller.strength == 4 && !controller.isGlitchMode,
+              onSelected: (_) => controller.updateStrength(4),
+              avatar: Semantics(
+                label: 'Максимальный профиль генерации пароля',
+                child: const Icon(Icons.shield, size: 18),
+              ),
+            ),
+            FilterChip(
+              label: const Text('PIN'),
+              selected: controller.strength == 0 && !controller.isGlitchMode,
+              onSelected: (_) => controller.updateStrength(0),
+              avatar: Semantics(
+                label: 'PIN код профиль',
+                child: const Icon(Icons.pin, size: 18),
+              ),
+            ),
+            FilterChip(
+              label: const Text('Свой+'),
+              selected: controller.strength == 1 && !controller.isGlitchMode,
+              onSelected: (_) => controller.updateStrength(1),
+              avatar: Semantics(
+                label: 'Пользовательский профиль генерации пароля',
+                child: const Icon(Icons.tune, size: 18),
+              ),
+            ),
+            FilterChip(
+              label: const Text('Глитч'),
+              selected: controller.isGlitchMode,
+              onSelected: (_) => controller.toggleGlitchMode(),
+              avatar: Semantics(
+                label: 'Глитч-генерация пароля',
+                child: const Icon(Icons.auto_fix_high, size: 18),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

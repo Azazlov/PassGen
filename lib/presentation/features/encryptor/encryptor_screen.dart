@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/breakpoints.dart';
 import '../../../domain/usecases/encryptor/decrypt_message_usecase.dart';
 import '../../../domain/usecases/encryptor/encrypt_message_usecase.dart';
 import '../../../presentation/widgets/app_button.dart';
@@ -41,6 +42,7 @@ class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controller = context.watch<EncryptorController>();
+    final isMobile = MediaQuery.of(context).size.width < Breakpoints.tabletMin;
 
     return Scaffold(
       appBar: AppBar(
@@ -56,124 +58,172 @@ class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
         ],
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: isMobile
+            ? _buildMobileContent(theme, controller)
+            : _buildDesktopContent(theme, controller),
+      ),
+    );
+  }
+
+  Widget _buildMobileContent(ThemeData theme, EncryptorController controller) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildModeCard(theme, controller),
+        const SizedBox(height: 24),
+        CopyablePassword(
+          label: controller.resultLabel,
+          text: controller.result.substring(
+            0,
+            min(40, controller.result.length),
+          ),
+          isEmpty: controller.result.isEmpty,
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: controller.result));
+            showAppDialog(
+              context: context,
+              title: 'Скопировано',
+              content: 'Скопировано в буфер обмена',
+            );
+          },
+        ),
+        const SizedBox(height: 24),
+        _buildInputForm(theme, controller),
+        const SizedBox(height: 16),
+        if (controller.error != null) _buildErrorBox(controller, theme),
+      ],
+    );
+  }
+
+  Widget _buildDesktopContent(ThemeData theme, EncryptorController controller) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 360,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildModeCard(theme, controller),
+                const SizedBox(height: 24),
+                _buildInputForm(theme, controller),
+                const SizedBox(height: 16),
+                if (controller.error != null) _buildErrorBox(controller, theme),
+              ],
+            ),
+          ),
+        ),
+        const VerticalDivider(thickness: 1, width: 1),
+        Expanded(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: CopyablePassword(
+                  label: controller.resultLabel,
+                  text: controller.result.substring(
+                    0,
+                    min(40, controller.result.length),
+                  ),
+                  isEmpty: controller.result.isEmpty,
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: controller.result));
+                    showAppDialog(
+                      context: context,
+                      title: 'Скопировано',
+                      content: 'Скопировано в буфер обмена',
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModeCard(ThemeData theme, EncryptorController controller) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
           children: [
-            // Режим работы
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(
-                      controller.isEncryptMode ? Icons.lock : Icons.lock_open,
-                      color: theme.colorScheme.primary,
+            Icon(
+              controller.isEncryptMode ? Icons.lock : Icons.lock_open,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    controller.isEncryptMode ? 'Шифрование' : 'Дешифрование',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            controller.isEncryptMode
-                                ? 'Шифрование'
-                                : 'Дешифрование',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            controller.isEncryptMode
-                                ? 'Зашифруйте сообщение паролем'
-                                : 'Расшифруйте сообщение паролем',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                  ),
+                  Text(
+                    controller.isEncryptMode
+                        ? 'Зашифруйте сообщение паролем'
+                        : 'Расшифруйте сообщение паролем',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-
-            // Результат
-            CopyablePassword(
-              label: controller.resultLabel,
-              text: controller.result.substring(
-                0,
-                min(40, controller.result.length),
-              ),
-              isEmpty: controller.result.isEmpty,
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: controller.result));
-                showAppDialog(
-                  context: context,
-                  title: 'Скопировано',
-                  content: 'Скопировано в буфер обмена',
-                );
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            // Поле сообщения/шифра
-            AppTextField(
-              label: controller.isEncryptMode
-                  ? 'Сообщение'
-                  : 'Зашифрованные данные',
-              hint: controller.isEncryptMode
-                  ? 'Введите текст для шифрования'
-                  : 'Вставьте зашифрованные данные',
-              controller: controller.messageController,
-              keyboardType: TextInputType.multiline,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Поле пароля
-            AppTextField(
-              label: 'Пароль',
-              hint: 'Введите надёжный пароль',
-              controller: controller.passwordController,
-              obscureText: true,
-              keyboardType: TextInputType.visiblePassword,
-            ),
-
-            const SizedBox(height: 32),
-
-            // Кнопка выполнения
-            AppButton(
-              label: controller.isEncryptMode ? 'Зашифровать' : 'Дешифровать',
-              onPressed: controller.execute,
-              isLoading: controller.isLoading,
-              icon: controller.isEncryptMode ? Icons.lock : Icons.lock_open,
-            ),
-
-            const SizedBox(height: 16),
-
-            // Отображение ошибки
-            if (controller.error != null)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  controller.error!,
-                  style: TextStyle(color: theme.colorScheme.onErrorContainer),
-                ),
-              ),
-
-            const SizedBox(height: 24),
-
-            const SizedBox(height: 32),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInputForm(ThemeData theme, EncryptorController controller) {
+    return Column(
+      children: [
+        AppTextField(
+          label: controller.isEncryptMode
+              ? 'Сообщение'
+              : 'Зашифрованные данные',
+          hint: controller.isEncryptMode
+              ? 'Введите текст для шифрования'
+              : 'Вставьте зашифрованные данные',
+          controller: controller.messageController,
+          keyboardType: TextInputType.multiline,
+        ),
+        const SizedBox(height: 16),
+        AppTextField(
+          label: 'Пароль',
+          hint: 'Введите надёжный пароль',
+          controller: controller.passwordController,
+          obscureText: true,
+          keyboardType: TextInputType.visiblePassword,
+        ),
+        const SizedBox(height: 32),
+        AppButton(
+          label: controller.isEncryptMode ? 'Зашифровать' : 'Дешифровать',
+          onPressed: controller.execute,
+          isLoading: controller.isLoading,
+          icon: controller.isEncryptMode ? Icons.lock : Icons.lock_open,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorBox(EncryptorController controller, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        controller.error!,
+        style: TextStyle(color: theme.colorScheme.onErrorContainer),
       ),
     );
   }

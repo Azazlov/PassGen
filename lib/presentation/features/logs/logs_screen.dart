@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/breakpoints.dart';
 import '../../../domain/entities/security_log.dart';
 import '../../../domain/usecases/log/get_logs_usecase.dart';
 import 'logs_controller.dart';
@@ -32,6 +33,7 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controller = context.watch<LogsController>();
+    final isMobile = MediaQuery.of(context).size.width < Breakpoints.tabletMin;
 
     return Scaffold(
       appBar: AppBar(
@@ -51,17 +53,68 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
       ),
       body: controller.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Column(
+          : isMobile
+              ? _buildMobileContent(context, theme, controller)
+              : _buildDesktopContent(context, theme, controller),
+    );
+  }
+
+  Widget _buildMobileContent(
+    BuildContext context,
+    ThemeData theme,
+    LogsController controller,
+  ) {
+    return Column(
+      children: [
+        _buildFilterChips(controller),
+        _buildDateFilterRow(context, controller, theme),
+        Expanded(
+          child: controller.isEmpty
+              ? _buildEmptyState(theme)
+              : _buildLogsList(controller, theme),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopContent(
+    BuildContext context,
+    ThemeData theme,
+    LogsController controller,
+  ) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 220,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildFilterChips(controller),
+                Text('Фильтры', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 12),
+                _buildFilterChip(controller, LogsFilter.all, 'Все'),
+                const SizedBox(height: 4),
+                _buildFilterChip(controller, LogsFilter.login, 'Вход'),
+                const SizedBox(height: 4),
+                _buildFilterChip(controller, LogsFilter.changes, 'Изменения'),
+                const SizedBox(height: 4),
+                _buildFilterChip(controller, LogsFilter.export, 'Экспорт'),
+                const SizedBox(height: 24),
+                Text('Дата', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 12),
                 _buildDateFilterRow(context, controller, theme),
-                Expanded(
-                  child: controller.isEmpty
-                      ? _buildEmptyState(theme)
-                      : _buildLogsList(controller, theme),
-                ),
               ],
             ),
+          ),
+        ),
+        const VerticalDivider(thickness: 1, width: 1),
+        Expanded(
+          child: controller.isEmpty
+              ? _buildEmptyState(theme)
+              : _buildLogsList(controller, theme),
+        ),
+      ],
     );
   }
 

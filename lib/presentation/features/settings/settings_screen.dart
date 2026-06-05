@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/breakpoints.dart';
 import '../../../data/database/database_helper.dart';
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
@@ -94,95 +95,20 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controller = context.watch<SettingsController>();
+    final isMobile = MediaQuery.of(context).size.width < Breakpoints.tabletMin;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _buildSectionHeader('Безопасность', theme),
-            _buildListTile(
-              icon: Icons.pin,
-              title: 'Сменить PIN-код',
-              onTap: () => _showChangePinDialog(context, controller),
-            ),
-            _buildListTile(
-              icon: Icons.lock_outline,
-              title: 'Удалить PIN-код',
-              onTap: () => _showRemovePinDialog(context, controller),
-              textColor: Colors.red,
-            ),
-            _buildSwitchTile(
-              icon: Icons.fingerprint,
-              title: 'Биометрическая аутентификация',
-              value: _biometricLogin,
-              onChanged: _toggleBiometric,
-            ),
-            _buildNumberField(
-              icon: Icons.timer,
-              title: 'Автоблокировка',
-              suffix: 'мин',
-              controller: _autoLockController,
-              min: 1,
-              max: 10,
-            ),
-            _buildNumberField(
-              icon: Icons.password,
-              title: 'Максимум попыток PIN до блокировки',
-              suffix: 'поп.',
-              controller: _maxAttemptsController,
-              min: 3,
-              max: 10,
-            ),
-            _buildListTile(
-              icon: Icons.lock_clock,
-              title: 'Экстренная блокировка',
-              subtitle: 'Немедленно заблокировать и выйти на экран PIN',
-              onTap: () => _confirmEmergencyLock(context),
-              textColor: Colors.orange,
-            ),
-            _buildListTile(
-              icon: Icons.history,
-              title: 'Журнал безопасности',
-              subtitle: 'Записей: $_logsCount',
-              onTap: () => _showLogsDialog(context, controller),
-            ),
-            _buildListTile(
-              icon: Icons.delete_sweep,
-              title: 'Очистить журнал',
-              onTap: () => _confirmClearLogs(context, controller),
-              textColor: Colors.orange,
-            ),
-            _buildListTile(
-              icon: Icons.delete_forever,
-              title: 'Сбросить все данные',
-              subtitle: 'Удалить все пароли, настройки и профили',
-              onTap: () => _confirmResetAllData(context, controller),
-              textColor: Colors.red,
-            ),
-            const SizedBox(height: 16),
-            _buildSectionHeader('О приложении', theme),
-            _buildInfoTile(
-              icon: Icons.password,
-              title: AppConstants.appName,
-              subtitle: 'Версия ${AppConstants.appVersion}',
-            ),
-            _buildInfoTile(
-              icon: Icons.person,
-              title: 'Разработчик',
-              subtitle: AppConstants.developer,
-            ),
-            _buildListTile(
-              icon: Icons.info,
-              title: 'Открыть раздел',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AboutScreen()),
+        child: isMobile
+            ? _buildSettingsList(theme, controller)
+            : Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: _buildSettingsList(theme, controller),
+                ),
               ),
-            ),
-          ],
-        ),
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'save_settings',
@@ -195,6 +121,93 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
               )
             : const Icon(Icons.save),
       ),
+    );
+  }
+
+  Widget _buildSettingsList(ThemeData theme, SettingsController controller) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildSectionHeader('Безопасность', theme),
+        _buildListTile(
+          icon: Icons.pin,
+          title: 'Сменить PIN-код',
+          onTap: () => _showChangePinDialog(context, controller),
+        ),
+        _buildListTile(
+          icon: Icons.lock_outline,
+          title: 'Удалить PIN-код',
+          onTap: () => _showRemovePinDialog(context, controller),
+          textColor: Colors.red,
+        ),
+        _buildSwitchTile(
+          icon: Icons.fingerprint,
+          title: 'Биометрическая аутентификация',
+          value: _biometricLogin,
+          onChanged: _toggleBiometric,
+        ),
+        _buildNumberField(
+          icon: Icons.timer,
+          title: 'Автоблокировка',
+          suffix: 'мин',
+          controller: _autoLockController,
+          min: 1,
+          max: 10,
+        ),
+        _buildNumberField(
+          icon: Icons.password,
+          title: 'Максимум попыток PIN до блокировки',
+          suffix: 'поп.',
+          controller: _maxAttemptsController,
+          min: 3,
+          max: 10,
+        ),
+        _buildListTile(
+          icon: Icons.lock_clock,
+          title: 'Экстренная блокировка',
+          subtitle: 'Немедленно заблокировать и выйти на экран PIN',
+          onTap: () => _confirmEmergencyLock(context),
+          textColor: Colors.orange,
+        ),
+        _buildListTile(
+          icon: Icons.history,
+          title: 'Журнал безопасности',
+          subtitle: 'Записей: $_logsCount',
+          onTap: () => _showLogsDialog(context, controller),
+        ),
+        _buildListTile(
+          icon: Icons.delete_sweep,
+          title: 'Очистить журнал',
+          onTap: () => _confirmClearLogs(context, controller),
+          textColor: Colors.orange,
+        ),
+        _buildListTile(
+          icon: Icons.delete_forever,
+          title: 'Сбросить все данные',
+          subtitle: 'Удалить все пароли, настройки и профили',
+          onTap: () => _confirmResetAllData(context, controller),
+          textColor: Colors.red,
+        ),
+        const SizedBox(height: 16),
+        _buildSectionHeader('О приложении', theme),
+        _buildInfoTile(
+          icon: Icons.password,
+          title: AppConstants.appName,
+          subtitle: 'Версия ${AppConstants.appVersion}',
+        ),
+        _buildInfoTile(
+          icon: Icons.person,
+          title: 'Разработчик',
+          subtitle: AppConstants.developer,
+        ),
+        _buildListTile(
+          icon: Icons.info,
+          title: 'Открыть раздел',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AboutScreen()),
+          ),
+        ),
+      ],
     );
   }
 

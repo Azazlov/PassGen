@@ -11,8 +11,9 @@ import 'storage_detail_pane.dart';
 
 /// Панель списка паролей
 class StorageListPane extends StatelessWidget {
-  const StorageListPane({super.key, this.onEntrySelected});
+  const StorageListPane({super.key, this.onEntrySelected, this.showInlineDetails = true});
   final Function(dynamic)? onEntrySelected;
+  final bool showInlineDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -221,11 +222,13 @@ class StorageListPane extends StatelessWidget {
           ),
           AnimatedCrossFade(
             firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: _buildExpandedDetails(context, entry),
-            ),
-            crossFadeState: isSelected
+            secondChild: showInlineDetails
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: _buildExpandedDetails(context, entry),
+                  )
+                : const SizedBox.shrink(),
+            crossFadeState: isSelected && showInlineDetails
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 200),
