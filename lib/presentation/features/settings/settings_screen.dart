@@ -152,7 +152,6 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
               controller: _autoLockController,
               min: 1,
               max: 10,
-              settingKey: 'security.auto_lock_minutes',
             ),
             _buildNumberField(
               icon: Icons.password,
@@ -161,7 +160,6 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
               controller: _maxAttemptsController,
               min: 3,
               max: 10,
-              settingKey: 'security.max_pin_attempts',
             ),
             _buildListTile(
               icon: Icons.lock_clock,
@@ -198,27 +196,18 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
               controller: _defaultLengthController,
               min: 4,
               max: 64,
-              settingKey: 'generator.default_length',
             ),
             _buildSwitchTile(
               icon: Icons.block,
               title: 'Исключать похожие символы',
               value: _excludeSimilarByDefault,
-              onChanged: (value) => _saveSwitchSetting(
-                key: 'generator.exclude_similar',
-                value: value,
-                update: () => _excludeSimilarByDefault = value,
-              ),
+              onChanged: (value) => setState(() => _excludeSimilarByDefault = value),
             ),
             _buildSwitchTile(
               icon: Icons.tag,
               title: 'Использовать спецсимволы',
               value: _useSymbolsByDefault,
-              onChanged: (value) => _saveSwitchSetting(
-                key: 'generator.use_symbols',
-                value: value,
-                update: () => _useSymbolsByDefault = value,
-              ),
+              onChanged: (value) => setState(() => _useSymbolsByDefault = value),
             ),
             const SizedBox(height: 16),
             _buildSectionHeader('Резервное копирование', theme),
@@ -226,11 +215,7 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
               icon: Icons.backup,
               title: 'Автоматическое резервное копирование',
               value: _autoBackup,
-              onChanged: (value) => _saveSwitchSetting(
-                key: 'backup.auto',
-                value: value,
-                update: () => _autoBackup = value,
-              ),
+              onChanged: (value) => setState(() => _autoBackup = value),
             ),
             _buildNumberField(
               icon: Icons.event_repeat,
@@ -239,7 +224,6 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
               controller: _backupIntervalController,
               min: 1,
               max: 365,
-              settingKey: 'backup.interval_days',
             ),
             const SizedBox(height: 16),
             _buildSectionHeader('О приложении', theme),
@@ -261,6 +245,17 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'save_settings',
+        onPressed: controller.isLoading ? null : () => _saveAllSettings(context),
+        child: controller.isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.save),
       ),
     );
   }
@@ -345,7 +340,6 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     required TextEditingController controller,
     required int min,
     required int max,
-    required String settingKey,
   }) {
     final theme = Theme.of(context);
 
@@ -369,24 +363,8 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
                   suffixText: suffix,
                   border: const OutlineInputBorder(),
                   isDense: true,
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.check),
-                    tooltip: 'Сохранить',
-                    onPressed: () => _saveNumberSetting(
-                      controller: controller,
-                      min: min,
-                      max: max,
-                      settingKey: settingKey,
-                    ),
-                  ),
                 ),
                 validator: (value) => _validateNumber(value, min, max),
-                onFieldSubmitted: (_) => _saveNumberSetting(
-                  controller: controller,
-                  min: min,
-                  max: max,
-                  settingKey: settingKey,
-                ),
               ),
             ),
           ],
@@ -395,43 +373,44 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     );
   }
 
+  Future<void> _saveAllSettings(BuildContext context) async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Проверьте корректность введённых значений')),
+      );
+      return;
+    }
+
+    final controller = context.read<SettingsController>();
+
+    final messenger = ScaffoldMessenger.of(context);
+    final authController = context.read<AuthController>();
+
+    await Future.wait([
+      controller.setSetting('security.auto_lock_minutes', _autoLockController.text),
+      controller.setSetting('security.max_pin_attempts', _maxAttemptsController.text),
+      controller.setSetting('generator.default_length', _defaultLengthController.text),
+      controller.setSetting('backup.interval_days', _backupIntervalController.text),
+      controller.setSetting('generator.exclude_similar', _excludeSimilarByDefault.toString()),
+      controller.setSetting('generator.use_symbols', _useSymbolsByDefault.toString()),
+      controller.setSetting('backup.auto', _autoBackup.toString()),
+    ]);
+
+    if (!mounted) return;
+
+    await authController.reloadInactivityTimeout();
+
+    if (!mounted) return;
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Настройки сохранены')),
+    );
+  }
+
   String? _validateNumber(String? value, int min, int max) {
     final number = int.tryParse(value ?? '');
     if (number == null) return 'Число';
     if (number < min || number > max) return '$min-$max';
     return null;
-  }
-
-  Future<void> _saveNumberSetting({
-    required TextEditingController controller,
-    required int min,
-    required int max,
-    required String settingKey,
-  }) async {
-    final error = _validateNumber(controller.text, min, max);
-    if (error != null) {
-      _showErrorDialog(context, 'Введите число в диапазоне $min-$max');
-      return;
-    }
-
-    await context.read<SettingsController>().setSetting(
-      settingKey,
-      controller.text,
-    );
-
-    if (!mounted) return;
-    if (settingKey == 'security.auto_lock_minutes') {
-      await context.read<AuthController>().reloadInactivityTimeout();
-    }
-  }
-
-  Future<void> _saveSwitchSetting({
-    required String key,
-    required bool value,
-    required VoidCallback update,
-  }) async {
-    setState(update);
-    await context.read<SettingsController>().setSetting(key, value.toString());
   }
 
   Future<void> _toggleBiometric(bool value) async {
