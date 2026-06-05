@@ -34,11 +34,11 @@ class AppButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: isLoading ? 'Загрузка' : label,
-      child: ElevatedButton(
+      child: FilledButton(
         onPressed: isLoading ? null : onPressed,
         style:
             style ??
-            ElevatedButton.styleFrom(
+            FilledButton.styleFrom(
               minimumSize: Size.fromHeight(buttonHeight),
               padding: EdgeInsets.symmetric(
                 horizontal: Spacing.lg,
@@ -61,16 +61,14 @@ class AppButton extends StatelessWidget {
                   if (icon != null) ...[
                     Semantics(
                       hidden: true,
-                      child: Icon(icon, color: theme.colorScheme.onPrimary),
+                      child: Icon(icon),
                     ),
                     const SizedBox(width: 8),
                   ],
                   Text(
                     label,
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                    ),
+                    style: theme.textTheme.labelLarge,
                   ),
                 ],
               ),

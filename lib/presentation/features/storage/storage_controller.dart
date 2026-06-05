@@ -114,18 +114,14 @@ class StorageController extends ChangeNotifier {
   }
 
   /// Применение фильтров
-  void _applyFilters() {
+  void _applyFilters({bool notify = true}) {
     _passwords = _allPasswords.where((entry) {
-      // Фильтр по категории
       if (_selectedCategoryId != null) {
-        // Если категория выбрана, показываем только записи с этой категорией
-        // entry.categoryId может быть null, поэтому используем явное сравнение
         final entryCategoryId = entry.categoryId;
         if (entryCategoryId != _selectedCategoryId) {
           return false;
         }
       }
-      // Поиск по сервису
       if (_searchQuery.isNotEmpty &&
           !entry.service.toLowerCase().contains(_searchQuery)) {
         return false;
@@ -134,7 +130,7 @@ class StorageController extends ChangeNotifier {
     }).toList();
     _currentIndex = 0;
 
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
   /// Сброс фильтров
@@ -170,7 +166,10 @@ class StorageController extends ChangeNotifier {
         },
         (passwordsList) {
           _allPasswords = passwordsList;
-          _applyFilters(); // Применяем фильтры
+          _applyFilters(notify: false);
+          if (_selectedEntry == null && _passwords.isNotEmpty) {
+            _selectedEntry = _passwords.first;
+          }
         },
       );
     } catch (e) {

@@ -117,26 +117,71 @@ class StorageLocalDataSource {
       await _ensurePasswordsMigrated();
       final database = await _db.database;
       final keyBytes = VaultKeySession.getForProfile(_defaultProfileId);
-      final entriesToInsert = <PasswordEntry>[];
+      final entriesToSave = <PasswordEntry>[];
       for (final entry in passwords) {
-        entriesToInsert.add(
+        entriesToSave.add(
           keyBytes != null ? await _encryptEntry(entry, keyBytes) : entry,
         );
       }
       await database.transaction((txn) async {
         await _ensureDefaultProfile(txn);
-        await txn.delete(
-          'password_configs',
-          where: 'profile_id = ?',
-          whereArgs: [_defaultProfileId],
-        );
-        await txn.delete(
+
+        final existingRows = await txn.query(
           'password_entries',
+          columns: ['id'],
           where: 'profile_id = ?',
           whereArgs: [_defaultProfileId],
         );
-        for (final entry in entriesToInsert) {
-          await _insertEntry(txn, entry);
+        final existingIds = existingRows.map((r) => r['id'] as int).toSet();
+
+        final processedIds = <int>{};
+
+        for (final entry in entriesToSave) {
+          final entryId = entry.id;
+          if (entryId != null && existingIds.contains(entryId)) {
+            final values = entry.toMap(defaultProfileId: _defaultProfileId);
+            values.remove('id');
+            values.remove('created_at');
+            await txn.update(
+              'password_entries',
+              values,
+              where: 'id = ? AND profile_id = ?',
+              whereArgs: [entryId, _defaultProfileId],
+            );
+            final configBytes = entry.encryptedConfigBlob();
+            if (configBytes != null) {
+              final updated = await txn.update(
+                'password_configs',
+                {'encrypted_config': configBytes},
+                where: 'entry_id = ?',
+                whereArgs: [entryId],
+              );
+              if (updated == 0) {
+                await txn.insert('password_configs', {
+                  'profile_id': entry.profileId ?? _defaultProfileId,
+                  'entry_id': entryId,
+                  'encrypted_config': configBytes,
+                });
+              }
+            }
+            processedIds.add(entryId);
+          } else {
+            await _insertEntry(txn, entry);
+          }
+        }
+
+        final idsToDelete = existingIds.difference(processedIds);
+        for (final id in idsToDelete) {
+          await txn.delete(
+            'password_configs',
+            where: 'entry_id = ?',
+            whereArgs: [id],
+          );
+          await txn.delete(
+            'password_entries',
+            where: 'id = ? AND profile_id = ?',
+            whereArgs: [id, _defaultProfileId],
+          );
         }
       });
       return true;
