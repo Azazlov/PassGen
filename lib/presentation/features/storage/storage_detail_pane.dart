@@ -440,12 +440,18 @@ class _StorageDetailPaneState extends State<StorageDetailPane> {
         final editBtn = ElevatedButton.icon(
           onPressed: () => _showEditDialog(context, controller, effectiveEntry),
           icon: const Icon(Icons.edit),
-          label: const Text('Редактировать'),
+          label: const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text('Редактировать'),
+          ),
         );
         final regenBtn = OutlinedButton.icon(
           onPressed: () => _showRegenerateConfirmation(context, controller, effectiveEntry),
           icon: const Icon(Icons.refresh),
-          label: const Text('Регенерировать'),
+          label: const FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text('Регенерировать'),
+          ),
         );
         final deleteBtn = OutlinedButton.icon(
           onPressed: () => _showDeleteConfirmation(context, controller),
