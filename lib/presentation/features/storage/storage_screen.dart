@@ -128,7 +128,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
               const PopupMenuDivider(),
               const PopupMenuItem(
                 value: 'delete',
-                child: Text('Удалить всё', style: TextStyle(color: Colors.red)),
+                child: Text('Удалить', style: TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -470,9 +470,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             await file.writeAsString(jsonString);
 
             await SharePlus.instance.share(
-              ShareParams(
-                files: [XFile(file.path)],
-              ),
+              ShareParams(files: [XFile(file.path)]),
             );
           } catch (e) {
             if (context.mounted) {
@@ -570,9 +568,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             await file.writeAsString(base64Data);
 
             await SharePlus.instance.share(
-              ShareParams(
-                files: [XFile(file.path)],
-              ),
+              ShareParams(files: [XFile(file.path)]),
             );
 
             if (context.mounted) {

@@ -156,6 +156,21 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
 
               SizedBox(height: isSmallScreen ? 16 : 32),
 
+              if (controller.error != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.errorContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    controller.error!,
+                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                  ),
+                ),
+
+              SizedBox(height: isSmallScreen ? 16 : 32),
+
               // Отображение пароля - приоритетный элемент
               Container(
                 constraints: BoxConstraints(
@@ -191,7 +206,6 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                 controller: controller.loginController,
                 keyboardType: TextInputType.text,
               ),
-
 
               const SizedBox(height: 16),
 
@@ -267,19 +281,6 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
               const SizedBox(height: 16),
 
               // Отображение ошибки
-              if (controller.error != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    controller.error!,
-                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
-                  ),
-                ),
-
               const SizedBox(height: 32),
             ],
           ),
@@ -343,9 +344,9 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
                 range.first.toDouble(),
                 range.last.toDouble(),
               ),
-              min: 1,
-              max: 64,
-              divisions: 63,
+              min: 4,
+              max: 32,
+              divisions: 32,
               labels: RangeLabels('${range.first}', '${range.last}'),
               onChanged: (values) {
                 controller.updateLengthRange(

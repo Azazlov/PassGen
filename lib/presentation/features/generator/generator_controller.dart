@@ -62,7 +62,6 @@ class GeneratorController extends ChangeNotifier {
   final TextEditingController minLengthController = TextEditingController();
   final TextEditingController maxLengthController = TextEditingController();
 
-
   // Выбор категории
   int? _selectedCategoryId;
   int? get selectedCategoryId => _selectedCategoryId;
@@ -426,7 +425,6 @@ class GeneratorController extends ChangeNotifier {
         masterPassword: masterPassword,
       );
 
-
       return result.fold(
         (failure) {
           _error = failure.message;
@@ -465,7 +463,6 @@ class GeneratorController extends ChangeNotifier {
     maxLengthController.dispose();
     super.dispose();
   }
-
 
   /// Валидирует ввод service/login
   ///
