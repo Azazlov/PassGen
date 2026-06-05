@@ -155,12 +155,14 @@ class GeneratorController extends ChangeNotifier {
   /// Переключает опцию "Исключить похожие символы"
   void toggleExcludeSimilar(bool value) {
     _settings = _settings.copyWith(excludeSimilar: value);
+    _strength = 1;
     generatePassword();
   }
 
   /// Переключает опцию "Без повторяющихся символов" (уникальные символы)
   void toggleAllUnique(bool value) {
     _settings = _settings.copyWith(allUnique: value);
+    _strength = 1;
     generatePassword();
   }
 
@@ -225,6 +227,7 @@ class GeneratorController extends ChangeNotifier {
         value,
       ),
     );
+    _strength = 1;
     generatePassword();
   }
 
@@ -238,6 +241,7 @@ class GeneratorController extends ChangeNotifier {
         value,
       ),
     );
+    _strength = 1;
     generatePassword();
   }
 
@@ -251,6 +255,7 @@ class GeneratorController extends ChangeNotifier {
         value,
       ),
     );
+    _strength = 1;
     generatePassword();
   }
 
@@ -264,6 +269,7 @@ class GeneratorController extends ChangeNotifier {
         value,
       ),
     );
+    _strength = 1;
     generatePassword();
   }
 
@@ -298,6 +304,7 @@ class GeneratorController extends ChangeNotifier {
   /// Завершает изменение диапазона длин и генерирует пароль
   void finishLengthRange(int min, int max) {
     updateLengthRange(min, max);
+    _strength = 1;
     generatePassword();
   }
 
