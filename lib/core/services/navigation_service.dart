@@ -40,8 +40,7 @@ enum AppTab {
   generator(Icons.create, 'Генератор'),
   encryptor(Icons.lock, 'Шифратор'),
   storage(Icons.archive, 'Хранилище'),
-  settings(Icons.settings, 'Настройки'),
-  about(Icons.info, 'О программе');
+  settings(Icons.settings, 'Настройки');
 
   const AppTab(this.icon, this.label);
   final IconData icon;

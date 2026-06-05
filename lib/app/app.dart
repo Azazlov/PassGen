@@ -57,7 +57,7 @@ import '../../domain/usecases/storage/get_passwords_usecase.dart';
 import '../../domain/usecases/storage/import_passgen_usecase.dart';
 import '../../domain/usecases/storage/import_passwords_usecase.dart';
 import '../../domain/validators/password_settings_validator.dart';
-import '../../presentation/features/about/about_screen.dart';
+
 import '../../presentation/features/auth/auth_controller.dart';
 import '../../presentation/features/auth/auth_screen.dart';
 import '../../presentation/features/categories/categories_controller.dart';
@@ -632,7 +632,6 @@ class _TabScaffoldState extends State<TabScaffold> {
                         EncryptorScreen(),
                         StorageScreen(),
                         SettingsScreen(),
-                        AboutScreen(),
                       ],
                     ),
                   ),

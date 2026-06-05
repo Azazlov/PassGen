@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/app_constants.dart';
-import '../../../core/services/navigation_service.dart';
 import '../../../data/database/database_helper.dart';
 import '../../../domain/usecases/auth/change_pin_usecase.dart';
 import '../../../domain/usecases/auth/remove_pin_usecase.dart';
@@ -12,6 +11,7 @@ import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/settings/get_setting_usecase.dart';
 import '../../../domain/usecases/settings/set_setting_usecase.dart';
 import '../../widgets/app_text_field.dart';
+import '../about/about_screen.dart';
 import '../auth/auth_controller.dart';
 import '../logs/logs_screen.dart';
 import 'settings_controller.dart';
@@ -49,14 +49,9 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
   final _formKey = GlobalKey<FormState>();
   final _autoLockController = TextEditingController(text: '5');
   final _maxAttemptsController = TextEditingController(text: '5');
-  final _defaultLengthController = TextEditingController(text: '16');
-  final _backupIntervalController = TextEditingController(text: '7');
 
   int _logsCount = 0;
   bool _biometricLogin = false;
-  bool _excludeSimilarByDefault = false;
-  bool _useSymbolsByDefault = true;
-  bool _autoBackup = false;
 
   @override
   void initState() {
@@ -69,8 +64,6 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
   void dispose() {
     _autoLockController.dispose();
     _maxAttemptsController.dispose();
-    _defaultLengthController.dispose();
-    _backupIntervalController.dispose();
     super.dispose();
   }
 
@@ -87,32 +80,14 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
 
     final autoLock = await controller.getSetting('security.auto_lock_minutes');
     final maxAttempts = await controller.getSetting('security.max_pin_attempts');
-    final defaultLength = await controller.getSetting(
-      'generator.default_length',
-    );
-    final excludeSimilar = await controller.getSetting(
-      'generator.exclude_similar',
-    );
-    final useSymbols = await controller.getSetting('generator.use_symbols');
-    final autoBackup = await controller.getSetting('backup.auto');
-    final backupInterval = await controller.getSetting('backup.interval_days');
 
     if (!mounted) return;
 
     setState(() {
       _autoLockController.text = autoLock ?? '5';
       _maxAttemptsController.text = maxAttempts ?? '5';
-      _defaultLengthController.text = defaultLength ?? '16';
-      _backupIntervalController.text = backupInterval ?? '7';
       _biometricLogin = authController.authState.isBiometricEnabled;
-      _excludeSimilarByDefault = _parseBool(excludeSimilar);
-      _useSymbolsByDefault = useSymbols == null ? true : _parseBool(useSymbols);
-      _autoBackup = _parseBool(autoBackup);
     });
-  }
-
-  bool _parseBool(String? value) {
-    return value == 'true';
   }
 
   @override
@@ -188,44 +163,6 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
               textColor: Colors.red,
             ),
             const SizedBox(height: 16),
-            _buildSectionHeader('Генератор', theme),
-            _buildNumberField(
-              icon: Icons.straighten,
-              title: 'Длина по умолчанию',
-              suffix: 'симв.',
-              controller: _defaultLengthController,
-              min: 4,
-              max: 64,
-            ),
-            _buildSwitchTile(
-              icon: Icons.block,
-              title: 'Исключать похожие символы',
-              value: _excludeSimilarByDefault,
-              onChanged: (value) => setState(() => _excludeSimilarByDefault = value),
-            ),
-            _buildSwitchTile(
-              icon: Icons.tag,
-              title: 'Использовать спецсимволы',
-              value: _useSymbolsByDefault,
-              onChanged: (value) => setState(() => _useSymbolsByDefault = value),
-            ),
-            const SizedBox(height: 16),
-            _buildSectionHeader('Резервное копирование', theme),
-            _buildSwitchTile(
-              icon: Icons.backup,
-              title: 'Автоматическое резервное копирование',
-              value: _autoBackup,
-              onChanged: (value) => setState(() => _autoBackup = value),
-            ),
-            _buildNumberField(
-              icon: Icons.event_repeat,
-              title: 'Интервал резервного копирования',
-              suffix: 'дн.',
-              controller: _backupIntervalController,
-              min: 1,
-              max: 365,
-            ),
-            const SizedBox(height: 16),
             _buildSectionHeader('О приложении', theme),
             _buildInfoTile(
               icon: Icons.password,
@@ -240,8 +177,9 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
             _buildListTile(
               icon: Icons.info,
               title: 'Открыть раздел',
-              onTap: () =>
-                  context.read<NavigationService>().navigateTo(AppTab.about),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AboutScreen()),
+              ),
             ),
           ],
         ),
@@ -389,11 +327,6 @@ class _SettingsScreenContentState extends State<_SettingsScreenContent> {
     await Future.wait([
       controller.setSetting('security.auto_lock_minutes', _autoLockController.text),
       controller.setSetting('security.max_pin_attempts', _maxAttemptsController.text),
-      controller.setSetting('generator.default_length', _defaultLengthController.text),
-      controller.setSetting('backup.interval_days', _backupIntervalController.text),
-      controller.setSetting('generator.exclude_similar', _excludeSimilarByDefault.toString()),
-      controller.setSetting('generator.use_symbols', _useSymbolsByDefault.toString()),
-      controller.setSetting('backup.auto', _autoBackup.toString()),
     ]);
 
     if (!mounted) return;
