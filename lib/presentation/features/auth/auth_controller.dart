@@ -505,17 +505,32 @@ class AuthController extends ChangeNotifier with WidgetsBindingObserver {
         (success) => success,
       );
 
-      if (success && biometricRepository != null &&
-          _authState.isBiometricEnabled &&
-          _authState.currentProfileId != null) {
-        try {
-          await biometricRepository!.updatePinForProfile(
-            _authState.currentProfileId!,
-            newPin,
-          );
-        } catch (_) {
-          _error = 'PIN изменён, но обновление биометрии не удалось';
-          notifyListeners();
+      if (success) {
+        // Обновляем сессию мастер-пароля с новым PIN
+        final profileId = _authState.currentProfileId ?? 1;
+        MasterPasswordSession.setForProfile(
+          profileId: profileId,
+          pin: newPin,
+        );
+        // Перевыводим vault-ключ с новым PIN и новой солью
+        unawaited(
+          vaultUnlockService
+                  ?.unlockWithPin(profileId: profileId, pin: newPin)
+                  .catchError((_) => 0) ??
+              Future.value(0),
+        );
+
+        if (biometricRepository != null &&
+            _authState.isBiometricEnabled) {
+          try {
+            await biometricRepository!.updatePinForProfile(
+              profileId,
+              newPin,
+            );
+          } catch (_) {
+            _error = 'PIN изменён, но обновление биометрии не удалось';
+            notifyListeners();
+          }
         }
       }
 

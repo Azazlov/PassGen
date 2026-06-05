@@ -464,20 +464,17 @@ class AuthLocalDataSource {
     if (oldSaltBase64 == null) throw const StorageFailure(message: 'Соль старого PIN не найдена');
 
     final oldSaltBytes = base64Decode(oldSaltBase64);
-    final oldPbkdf2 = Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: pbkdf2Iterations, bits: 256);
-    final oldSecretKey = await oldPbkdf2.deriveKeyFromPassword(
-      password: oldPin,
-      nonce: Uint8List.fromList(oldSaltBytes),
-    );
-    final oldKeyBytes = await oldSecretKey.extractBytes();
-
     final newSaltBytes = base64Decode(newSalt);
-    final newPbkdf2 = Pbkdf2(macAlgorithm: Hmac.sha256(), iterations: pbkdf2Iterations, bits: 256);
-    final newSecretKey = await newPbkdf2.deriveKeyFromPassword(
-      password: newPin,
-      nonce: Uint8List.fromList(newSaltBytes),
+
+    final encryptor = EncryptorLocalDataSource();
+    final oldKeyBytes = await encryptor.deriveVaultKeyBytes(
+      pin: utf8.encode(oldPin),
+      salt: oldSaltBytes,
     );
-    final newKeyBytes = await newSecretKey.extractBytes();
+    final newKeyBytes = await encryptor.deriveVaultKeyBytes(
+      pin: utf8.encode(newPin),
+      salt: newSaltBytes,
+    );
 
     final entries = await db.query(
       'password_entries',
@@ -486,28 +483,86 @@ class AuthLocalDataSource {
     );
 
     for (final entry in entries) {
-      final encryptedPassword = entry['encrypted_password'] as List<int>;
-      final nonceBytes = entry['nonce'] as List<int>;
+      final encryptedPasswordBlob = entry['encrypted_password'] as List<int>;
+
+      // Пустой BLOB — пропускаем
+      if (encryptedPasswordBlob.isEmpty) continue;
+
       List<int>? decryptedPassword;
       try {
-        decryptedPassword = await _decryptPassword(encryptedPassword, nonceBytes, oldKeyBytes);
+        final miniEncrypted = utf8.decode(encryptedPasswordBlob);
+        decryptedPassword = await encryptor.decryptFromMini(
+          miniEncrypted: miniEncrypted,
+          password: utf8.encode(oldPin),
+        );
       } catch (_) {
         continue;
       }
-      final encryptedData = await _encryptPassword(decryptedPassword, newKeyBytes);
+
+      // Перешифровываем пароль с новым PIN
+      final newMiniEncrypted = await encryptor.encryptToMini(
+        message: decryptedPassword,
+        password: utf8.encode(newPin),
+      );
+
+      // Извлекаем PBKDF2-nonce из нового мини-формата
+      final newMiniBytes = CryptoUtils.decodeBytesBase64(newMiniEncrypted);
+      final newNonceBytes = newMiniBytes.sublist(0, 32);
+      final newNonceBase64 = CryptoUtils.encodeBytesBase64(newNonceBytes);
+
+      // Перешифровываем encrypted_service с новым vault-ключом
+      List<int>? newEncryptedService;
+      final serviceBlob = entry['encrypted_service'] as Uint8List?;
+      if (serviceBlob != null && serviceBlob.isNotEmpty) {
+        try {
+          final decryptedService = await encryptor.decryptFieldWithKey(
+            blob: serviceBlob.toList(),
+            keyBytes: oldKeyBytes,
+          );
+          newEncryptedService = await encryptor.encryptFieldWithKey(
+            message: decryptedService,
+            keyBytes: newKeyBytes,
+          );
+        } catch (_) {}
+      }
+
+      // Перешифровываем encrypted_login с новым vault-ключом
+      List<int>? newEncryptedLogin;
+      final loginBlob = entry['encrypted_login'] as Uint8List?;
+      if (loginBlob != null && loginBlob.isNotEmpty) {
+        try {
+          final decryptedLogin = await encryptor.decryptFieldWithKey(
+            blob: loginBlob.toList(),
+            keyBytes: oldKeyBytes,
+          );
+          newEncryptedLogin = await encryptor.encryptFieldWithKey(
+            message: decryptedLogin,
+            keyBytes: newKeyBytes,
+          );
+        } catch (_) {}
+      }
+
+      final updateMap = <String, Object?>{
+        'encrypted_password': Uint8List.fromList(utf8.encode(newMiniEncrypted)),
+        'nonce': Uint8List.fromList(utf8.encode(newNonceBase64)),
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      };
+      if (newEncryptedService != null) {
+        updateMap['encrypted_service'] = Uint8List.fromList(newEncryptedService);
+      }
+      if (newEncryptedLogin != null) {
+        updateMap['encrypted_login'] = Uint8List.fromList(newEncryptedLogin);
+      }
+
       await db.update(
         'password_entries',
-        {
-          'encrypted_password': encryptedData['cipherText'],
-          'nonce': encryptedData['nonce'],
-          'updated_at': DateTime.now().millisecondsSinceEpoch,
-        },
+        updateMap,
         where: 'id = ?',
         whereArgs: [entry['id']],
       );
+
       try {
-        final modifiable = Uint8List.fromList(decryptedPassword);
-        CryptoUtils.secureWipeData(modifiable);
+        CryptoUtils.secureWipeData(Uint8List.fromList(decryptedPassword));
       } catch (_) {}
     }
 
@@ -517,29 +572,5 @@ class AuthLocalDataSource {
     try {
       CryptoUtils.secureWipeKey(Uint8List.fromList(newKeyBytes));
     } catch (_) {}
-  }
-
-  Future<List<int>> _decryptPassword(
-    List<int> encryptedData,
-    List<int> nonce,
-    List<int> key,
-  ) async {
-    final encryptor = EncryptorLocalDataSource();
-    return encryptor.decryptFromMini(
-      miniEncrypted: base64Encode(encryptedData),
-      password: key,
-    );
-  }
-
-  Future<Map<String, dynamic>> _encryptPassword(
-    List<int> password,
-    List<int> key,
-  ) async {
-    final encryptor = EncryptorLocalDataSource();
-    final encrypted = await encryptor.encrypt(message: password, password: key);
-    return {
-      'cipherText': base64Decode(encrypted['cipherText'] as String),
-      'nonce': base64Decode(encrypted['nonce'] as String),
-    };
   }
 }
