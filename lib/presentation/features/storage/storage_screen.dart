@@ -378,17 +378,86 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
         await _importPasswords(controller);
         break;
       case 'export_json':
-        await _exportPasswords(controller);
+        await _showExportOptions(controller, format: 'json');
         break;
       case 'import_passgen':
         await _importPassgen(controller);
         break;
       case 'export_passgen':
-        await _exportPassgen(controller);
+        await _showExportOptions(controller, format: 'passgen');
         break;
       case 'delete':
         _deletePassword(controller);
         break;
+    }
+  }
+
+  Future<void> _showExportOptions(
+    StorageController controller, {
+    required String format,
+  }) async {
+    if (controller.isEmpty) {
+      showAppDialog(
+        context: context,
+        title: 'Ошибка',
+        content: 'Хранилище пустое',
+      );
+      return;
+    }
+
+    if (!context.mounted) return;
+
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(ctx).colorScheme.outlineVariant,
+                  ),
+                ),
+              ),
+              child: Text(
+                format == 'json' ? 'Экспорт в JSON' : 'Экспорт в .passgen',
+                style: Theme.of(ctx).textTheme.titleMedium,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.share),
+              title: const Text('Поделиться'),
+              onTap: () => Navigator.of(ctx).pop('share'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.save_alt),
+              title: const Text('Сохранить как'),
+              onTap: () => Navigator.of(ctx).pop('save'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (action == null || !context.mounted) return;
+
+    if (format == 'json') {
+      if (action == 'share') {
+        await _exportPasswordsShare(controller);
+      } else {
+        await _exportPasswordsSave(controller);
+      }
+    } else {
+      if (action == 'share') {
+        await _exportPassgenShare(controller);
+      } else {
+        await _exportPassgenSave(controller);
+      }
     }
   }
 
@@ -440,16 +509,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
     }
   }
 
-  Future<void> _exportPasswords(StorageController controller) async {
-    if (controller.isEmpty) {
-      showAppDialog(
-        context: context,
-        title: 'Ошибка',
-        content: 'Хранилище пустое',
-      );
-      return;
-    }
-
+  Future<void> _exportPasswordsShare(StorageController controller) async {
     try {
       final result = await controller.exportPasswords();
 
@@ -493,24 +553,63 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
     }
   }
 
-  // ==================== .passgen ЭКСПОРТ/ИМПОРТ ====================
+  Future<void> _exportPasswordsSave(StorageController controller) async {
+    try {
+      final result = await controller.exportPasswords();
 
-  Future<void> _exportPassgen(StorageController controller) async {
-    if (controller.isEmpty) {
+      if (!context.mounted) return;
+
+      result.fold(
+        (failure) {
+          showAppDialog(
+            context: context,
+            title: 'Ошибка',
+            content: failure.message,
+          );
+        },
+        (jsonString) async {
+          try {
+            final savedPath = await FilePicker.platform.saveFile(
+              fileName: 'passwords_export.json',
+              type: FileType.custom,
+              allowedExtensions: ['json'],
+              bytes: utf8.encode(jsonString),
+            );
+
+            if (savedPath != null && context.mounted) {
+              showAppDialog(
+                context: context,
+                title: 'Сохранено',
+                content: 'Файл сохранён: $savedPath',
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              showAppDialog(
+                context: context,
+                title: 'Ошибка',
+                content: 'При сохранении произошла ошибка: $e',
+              );
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (!context.mounted) return;
       showAppDialog(
         context: context,
         title: 'Ошибка',
-        content: 'Хранилище пустое',
+        content: 'При экспорте произошла ошибка: $e',
       );
-      return;
     }
+  }
 
-    // Запрашиваем мастер-пароль
+  // ==================== .passgen ЭКСПОРТ/ИМПОРТ ====================
+
+  Future<String?> _requestMasterPassword() {
     final masterPasswordController = TextEditingController();
 
-    if (!context.mounted) return;
-
-    final confirmed = await showDialog<bool>(
+    return showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Экспорт в .passgen'),
@@ -531,25 +630,32 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
+            onPressed: () {
+              masterPasswordController.dispose();
+              Navigator.of(ctx).pop(null);
+            },
             child: const Text('Отмена'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
+            onPressed: () {
+              final pwd = masterPasswordController.text;
+              masterPasswordController.dispose();
+              Navigator.of(ctx).pop(pwd);
+            },
             child: const Text('Экспорт'),
           ),
         ],
       ),
     );
+  }
 
-    masterPasswordController.dispose();
+  Future<void> _exportPassgenShare(StorageController controller) async {
+    final masterPassword = await _requestMasterPassword();
 
-    if (confirmed != true) return;
+    if (masterPassword == null || !context.mounted) return;
 
     try {
-      final result = await controller.exportPassgen(
-        masterPasswordController.text,
-      );
+      final result = await controller.exportPassgen(masterPassword);
 
       if (!context.mounted) return;
 
@@ -570,12 +676,59 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
             await SharePlus.instance.share(
               ShareParams(files: [XFile(file.path)]),
             );
-
+          } catch (e) {
             if (context.mounted) {
               showAppDialog(
                 context: context,
-                title: 'Экспорт выполнен',
-                content: 'Пароли экспортированы в формате .passgen',
+                title: 'Ошибка',
+                content: 'При экспорте произошла ошибка: $e',
+              );
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      showAppDialog(
+        context: context,
+        title: 'Ошибка',
+        content: 'При экспорте произошла ошибка: $e',
+      );
+    }
+  }
+
+  Future<void> _exportPassgenSave(StorageController controller) async {
+    final masterPassword = await _requestMasterPassword();
+
+    if (masterPassword == null || !context.mounted) return;
+
+    try {
+      final result = await controller.exportPassgen(masterPassword);
+
+      if (!context.mounted) return;
+
+      result.fold(
+        (failure) {
+          showAppDialog(
+            context: context,
+            title: 'Ошибка',
+            content: failure.message,
+          );
+        },
+        (base64Data) async {
+          try {
+            final savedPath = await FilePicker.platform.saveFile(
+              fileName: 'passwords_export.passgen',
+              type: FileType.custom,
+              allowedExtensions: ['passgen'],
+              bytes: utf8.encode(base64Data),
+            );
+
+            if (savedPath != null && context.mounted) {
+              showAppDialog(
+                context: context,
+                title: 'Сохранено',
+                content: 'Файл сохранён: $savedPath',
               );
             }
           } catch (e) {
@@ -583,7 +736,7 @@ class _StorageScreenContentState extends State<_StorageScreenContent> {
               showAppDialog(
                 context: context,
                 title: 'Ошибка',
-                content: 'При экспорте произошла ошибка: $e',
+                content: 'При сохранении произошла ошибка: $e',
               );
             }
           }
