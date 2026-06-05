@@ -50,6 +50,16 @@ class _GeneratorScreenContent extends StatefulWidget {
 class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
   final _formKey = GlobalKey<FormState>();
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<GeneratorController>().generatePassword();
+      }
+    });
+  }
+
   Future<void> _handleCopyPassword() async {
     final controller = context.read<GeneratorController>();
 
@@ -350,6 +360,12 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
               labels: RangeLabels('${range.first}', '${range.last}'),
               onChanged: (values) {
                 controller.updateLengthRange(
+                  values.start.round(),
+                  values.end.round(),
+                );
+              },
+              onChangeEnd: (values) {
+                controller.finishLengthRange(
                   values.start.round(),
                   values.end.round(),
                 );

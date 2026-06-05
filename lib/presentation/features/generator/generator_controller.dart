@@ -149,43 +149,43 @@ class GeneratorController extends ChangeNotifier {
     _strength = value;
     _updateSettingsByStrength(value);
     _updateControllersFromSettings();
-    notifyListeners();
+    generatePassword();
   }
 
   /// Переключает опцию "Исключить похожие символы"
   void toggleExcludeSimilar(bool value) {
     _settings = _settings.copyWith(excludeSimilar: value);
-    notifyListeners();
+    generatePassword();
   }
 
   /// Переключает опцию "Без повторяющихся символов" (уникальные символы)
   void toggleAllUnique(bool value) {
     _settings = _settings.copyWith(allUnique: value);
-    notifyListeners();
+    generatePassword();
   }
 
   /// Переключает использование строчных букв
   void toggleUseLowercase(bool value) {
     _settings = _settings.copyWith(useCustomLowercase: value);
-    notifyListeners();
+    generatePassword();
   }
 
   /// Переключает использование заглавных букв
   void toggleUseUppercase(bool value) {
     _settings = _settings.copyWith(useCustomUppercase: value);
-    notifyListeners();
+    generatePassword();
   }
 
   /// Переключает использование цифр
   void toggleUseDigits(bool value) {
     _settings = _settings.copyWith(useCustomDigits: value);
-    notifyListeners();
+    generatePassword();
   }
 
   /// Переключает использование спецсимволов
   void toggleUseSymbols(bool value) {
     _settings = _settings.copyWith(useCustomSymbols: value);
-    notifyListeners();
+    generatePassword();
   }
 
   /// Обновляет настройки на основе уровня сложности
@@ -225,7 +225,7 @@ class GeneratorController extends ChangeNotifier {
         value,
       ),
     );
-    notifyListeners();
+    generatePassword();
   }
 
   void toggleRequireLowercase(bool value) {
@@ -238,7 +238,7 @@ class GeneratorController extends ChangeNotifier {
         value,
       ),
     );
-    notifyListeners();
+    generatePassword();
   }
 
   void toggleRequireDigits(bool value) {
@@ -251,7 +251,7 @@ class GeneratorController extends ChangeNotifier {
         value,
       ),
     );
-    notifyListeners();
+    generatePassword();
   }
 
   void toggleRequireSymbols(bool value) {
@@ -264,7 +264,7 @@ class GeneratorController extends ChangeNotifier {
         value,
       ),
     );
-    notifyListeners();
+    generatePassword();
   }
 
   /// Обновляет флаги
@@ -293,6 +293,12 @@ class GeneratorController extends ChangeNotifier {
     _settings = _settings.copyWith(lengthRange: [min, max]);
     _updateControllersFromSettings();
     notifyListeners();
+  }
+
+  /// Завершает изменение диапазона длин и генерирует пароль
+  void finishLengthRange(int min, int max) {
+    updateLengthRange(min, max);
+    generatePassword();
   }
 
   /// Генерирует новый пароль
