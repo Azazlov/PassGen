@@ -8,14 +8,14 @@ import 'package:pass_gen/presentation/widgets/character_set_display.dart';
 
 void main() {
   group('CharacterSetDisplay Widget Tests', () {
+    // Флаги: digits=1, lowercase=4, uppercase=16, symbols=64
+    const int _allFlags = 1 | 4 | 16 | 64; // 85
+
     testWidgets('shows all character categories when all enabled', (
       tester,
     ) async {
       const settings = PasswordGenerationSettings(
-        useCustomLowercase: true,
-        useCustomUppercase: true,
-        useCustomDigits: true,
-        useCustomSymbols: true,
+        flags: _allFlags,
       );
 
       await tester.pumpWidget(
@@ -28,17 +28,14 @@ void main() {
       expect(find.text('Заглавные'), findsOneWidget);
       expect(find.text('Цифры'), findsOneWidget);
       expect(find.text('Спецсимволы'), findsOneWidget);
-      // 26 + 26 + 10 + 20 = 82 символа (текст отображается как единое целое)
+      // 26 + 26 + 10 + 20 = 82 символа
       expect(find.text('Итого:'), findsOneWidget);
       expect(find.text('82 символов'), findsOneWidget);
     });
 
     testWidgets('hides disabled categories', (tester) async {
       const settings = PasswordGenerationSettings(
-        useCustomLowercase: true,
-        useCustomUppercase: false,
-        useCustomDigits: true,
-        useCustomSymbols: false,
+        flags: 1 | 4, // only digits + lowercase
       );
 
       await tester.pumpWidget(
@@ -58,10 +55,7 @@ void main() {
 
     testWidgets('shows excluded characters when enabled', (tester) async {
       const settings = PasswordGenerationSettings(
-        useCustomLowercase: true,
-        useCustomUppercase: true,
-        useCustomDigits: true,
-        useCustomSymbols: true,
+        flags: _allFlags,
         excludeSimilar: true,
       );
 
@@ -78,10 +72,7 @@ void main() {
 
     testWidgets('hides excluded section when disabled', (tester) async {
       const settings = PasswordGenerationSettings(
-        useCustomLowercase: true,
-        useCustomUppercase: true,
-        useCustomDigits: true,
-        useCustomSymbols: true,
+        flags: _allFlags,
         excludeSimilar: false,
       );
 
@@ -96,10 +87,7 @@ void main() {
 
     testWidgets('shows correct count after excluding similar', (tester) async {
       const settings = PasswordGenerationSettings(
-        useCustomLowercase: true,
-        useCustomUppercase: true,
-        useCustomDigits: true,
-        useCustomSymbols: true,
+        flags: _allFlags,
         excludeSimilar: true,
       );
 
@@ -115,12 +103,7 @@ void main() {
     });
 
     testWidgets('hides widget when no categories enabled', (tester) async {
-      const settings = PasswordGenerationSettings(
-        useCustomLowercase: false,
-        useCustomUppercase: false,
-        useCustomDigits: false,
-        useCustomSymbols: false,
-      );
+      const settings = PasswordGenerationSettings();
 
       await tester.pumpWidget(
         const MaterialApp(
@@ -133,7 +116,7 @@ void main() {
     });
 
     testWidgets('displays monospace font for characters', (tester) async {
-      const settings = PasswordGenerationSettings(useCustomDigits: true);
+      const settings = PasswordGenerationSettings(flags: 1); // only digits
 
       await tester.pumpWidget(
         const MaterialApp(

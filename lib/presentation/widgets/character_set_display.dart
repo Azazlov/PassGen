@@ -103,9 +103,10 @@ class CharacterSetDisplay extends StatelessWidget {
 
   List<CharacterSet> _getCharacterCategoriesFromSettings() {
     final categories = <CharacterSet>[];
+    final flags = settings.flags;
 
-    // Строчные
-    if (settings.useCustomLowercase || settings.requireLowercase) {
+    // Строчные (флаг 4)
+    if ((flags & 4) != 0) {
       var chars = _lowercase;
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
@@ -123,8 +124,8 @@ class CharacterSetDisplay extends StatelessWidget {
       }
     }
 
-    // Заглавные
-    if (settings.useCustomUppercase || settings.requireUppercase) {
+    // Заглавные (флаг 16)
+    if ((flags & 16) != 0) {
       var chars = _uppercase;
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
@@ -142,8 +143,8 @@ class CharacterSetDisplay extends StatelessWidget {
       }
     }
 
-    // Цифры
-    if (settings.useCustomDigits || settings.requireDigits) {
+    // Цифры (флаг 1)
+    if ((flags & 1) != 0) {
       var chars = _digits;
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
@@ -161,8 +162,8 @@ class CharacterSetDisplay extends StatelessWidget {
       }
     }
 
-    // Спецсимволы
-    if (settings.useCustomSymbols || settings.requireSymbols) {
+    // Спецсимволы (флаг 64)
+    if ((flags & 64) != 0) {
       var chars = _symbols;
       if (settings.excludeSimilar) {
         chars = _excludeSimilar(chars);
