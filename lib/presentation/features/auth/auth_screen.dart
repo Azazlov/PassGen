@@ -249,8 +249,8 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
     final content = !controller.authState.isPinSetup
         ? _buildSetupScreen(controller, theme)
         : controller.authState.isLocked
-            ? _buildLockoutScreen(controller, theme)
-            : _buildLoginScreen(controller, theme);
+        ? _buildLockoutScreen(controller, theme)
+        : _buildLoginScreen(controller, theme);
 
     if (isMobile) return content;
 
@@ -620,26 +620,26 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
   }
 }
 
-// class _DevDatabaseResetButton extends StatelessWidget {
-//   const _DevDatabaseResetButton({required this.onPressed});
+class _DevDatabaseResetButton extends StatelessWidget {
+  const _DevDatabaseResetButton({required this.onPressed});
 
-//   final VoidCallback? onPressed;
+  final VoidCallback? onPressed;
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return SizedBox(
-//       width: double.infinity,
-//       child: OutlinedButton.icon(
-//         onPressed: onPressed,
-//         icon: const Icon(Icons.storage),
-//         label: const Text('Сбросить БД'),
-//         style: OutlinedButton.styleFrom(
-//           foregroundColor: Theme.of(context).colorScheme.error,
-//         ),
-//       ),
-//     );
-//   }
-// }
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.storage),
+        label: const Text('Сбросить БД'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Theme.of(context).colorScheme.error,
+        ),
+      ),
+    );
+  }
+}
 
 /// Бейдж текущего профиля (аватарка + имя)
 class _ProfileBadge extends StatelessWidget {
@@ -666,10 +666,7 @@ class _ProfileBadge extends StatelessWidget {
             style: const TextStyle(fontSize: 32),
           ),
           const SizedBox(width: 8),
-          Text(
-            profile.name,
-            style: theme.textTheme.bodyLarge,
-          ),
+          Text(profile.name, style: theme.textTheme.bodyLarge),
           if (hasMultiple) ...[
             const SizedBox(width: 4),
             Icon(
