@@ -620,26 +620,26 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
   }
 }
 
-class _DevDatabaseResetButton extends StatelessWidget {
-  const _DevDatabaseResetButton({required this.onPressed});
+// class _DevDatabaseResetButton extends StatelessWidget {
+//   const _DevDatabaseResetButton({required this.onPressed});
 
-  final VoidCallback? onPressed;
+//   final VoidCallback? onPressed;
 
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: const Icon(Icons.storage),
-        label: const Text('Сбросить БД'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Theme.of(context).colorScheme.error,
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return SizedBox(
+//       width: double.infinity,
+//       child: OutlinedButton.icon(
+//         onPressed: onPressed,
+//         icon: const Icon(Icons.storage),
+//         label: const Text('Сбросить БД'),
+//         style: OutlinedButton.styleFrom(
+//           foregroundColor: Theme.of(context).colorScheme.error,
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 /// Бейдж текущего профиля (аватарка + имя)
 class _ProfileBadge extends StatelessWidget {

@@ -9,7 +9,7 @@ publish_to: "none"
 
 # Версия приложения (семантическое версионирование)
 # MAJOR.MINOR.PATCH+BUILD
-version: 0.5.2+3
+version: 0.6.1+1
 
 environment:
   sdk: ^3.9.0
