@@ -5,7 +5,7 @@ repository: https://github.com/azazlov/passgen
 issue_tracker: https://github.com/azazlov/passgen/issues
 
 # Защита от случайной публикации на pub.dev
-publish_to: 'none'
+publish_to: "none"
 
 # Версия приложения (семантическое версионирование)
 # MAJOR.MINOR.PATCH+BUILD
@@ -42,10 +42,8 @@ dependencies:
   zxcvbn: ^1.0.0
 
   # Новые зависимости (v0.6)
-  local_auth: ^2.3.0              # Биометрическая аутентификация (Android/iOS)
-  flutter_secure_storage: ^9.2.2  # Платформенное защищённое хранилище для PIN под биометрией
-  qr_flutter: ^4.1.0              # Генерация QR-кодов
-  mobile_scanner: ^6.0.0          # Сканирование QR-кодов
+  local_auth: ^2.3.0 # Биометрическая аутентификация (Android/iOS)
+  flutter_secure_storage: ^9.2.2 # Платформенное защищённое хранилище для PIN под биометрией
 
 dev_dependencies:
   build_runner: ^2.4.9
@@ -60,20 +58,20 @@ dev_dependencies:
 flutter_launcher_icons:
   # Android
   android: true
-  adaptive_icon_background: "#2196F3"  # Синий фон (primary цвет)
+  adaptive_icon_background: "#2196F3" # Синий фон (primary цвет)
   adaptive_icon_foreground: "assets/icons/app_icon_fg_1024.png"
-  
+
   # iOS
   ios: true
   image_path: "assets/icons/app_icon_1024.png"
   image_path_ios_dark_transparent: "assets/icons/app_icon_fg_1024.png"
-  
+
   # Windows
   windows:
     generate: true
     image_path: "assets/icons/app_icon_1024.png"
     icon_size: 256
-  
+
   # Linux
   linux:
     generate: true
