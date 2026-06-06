@@ -28,9 +28,11 @@ class PinInputWidget extends StatelessWidget {
     return Column(
       children: [
         // Ячейки для ввода PIN
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(maxLength, (index) {
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(maxLength, (index) {
             final isFilled = index < pinLength;
             final isLast = index == pinLength;
 
@@ -66,6 +68,7 @@ class PinInputWidget extends StatelessWidget {
               ),
             );
           }),
+          ),
         ),
 
         // Сообщение об ошибке или блокировке

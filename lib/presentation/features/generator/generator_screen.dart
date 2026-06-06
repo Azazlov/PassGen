@@ -194,53 +194,58 @@ class _GeneratorScreenContentState extends State<_GeneratorScreenContent> {
     ThemeData theme,
     GeneratorController controller,
   ) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 320,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildStrengthChips(controller, theme),
-                const SizedBox(height: 24),
-                if (controller.isGlitchMode)
-                  _buildGlitchInput(controller, theme)
-                else ...[
-                  _buildGeneratorSettingsPanel(controller, theme),
-                  const SizedBox(height: 16),
-                  CharacterSetDisplay(settings: controller.settings),
-                ],
-              ],
-            ),
-          ),
-        ),
-        const VerticalDivider(thickness: 1, width: 1),
-        Expanded(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 320,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 100),
+                padding: const EdgeInsets.all(16),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTitle(theme, false),
-                    const SizedBox(height: 16),
-                    if (controller.error != null) _buildErrorBox(controller, theme),
-                    if (controller.error != null) const SizedBox(height: 16),
-                    _buildPasswordDisplay(theme, false, controller),
-                    const SizedBox(height: 12),
-                    _buildStrengthMeter(controller, theme),
+                    _buildStrengthChips(controller, theme),
                     const SizedBox(height: 24),
-                    _buildSaveFields(controller, theme),
+                    if (controller.isGlitchMode)
+                      _buildGlitchInput(controller, theme)
+                    else ...[
+                      _buildGeneratorSettingsPanel(controller, theme),
+                      const SizedBox(height: 16),
+                      CharacterSetDisplay(settings: controller.settings),
+                    ],
                   ],
                 ),
               ),
             ),
-          ),
+            const VerticalDivider(thickness: 1, width: 1),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 100),
+                    child: Column(
+                      children: [
+                        _buildTitle(theme, false),
+                        const SizedBox(height: 16),
+                        if (controller.error != null) _buildErrorBox(controller, theme),
+                        if (controller.error != null) const SizedBox(height: 16),
+                        _buildPasswordDisplay(theme, false, controller),
+                        const SizedBox(height: 12),
+                        _buildStrengthMeter(controller, theme),
+                        const SizedBox(height: 24),
+                        _buildSaveFields(controller, theme),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 

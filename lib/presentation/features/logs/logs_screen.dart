@@ -82,39 +82,44 @@ class _LogsScreenContentState extends State<_LogsScreenContent> {
     ThemeData theme,
     LogsController controller,
   ) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 220,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Фильтры', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 12),
-                _buildFilterChip(controller, LogsFilter.all, 'Все'),
-                const SizedBox(height: 4),
-                _buildFilterChip(controller, LogsFilter.login, 'Вход'),
-                const SizedBox(height: 4),
-                _buildFilterChip(controller, LogsFilter.changes, 'Изменения'),
-                const SizedBox(height: 4),
-                _buildFilterChip(controller, LogsFilter.export, 'Экспорт'),
-                const SizedBox(height: 24),
-                Text('Дата', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 12),
-                _buildDateFilterRow(context, controller, theme),
-              ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 220,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Фильтры', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    _buildFilterChip(controller, LogsFilter.all, 'Все'),
+                    const SizedBox(height: 4),
+                    _buildFilterChip(controller, LogsFilter.login, 'Вход'),
+                    const SizedBox(height: 4),
+                    _buildFilterChip(controller, LogsFilter.changes, 'Изменения'),
+                    const SizedBox(height: 4),
+                    _buildFilterChip(controller, LogsFilter.export, 'Экспорт'),
+                    const SizedBox(height: 24),
+                    Text('Дата', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    _buildDateFilterRow(context, controller, theme),
+                  ],
+                ),
+              ),
             ),
-          ),
+            const VerticalDivider(thickness: 1, width: 1),
+            Expanded(
+              child: controller.isEmpty
+                  ? _buildEmptyState(theme)
+                  : _buildLogsList(controller, theme),
+            ),
+          ],
         ),
-        const VerticalDivider(thickness: 1, width: 1),
-        Expanded(
-          child: controller.isEmpty
-              ? _buildEmptyState(theme)
-              : _buildLogsList(controller, theme),
-        ),
-      ],
+      ),
     );
   }
 

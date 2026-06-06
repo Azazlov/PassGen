@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/breakpoints.dart';
 import '../../../core/utils/android_security_utils.dart';
 import '../../../data/database/database_helper.dart';
 import '../../../domain/entities/auth_result.dart';
@@ -229,18 +230,21 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
   }
 
   Widget _buildContent(AuthController controller, ThemeData theme) {
-    // Если PIN не установлен - показываем режим установки
-    if (!controller.authState.isPinSetup) {
-      return _buildSetupScreen(controller, theme);
-    }
+    final isMobile = MediaQuery.of(context).size.width < Breakpoints.tabletMin;
+    final content = !controller.authState.isPinSetup
+        ? _buildSetupScreen(controller, theme)
+        : controller.authState.isLocked
+            ? _buildLockoutScreen(controller, theme)
+            : _buildLoginScreen(controller, theme);
 
-    // Если заблокировано - показываем экран блокировки
-    if (controller.authState.isLocked) {
-      return _buildLockoutScreen(controller, theme);
-    }
+    if (isMobile) return content;
 
-    // Обычный экран ввода PIN
-    return _buildLoginScreen(controller, theme);
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500),
+        child: content,
+      ),
+    );
   }
 
   Widget _buildAppLogo(ThemeData theme, {double size = 72}) {

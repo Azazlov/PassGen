@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/database/database_helper.dart';
@@ -424,7 +423,7 @@ ThemeData getTheme(bool isDarkMode) {
     useMaterial3: true,
     colorScheme: isDarkMode ? darkColorScheme : lightColorScheme,
     // Кастомизированная типографика согласно ТЗ (Раздел 2.3)
-    textTheme: GoogleFonts.latoTextTheme(baseTheme.textTheme).copyWith(
+    textTheme: baseTheme.textTheme.copyWith(
       displayLarge: const TextStyle(
         fontSize: 57,
         fontWeight: FontWeight.w400,

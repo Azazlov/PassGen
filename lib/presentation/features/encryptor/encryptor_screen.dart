@@ -96,51 +96,56 @@ class _EncryptorScreenContentState extends State<_EncryptorScreenContent> {
   }
 
   Widget _buildDesktopContent(ThemeData theme, EncryptorController controller) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 360,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                _buildModeCard(theme, controller),
-                const SizedBox(height: 24),
-                _buildInputForm(theme, controller),
-                const SizedBox(height: 16),
-                if (controller.error != null) _buildErrorBox(controller, theme),
-              ],
-            ),
-          ),
-        ),
-        const VerticalDivider(thickness: 1, width: 1),
-        Expanded(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 360,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: CopyablePassword(
-                  label: controller.resultLabel,
-                  text: controller.result.substring(
-                    0,
-                    min(40, controller.result.length),
-                  ),
-                  isEmpty: controller.result.isEmpty,
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: controller.result));
-                    showAppDialog(
-                      context: context,
-                      title: 'Скопировано',
-                      content: 'Скопировано в буфер обмена',
-                    );
-                  },
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildModeCard(theme, controller),
+                    const SizedBox(height: 24),
+                    _buildInputForm(theme, controller),
+                    const SizedBox(height: 16),
+                    if (controller.error != null) _buildErrorBox(controller, theme),
+                  ],
                 ),
               ),
             ),
-          ),
+            const VerticalDivider(thickness: 1, width: 1),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: CopyablePassword(
+                      label: controller.resultLabel,
+                      text: controller.result.substring(
+                        0,
+                        min(40, controller.result.length),
+                      ),
+                      isEmpty: controller.result.isEmpty,
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: controller.result));
+                        showAppDialog(
+                          context: context,
+                          title: 'Скопировано',
+                          content: 'Скопировано в буфер обмена',
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 

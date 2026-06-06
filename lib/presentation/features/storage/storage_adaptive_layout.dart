@@ -91,27 +91,32 @@ class StorageDesktopLayout extends StatelessWidget {
       });
     }
 
-    return Row(
-      children: [
-        const SizedBox(
-          width: 280,
-          child: StorageListPane(showInlineDetails: false),
-        ),
-        const VerticalDivider(thickness: 1, width: 1),
-        Expanded(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 800),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: controller.selectedEntry != null
-                    ? StorageDetailPane(entry: controller.selectedEntry!)
-                    : const StorageEmptyDetailState(),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 280,
+              child: StorageListPane(showInlineDetails: false),
+            ),
+            const VerticalDivider(thickness: 1, width: 1),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: controller.selectedEntry != null
+                        ? StorageDetailPane(entry: controller.selectedEntry!)
+                        : const StorageEmptyDetailState(),
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
