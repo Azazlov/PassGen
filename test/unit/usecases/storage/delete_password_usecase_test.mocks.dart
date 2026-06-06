@@ -89,6 +89,21 @@ class MockStorageRepository extends _i1.Mock implements _i3.StorageRepository {
           as _i4.Future<_i2.Either<_i5.StorageFailure, bool>>);
 
   @override
+  _i4.Future<_i2.Either<_i5.StorageFailure, bool>> updateEntry(
+    _i6.PasswordEntry? updated,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateEntry, [updated]),
+            returnValue: _i4.Future<_i2.Either<_i5.StorageFailure, bool>>.value(
+              _FakeEither_0<_i5.StorageFailure, bool>(
+                this,
+                Invocation.method(#updateEntry, [updated]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Either<_i5.StorageFailure, bool>>);
+
+  @override
   _i4.Future<_i2.Either<_i5.StorageFailure, bool>> clearStorage() =>
       (super.noSuchMethod(
             Invocation.method(#clearStorage, []),

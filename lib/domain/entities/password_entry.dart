@@ -8,13 +8,14 @@ class PasswordEntry {
     this.profileId,
     this.categoryId,
     required this.service,
-    this.password, // ← Теперь необязательный (только для временного хранения)
-    this.encryptedPassword, // ← Зашифрованный пароль (Base64)
-    this.nonce, // ← Nonce для шифрования (Base64)
+    this.password,
+    this.encryptedPassword,
+    this.nonce,
     required this.config,
     this.login,
     this.url,
     this.notes,
+    this.expireDays,
     required this.createdAt,
     this.updatedAt,
     this.encryptedServiceBlob,
@@ -35,6 +36,7 @@ class PasswordEntry {
       login: json['login'] as String?,
       url: json['url'] as String?,
       notes: json['notes'] as String?,
+      expireDays: json['expireDays'] as int?,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
@@ -58,6 +60,9 @@ class PasswordEntry {
 
   /// Произвольные заметки пользователя (plaintext в v6).
   final String? notes;
+
+  /// Срок действия пароля в днях (null = не истекает).
+  final int? expireDays;
 
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -87,6 +92,7 @@ class PasswordEntry {
       if (login != null) 'login': login,
       if (url != null) 'url': url,
       if (notes != null) 'notes': notes,
+      if (expireDays != null) 'expireDays': expireDays,
       'createdAt': createdAt.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
     };
@@ -130,6 +136,7 @@ class PasswordEntry {
     String? login,
     String? url,
     String? notes,
+    int? expireDays,
     DateTime? updatedAt,
     List<int>? encryptedServiceBlob,
     List<int>? encryptedLoginBlob,
@@ -150,6 +157,7 @@ class PasswordEntry {
       login: login ?? this.login,
       url: clearUrl ? null : (url ?? this.url),
       notes: clearNotes ? null : (notes ?? this.notes),
+      expireDays: expireDays ?? this.expireDays,
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),
       encryptedServiceBlob: clearEncryptedServiceBlob
@@ -228,6 +236,7 @@ class PasswordEntry {
       encryptedPassword: encryptedPassword,
       nonce: readNonceBlob(map['nonce']),
       config: config,
+      expireDays: map['expire_days'] as int?,
       createdAt: createdAtMs != null
           ? DateTime.fromMillisecondsSinceEpoch(createdAtMs)
           : DateTime.now(),
@@ -276,6 +285,7 @@ class PasswordEntry {
         'encrypted_service': Uint8List.fromList(encryptedServiceBlob!),
       if (encryptedLoginBlob != null)
         'encrypted_login': Uint8List.fromList(encryptedLoginBlob!),
+      if (expireDays != null) 'expire_days': expireDays,
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': (updatedAt ?? createdAt).millisecondsSinceEpoch,
     };

@@ -93,6 +93,7 @@ class _FakePasswordGeneratorRepository implements PasswordGeneratorRepository {
     String? masterPassword,
     int? categoryId,
     String? login,
+    int? expireDays,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 10));
     return const Right({'success': true, 'updated': false});

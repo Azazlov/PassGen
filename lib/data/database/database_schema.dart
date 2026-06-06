@@ -1,7 +1,7 @@
 /// Схема базы данных SQLite
 ///
-/// Версия схемы: 6 (v0.6.2)
-/// Версия приложения: 0.6.2
+/// Версия схемы: 7 (v0.6.3)
+/// Версия приложения: 0.6.3
 ///
 /// История изменений:
 /// - Version 1: Initial schema (5 таблиц)
@@ -16,12 +16,15 @@
 /// - Version 6 (v0.6.2): Добавлены поля `url` и `notes` в password_entries и
 ///                       password_history (TEXT, nullable). Шифрование этих
 ///                       полей планируется отдельным этапом.
+/// - Version 7 (v0.6.3): Добавлено поле `expire_days` в password_entries
+///                       (INTEGER, nullable). При регенерации используются
+///                       оригинальные настройки генерации пароля.
 ///
 /// Текущие криптопараметры (см. [EncryptionParams.v2]): PBKDF2-HMAC-SHA256,
 /// 600 000 итераций (соответствует рекомендации OWASP 2024).
 class DatabaseSchema {
-  static const int version = 6;
-  static const String appVersion = '0.6.2';
+  static const int version = 7;
+  static const String appVersion = '0.6.3';
   static const String schemaInfo = '''
 Version 1: Initial schema (5 tables)
   - categories
@@ -61,6 +64,10 @@ Version 6 (v0.6.2): Additional metadata fields
   - url (TEXT, nullable) — адрес сервиса
   - notes (TEXT, nullable) — заметки пользователя
   - Добавлены в password_entries и password_history
+
+Version 7 (v0.6.3): Password expiration & regeneration
+  - expire_days (INTEGER, nullable) в password_entries
+  - Регенерация использует оригинальные настройки генерации
 ''';
 
   // ==================== ТАБЛИЦЫ ====================
@@ -107,6 +114,7 @@ Version 6 (v0.6.2): Additional metadata fields
       nonce BLOB NOT NULL,
       encrypted_service BLOB,
       encrypted_login BLOB,
+      expire_days INTEGER,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     )

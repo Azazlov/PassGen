@@ -398,6 +398,7 @@ class StorageLocalDataSource {
         'url': updated.url,
         'notes': updated.notes,
         'category_id': updated.categoryId,
+        'expire_days': updated.expireDays,
         'updated_at': now,
         if (encryptedServiceBlob != null)
           'encrypted_service': Uint8List.fromList(encryptedServiceBlob),

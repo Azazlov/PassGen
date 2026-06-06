@@ -388,6 +388,15 @@ class _StorageDetailPaneState extends State<StorageDetailPane> {
   }
 
   Widget _buildDatesFields(ThemeData theme, PasswordEntry effectiveEntry) {
+    final expireDays = effectiveEntry.expireDays;
+    Duration? remaining;
+    bool isExpired = false;
+    if (expireDays != null && expireDays > 0) {
+      final expiryDate = effectiveEntry.createdAt.add(Duration(days: expireDays));
+      remaining = expiryDate.difference(DateTime.now());
+      isExpired = remaining.isNegative;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -434,8 +443,71 @@ class _StorageDetailPaneState extends State<StorageDetailPane> {
             ],
           ],
         ),
+        if (expireDays != null && expireDays > 0) ...[
+          const SizedBox(height: 16),
+          Card(
+            color: isExpired
+                ? theme.colorScheme.errorContainer
+                : theme.colorScheme.surfaceContainerHighest,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(
+                    isExpired ? Icons.warning_amber_rounded : Icons.schedule,
+                    size: 20,
+                    color: isExpired
+                        ? theme.colorScheme.onErrorContainer
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isExpired ? 'Срок действия истёк' : 'Действует до',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            color: isExpired
+                                ? theme.colorScheme.onErrorContainer
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isExpired
+                              ? 'Истёк ${_formatDuration(-remaining!)} назад'
+                              : 'Осталось ${_formatDuration(remaining!)}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isExpired
+                                ? theme.colorScheme.onErrorContainer
+                                : theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ],
     );
+  }
+
+  String _formatDuration(Duration d) {
+    if (d.inDays >= 30) {
+      final months = d.inDays ~/ 30;
+      final days = d.inDays % 30;
+      if (months > 0 && days > 0) return '$months мес. $days дн.';
+      if (months > 0) return '$months мес.';
+      return '$days дн.';
+    }
+    if (d.inDays > 0) return '${d.inDays} дн.';
+    if (d.inHours > 0) return '${d.inHours} ч.';
+    if (d.inMinutes > 0) return '${d.inMinutes} мин.';
+    return 'менее минуты';
   }
 
   Widget _buildActionButtons(
@@ -508,8 +580,9 @@ class _StorageDetailPaneState extends State<StorageDetailPane> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Регенерировать пароль?'),
         content: const Text(
-          'Будет сгенерирован новый сложный пароль (длина 16, '
-          'все классы символов). Текущий пароль сохранится в истории.',
+          'Будет сгенерирован новый пароль с теми же настройками длины '
+          'и набора символов, что и текущий. Предыдущая версия '
+          'сохранится в истории.',
         ),
         actions: [
           TextButton(

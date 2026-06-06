@@ -166,6 +166,7 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
     String? masterPassword,
     int? categoryId,
     String? login,
+    int? expireDays,
   }) async {
     try {
       // Сохраняем пароль через dataSource
@@ -176,6 +177,7 @@ class PasswordGeneratorRepositoryImpl implements PasswordGeneratorRepository {
         masterPassword: masterPassword,
         categoryId: categoryId,
         login: login,
+        expireDays: expireDays,
       );
 
       if (result['error'] != null) {

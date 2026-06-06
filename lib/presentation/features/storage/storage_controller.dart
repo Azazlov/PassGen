@@ -4,11 +4,14 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/event_types.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/errors/failures.dart';
 import '../../../core/security/master_password_session.dart';
 import '../../../core/security/vault_key_session.dart';
+import '../../../core/utils/crypto_utils.dart';
 import '../../../data/datasources/encryptor_local_datasource.dart';
 import '../../../domain/entities/password_entry.dart';
+import '../../../domain/entities/password_generation_settings.dart';
 import '../../../domain/entities/password_history_entry.dart';
 import '../../../domain/usecases/log/log_event_usecase.dart';
 import '../../../domain/usecases/password/generate_password_usecase.dart';
@@ -404,9 +407,9 @@ class StorageController extends ChangeNotifier {
   /// Регенерирует пароль для существующей записи, сохраняя предыдущую
   /// версию в `password_history` (через `SavePasswordUseCase`).
   ///
-  /// Использует настройки уровня «Сложный» (length 16, все классы символов)
-  /// чтобы не зависеть от прежней конфигурации, которая хранится зашифрованной.
-  /// Возвращает `true` при успехе.
+  /// Расшифровывает оригинальный конфиг пароля и использует те же настройки
+  /// длины и набора символов. Если расшифровать конфиг не удалось — падает
+  /// на уровень «Сложный» (strength 2). Возвращает `true` при успехе.
   Future<bool> regeneratePassword(PasswordEntry entry) async {
     final generate = generatePasswordUseCase;
     final save = savePasswordUseCase;
@@ -425,7 +428,40 @@ class StorageController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final settings = GeneratePasswordUseCase.getSettingsByStrength(2);
+      // Пытаемся расшифровать оригинальный конфиг и извлечь настройки
+      PasswordGenerationSettings settings;
+      try {
+        final encryptor = EncryptorLocalDataSource();
+        final decryptedBytes = await encryptor.decryptFromMini(
+          miniEncrypted: entry.config,
+          password: utf8.encode(masterPassword),
+        );
+        final plaintextConfig = utf8.decode(decryptedBytes);
+        final parts = plaintextConfig.split('.');
+        if (parts.length >= 3) {
+          final originalLength = int.parse(CryptoUtils.decodeBase64Url(parts[0]));
+          final originalFlags = int.parse(CryptoUtils.decodeBase64Url(parts[1]));
+          settings = PasswordGenerationSettings(
+            strength: 1,
+            lengthRange: [originalLength, originalLength],
+            flags: originalFlags,
+            requireUppercase: (originalFlags & PasswordFlags.uppercase) != 0,
+            requireLowercase: (originalFlags & PasswordFlags.lowercase) != 0,
+            requireDigits: (originalFlags & PasswordFlags.digits) != 0,
+            requireSymbols: (originalFlags & PasswordFlags.symbols) != 0,
+            allUnique: (originalFlags & PasswordFlags.allUnique) != 0,
+            useCustomLowercase: (originalFlags & PasswordFlags.lowercase) != 0,
+            useCustomUppercase: (originalFlags & PasswordFlags.uppercase) != 0,
+            useCustomDigits: (originalFlags & PasswordFlags.digits) != 0,
+            useCustomSymbols: (originalFlags & PasswordFlags.symbols) != 0,
+          );
+        } else {
+          settings = GeneratePasswordUseCase.getSettingsByStrength(2);
+        }
+      } catch (_) {
+        settings = GeneratePasswordUseCase.getSettingsByStrength(2);
+      }
+
       final generated = await generate.execute(settings);
       final newPassword = generated.fold<String?>((_) => null, (r) => r.password);
       final newConfig = generated.fold<String?>((_) => null, (r) => r.config);
@@ -445,6 +481,7 @@ class StorageController extends ChangeNotifier {
         nonce: entry.nonce,
         reason: 'Регенерация',
         masterPassword: masterPassword,
+        expireDays: entry.expireDays,
       );
 
       return await result.fold(

@@ -415,6 +415,7 @@ class PasswordGeneratorLocalDataSource {
     String? masterPassword,
     int? categoryId,
     String? login,
+    int? expireDays,
   }) async {
     if (masterPassword == null || masterPassword.isEmpty) {
       return {
@@ -460,6 +461,7 @@ class PasswordGeneratorLocalDataSource {
           config: encryptedConfig,
           login: login ?? existingEntry.login,
           categoryId: categoryId ?? existingEntry.categoryId,
+          expireDays: expireDays ?? existingEntry.expireDays,
           updatedAt: DateTime.now(),
         );
         passwords[existingIndex] = updatedEntry;
@@ -471,6 +473,7 @@ class PasswordGeneratorLocalDataSource {
           config: encryptedConfig,
           login: login,
           categoryId: categoryId,
+          expireDays: expireDays,
           createdAt: DateTime.now(),
         );
         passwords.add(newEntry);

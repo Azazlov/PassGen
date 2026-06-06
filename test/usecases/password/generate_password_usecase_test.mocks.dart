@@ -148,6 +148,7 @@ class MockPasswordGeneratorRepository extends _i1.Mock
     String? masterPassword,
     int? categoryId,
     String? login,
+    int? expireDays,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#savePassword, [], {
@@ -157,6 +158,7 @@ class MockPasswordGeneratorRepository extends _i1.Mock
               #masterPassword: masterPassword,
               #categoryId: categoryId,
               #login: login,
+              #expireDays: expireDays,
             }),
             returnValue:
                 _i4.Future<
@@ -177,6 +179,7 @@ class MockPasswordGeneratorRepository extends _i1.Mock
                       #masterPassword: masterPassword,
                       #categoryId: categoryId,
                       #login: login,
+                      #expireDays: expireDays,
                     }),
                   ),
                 ),
@@ -196,4 +199,29 @@ class MockPasswordGeneratorRepository extends _i1.Mock
             ),
           )
           as _i4.Future<List<_i9.CharacterSet>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.PasswordGenerationFailure, String>> decryptConfig(
+    String? encryptedConfig,
+    String? masterPassword,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#decryptConfig, [
+              encryptedConfig,
+              masterPassword,
+            ]),
+            returnValue:
+                _i4.Future<
+                  _i2.Either<_i5.PasswordGenerationFailure, String>
+                >.value(
+                  _FakeEither_0<_i5.PasswordGenerationFailure, String>(
+                    this,
+                    Invocation.method(#decryptConfig, [
+                      encryptedConfig,
+                      masterPassword,
+                    ]),
+                  ),
+                ),
+          )
+          as _i4.Future<_i2.Either<_i5.PasswordGenerationFailure, String>>);
 }
