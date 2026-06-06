@@ -404,6 +404,25 @@ class StorageController extends ChangeNotifier {
     }
   }
 
+  /// Расшифровывает пароль из записи истории.
+  Future<String?> decryptHistoryPassword(PasswordHistoryEntry entry) async {
+    final masterPassword = MasterPasswordSession.getAny();
+    if (masterPassword == null || masterPassword.isEmpty ||
+        entry.encryptedPassword.isEmpty) {
+      return null;
+    }
+    try {
+      final encryptor = EncryptorLocalDataSource();
+      final decryptedBytes = await encryptor.decryptFromMini(
+        miniEncrypted: entry.encryptedPassword,
+        password: utf8.encode(masterPassword),
+      );
+      return utf8.decode(decryptedBytes);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Регенерирует пароль для существующей записи, сохраняя предыдущую
   /// версию в `password_history` (через `SavePasswordUseCase`).
   ///

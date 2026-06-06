@@ -211,47 +211,89 @@ class _StorageDetailPaneState extends State<StorageDetailPane> {
     );
   }
 
-  Widget _buildHistoryTile(ThemeData theme, PasswordHistoryEntry h) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.lock_clock,
-            size: 18,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _formatDate(h.createdAt),
-                  style: theme.textTheme.bodyMedium,
-                ),
-                if ((h.reason ?? '').isNotEmpty)
+  Widget _buildHistoryTile(
+    ThemeData theme,
+    PasswordHistoryEntry h,
+  ) {
+    return GestureDetector(
+      onTap: () => _showHistoryPasswordDialog(h),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.lock_clock,
+              size: 18,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    h.reason!,
+                    _formatDate(h.createdAt),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  if ((h.reason ?? '').isNotEmpty)
+                    Text(
+                      h.reason!,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.7),
+                      ),
+                    ),
+                  Text(
+                    'Нажмите для просмотра',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color:
-                          theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: theme.colorScheme.primary,
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
-                Text(
-                  '(пароль зашифрован)',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color:
-                        theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+            Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  void _showHistoryPasswordDialog(PasswordHistoryEntry h) {
+    final controller = context.read<StorageController>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return _HistoryPasswordDialog(
+          entry: h,
+          controller: controller,
+          onPasswordTap: (password) {
+            Clipboard.setData(ClipboardData(text: password));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Пароль скопирован')),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _historyField(BuildContext context, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 2),
+        Text(value, style: Theme.of(context).textTheme.bodyMedium),
+      ],
     );
   }
 
@@ -857,5 +899,150 @@ class StorageEmptyDetailState extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Диалог просмотра старого пароля из истории.
+///
+/// Открывается сразу с индикатором загрузки, расшифровывает пароль
+/// асинхронно и обновляет содержимое по готовности.
+class _HistoryPasswordDialog extends StatefulWidget {
+  const _HistoryPasswordDialog({
+    required this.entry,
+    required this.controller,
+    required this.onPasswordTap,
+  });
+
+  final PasswordHistoryEntry entry;
+  final StorageController controller;
+  final void Function(String password) onPasswordTap;
+
+  @override
+  State<_HistoryPasswordDialog> createState() => _HistoryPasswordDialogState();
+}
+
+class _HistoryPasswordDialogState extends State<_HistoryPasswordDialog> {
+  String? _password;
+  bool _isLoading = true;
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _decrypt();
+  }
+
+  Future<void> _decrypt() async {
+    try {
+      final password = await widget.controller.decryptHistoryPassword(widget.entry);
+      if (!mounted) return;
+      setState(() {
+        _password = password;
+        _isLoading = false;
+        _hasError = password == null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final h = widget.entry;
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.history, size: 22),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              h.reason ?? 'Предыдущая версия',
+              style: theme.textTheme.titleMedium,
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildField(context, 'Дата', _formatDate(h.createdAt)),
+          const SizedBox(height: 12),
+          _buildField(context, 'Сервис', h.service),
+          if (h.login != null) ...[
+            const SizedBox(height: 8),
+            _buildField(context, 'Логин', h.login!),
+          ],
+          const SizedBox(height: 12),
+          Text('Пароль', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: _isLoading
+                ? const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : SelectableText(
+                    _hasError
+                        ? 'Не удалось расшифровать'
+                        : _password!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+          ),
+        ],
+      ),
+      actions: [
+        if (!_isLoading && _password != null)
+          TextButton.icon(
+            onPressed: () => widget.onPasswordTap(_password!),
+            icon: const Icon(Icons.copy, size: 18),
+            label: const Text('Копировать'),
+          ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Закрыть'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildField(BuildContext context, String label, String value) {
+    final t = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: t.textTheme.titleSmall),
+        const SizedBox(height: 2),
+        Text(value, style: t.textTheme.bodyMedium),
+      ],
+    );
+  }
+
+  static String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    if (diff.inMinutes < 1) return 'только что';
+    if (diff.inHours < 1) return '${diff.inMinutes} мин. назад';
+    if (diff.inDays < 1) return '${diff.inHours} ч. назад';
+    if (diff.inDays < 7) return '${diff.inDays} дн. назад';
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
   }
 }
