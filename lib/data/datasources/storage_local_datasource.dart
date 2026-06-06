@@ -40,9 +40,7 @@ class StorageLocalDataSource {
   /// Флаг успешной миграции SharedPreferences → SQLite.
   static const String _migrationFlagKey = 'sp_to_sqlite_passwords_migrated';
 
-  /// id профиля по умолчанию (соответствует строке, создаваемой
-  /// миграцией v3→v4 в `database_migrations.dart`).
-  static const int _defaultProfileId = 1;
+
 
   // ==================== KEY-VALUE (SharedPreferences) ====================
 
@@ -112,11 +110,11 @@ class StorageLocalDataSource {
   /// (`SharedPreferences.setString` затирал всю строку), а вызовы
   /// add/update в верхних слоях обычно построены как
   /// «получить список → изменить → сохранить полностью».
-  Future<bool> savePasswords(List<PasswordEntry> passwords) async {
+  Future<bool> savePasswords(List<PasswordEntry> passwords, {int profileId = 1}) async {
     try {
       await _ensurePasswordsMigrated();
       final database = await _db.database;
-      final keyBytes = VaultKeySession.getForProfile(_defaultProfileId);
+      final keyBytes = VaultKeySession.getForProfile(profileId);
       final entriesToSave = <PasswordEntry>[];
       for (final entry in passwords) {
         entriesToSave.add(
@@ -124,13 +122,13 @@ class StorageLocalDataSource {
         );
       }
       await database.transaction((txn) async {
-        await _ensureDefaultProfile(txn);
+        await _ensureProfile(txn, profileId: profileId);
 
         final existingRows = await txn.query(
           'password_entries',
           columns: ['id'],
           where: 'profile_id = ?',
-          whereArgs: [_defaultProfileId],
+          whereArgs: [profileId],
         );
         final existingIds = existingRows.map((r) => r['id'] as int).toSet();
 
@@ -139,14 +137,14 @@ class StorageLocalDataSource {
         for (final entry in entriesToSave) {
           final entryId = entry.id;
           if (entryId != null && existingIds.contains(entryId)) {
-            final values = entry.toMap(defaultProfileId: _defaultProfileId);
+            final values = entry.toMap(defaultProfileId: profileId);
             values.remove('id');
             values.remove('created_at');
             await txn.update(
               'password_entries',
               values,
               where: 'id = ? AND profile_id = ?',
-              whereArgs: [entryId, _defaultProfileId],
+              whereArgs: [entryId, profileId],
             );
             final configBytes = entry.encryptedConfigBlob();
             if (configBytes != null) {
@@ -158,7 +156,7 @@ class StorageLocalDataSource {
               );
               if (updated == 0) {
                 await txn.insert('password_configs', {
-                  'profile_id': entry.profileId ?? _defaultProfileId,
+                  'profile_id': entry.profileId ?? profileId,
                   'entry_id': entryId,
                   'encrypted_config': configBytes,
                 });
@@ -166,7 +164,7 @@ class StorageLocalDataSource {
             }
             processedIds.add(entryId);
           } else {
-            await _insertEntry(txn, entry);
+            await _insertEntry(txn, entry, profileId: profileId);
           }
         }
 
@@ -180,7 +178,7 @@ class StorageLocalDataSource {
           await txn.delete(
             'password_entries',
             where: 'id = ? AND profile_id = ?',
-            whereArgs: [id, _defaultProfileId],
+            whereArgs: [id, profileId],
           );
         }
       });
@@ -198,7 +196,7 @@ class StorageLocalDataSource {
   /// (`service` / `login`). Без активного ключа возвращаются значения из
   /// plaintext-колонок — это нужно для совместимости со старыми записями
   /// и для работы тестов, не поднимающих сессию.
-  Future<List<PasswordEntry>> getPasswords() async {
+  Future<List<PasswordEntry>> getPasswords({int profileId = 1}) async {
     try {
       await _ensurePasswordsMigrated();
       final database = await _db.database;
@@ -206,7 +204,7 @@ class StorageLocalDataSource {
       final entryRows = await database.query(
         'password_entries',
         where: 'profile_id = ?',
-        whereArgs: [_defaultProfileId],
+        whereArgs: [profileId],
         orderBy: 'created_at ASC, id ASC',
       );
       if (entryRows.isEmpty) return [];
@@ -214,7 +212,7 @@ class StorageLocalDataSource {
       final configRows = await database.query(
         'password_configs',
         where: 'profile_id = ?',
-        whereArgs: [_defaultProfileId],
+        whereArgs: [profileId],
       );
       final configByEntryId = <int, Uint8List?>{};
       for (final row in configRows) {
@@ -230,7 +228,7 @@ class StorageLocalDataSource {
         configByEntryId[entryId] = bytes;
       }
 
-      final keyBytes = VaultKeySession.getForProfile(_defaultProfileId);
+      final keyBytes = VaultKeySession.getForProfile(profileId);
       final result = <PasswordEntry>[];
       for (final row in entryRows) {
         final entryId = row['id'] as int?;
@@ -259,7 +257,7 @@ class StorageLocalDataSource {
   ///
   /// Возвращает количество фактически зашифрованных строк.
   Future<int> runLazyFieldEncryption({int? profileId}) async {
-    final pid = profileId ?? _defaultProfileId;
+    final pid = profileId ?? 1;
     final keyBytes = VaultKeySession.getForProfile(pid);
     if (keyBytes == null) return 0;
 
@@ -312,10 +310,10 @@ class StorageLocalDataSource {
   ///
   /// Индексы используются legacy-вызовами в presentation-слое; при наличии
   /// `entry.id` физически удаляется конкретная строка SQLite.
-  Future<bool> removePasswordAt(int index) async {
+  Future<bool> removePasswordAt(int index, {int profileId = 1}) async {
     try {
       await _ensurePasswordsMigrated();
-      final passwords = await getPasswords();
+      final passwords = await getPasswords(profileId: profileId);
       if (passwords.isEmpty) {
         throw const StorageFailure(message: 'Хранилище паролей пустое');
       }
@@ -348,7 +346,7 @@ class StorageLocalDataSource {
           newPasswords.add(passwords[i]);
         }
       }
-      return await savePasswords(newPasswords);
+      return await savePasswords(newPasswords, profileId: profileId);
     } catch (e) {
       if (e is StorageFailure) rethrow;
       throw StorageFailure(message: 'Ошибка удаления пароля: $e');
@@ -362,7 +360,7 @@ class StorageLocalDataSource {
   /// plaintext (шифрование этих полей вынесено в отдельный этап).
   ///
   /// Поля `encrypted_password` / `nonce` / `config` не затрагиваются.
-  Future<bool> updateEntry(PasswordEntry updated) async {
+  Future<bool> updateEntry(PasswordEntry updated, {int profileId = 1}) async {
     if (updated.id == null) {
       throw const StorageFailure(
         message: 'Невозможно обновить запись без id',
@@ -371,7 +369,7 @@ class StorageLocalDataSource {
     try {
       await _ensurePasswordsMigrated();
       final database = await _db.database;
-      final keyBytes = VaultKeySession.getForProfile(_defaultProfileId);
+      final keyBytes = VaultKeySession.getForProfile(profileId);
 
       List<int>? encryptedServiceBlob;
       List<int>? encryptedLoginBlob;
@@ -410,7 +408,7 @@ class StorageLocalDataSource {
         'password_entries',
         values,
         where: 'id = ? AND profile_id = ?',
-        whereArgs: [updated.id, _defaultProfileId],
+        whereArgs: [updated.id, profileId],
       );
       return count > 0;
     } catch (e) {
@@ -420,9 +418,9 @@ class StorageLocalDataSource {
   }
 
   /// Экспортирует пароли в JSON строку (формат совместим с `importPasswords`).
-  Future<String> exportPasswords() async {
+  Future<String> exportPasswords({int profileId = 1}) async {
     try {
-      final passwords = await getPasswords();
+      final passwords = await getPasswords(profileId: profileId);
       return PasswordEntry.encodeList(passwords);
     } catch (e) {
       throw StorageFailure(message: 'Ошибка экспорта паролей: $e');
@@ -434,12 +432,12 @@ class StorageLocalDataSource {
   /// Сохраняется поведение v0.5.1:
   /// - дубликаты по (service + login) обновляются, а не дублируются;
   /// - при ошибке выполняется rollback к предыдущему состоянию.
-  Future<bool> importPasswords(String jsonString) async {
+  Future<bool> importPasswords(String jsonString, {int profileId = 1}) async {
     List<PasswordEntry>? originalPasswords;
 
     try {
       final newPasswords = PasswordEntry.decodeList(jsonString);
-      final currentPasswords = await getPasswords();
+      final currentPasswords = await getPasswords(profileId: profileId);
 
       originalPasswords = List<PasswordEntry>.from(currentPasswords);
 
@@ -458,11 +456,11 @@ class StorageLocalDataSource {
         }
       }
 
-      return await savePasswords(mergedPasswords);
+      return await savePasswords(mergedPasswords, profileId: profileId);
     } catch (e) {
       if (originalPasswords != null) {
         try {
-          await savePasswords(originalPasswords);
+          await savePasswords(originalPasswords, profileId: profileId);
         } catch (_) {
           // Rollback failed, but don't mask the original error
         }
@@ -475,8 +473,8 @@ class StorageLocalDataSource {
 
   /// Вставляет одну запись в таблицы `password_entries` + `password_configs`
   /// внутри переданной транзакции. Возвращает `id` вставленной записи.
-  Future<int> _insertEntry(Transaction txn, PasswordEntry entry) async {
-    final entryMap = entry.toMap(defaultProfileId: _defaultProfileId);
+  Future<int> _insertEntry(Transaction txn, PasswordEntry entry, {int profileId = 1}) async {
+    final entryMap = entry.toMap(defaultProfileId: profileId);
     // При полной перезаписи списка id предыдущих записей всё равно
     // были удалены — оставляем AUTOINCREMENT'у назначить новые.
     entryMap.remove('id');
@@ -486,7 +484,7 @@ class StorageLocalDataSource {
     final configBytes = entry.encryptedConfigBlob();
     if (configBytes != null) {
       await txn.insert('password_configs', {
-        'profile_id': entry.profileId ?? _defaultProfileId,
+        'profile_id': entry.profileId ?? profileId,
         'entry_id': entryId,
         'encrypted_config': configBytes,
       });
@@ -563,20 +561,21 @@ class StorageLocalDataSource {
     );
   }
 
-  /// Гарантирует существование строки `profiles.id = 1`. Без неё
+  /// Гарантирует существование строки `profiles.id = profileId`. Без неё
   /// FK на `password_entries.profile_id` оставался бы висящим (для свежих
   /// инсталляций, где `_onCreate` не вставляет дефолтный профиль).
-  Future<void> _ensureDefaultProfile(Transaction txn) async {
+  Future<void> _ensureProfile(Transaction txn, {int profileId = 1}) async {
     final existing = await txn.query(
       'profiles',
       where: 'id = ?',
-      whereArgs: [_defaultProfileId],
+      whereArgs: [profileId],
       limit: 1,
     );
     if (existing.isEmpty) {
+      final name = profileId == 1 ? 'Профиль по умолчанию' : 'Профиль $profileId';
       await txn.insert('profiles', {
-        'id': _defaultProfileId,
-        'name': 'Профиль по умолчанию',
+        'id': profileId,
+        'name': name,
         'created_at': DateTime.now().millisecondsSinceEpoch,
       });
     }
@@ -597,9 +596,9 @@ class StorageLocalDataSource {
       if (legacyPasswords.isNotEmpty) {
         final database = await _db.database;
         await database.transaction((txn) async {
-          await _ensureDefaultProfile(txn);
+          await _ensureProfile(txn, profileId: 1);
           for (final entry in legacyPasswords) {
-            await _insertEntry(txn, entry);
+            await _insertEntry(txn, entry, profileId: 1);
           }
         });
       }

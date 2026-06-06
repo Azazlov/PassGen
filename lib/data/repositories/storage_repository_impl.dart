@@ -11,10 +11,11 @@ class StorageRepositoryImpl implements StorageRepository {
 
   @override
   Future<Either<StorageFailure, bool>> savePasswords(
-    List<PasswordEntry> passwords,
-  ) async {
+    List<PasswordEntry> passwords, {
+    int profileId = 1,
+  }) async {
     try {
-      final result = await dataSource.savePasswords(passwords);
+      final result = await dataSource.savePasswords(passwords, profileId: profileId);
       return Right(result);
     } catch (e) {
       if (e is StorageFailure) {
@@ -25,9 +26,9 @@ class StorageRepositoryImpl implements StorageRepository {
   }
 
   @override
-  Future<Either<StorageFailure, List<PasswordEntry>>> getPasswords() async {
+  Future<Either<StorageFailure, List<PasswordEntry>>> getPasswords({int profileId = 1}) async {
     try {
-      final result = await dataSource.getPasswords();
+      final result = await dataSource.getPasswords(profileId: profileId);
       return Right(result);
     } catch (e) {
       if (e is StorageFailure) {
@@ -38,9 +39,9 @@ class StorageRepositoryImpl implements StorageRepository {
   }
 
   @override
-  Future<Either<StorageFailure, bool>> removePasswordAt(int index) async {
+  Future<Either<StorageFailure, bool>> removePasswordAt(int index, {int profileId = 1}) async {
     try {
-      final result = await dataSource.removePasswordAt(index);
+      final result = await dataSource.removePasswordAt(index, profileId: profileId);
       return Right(result);
     } catch (e) {
       if (e is StorageFailure) {
@@ -51,9 +52,9 @@ class StorageRepositoryImpl implements StorageRepository {
   }
 
   @override
-  Future<Either<StorageFailure, bool>> updateEntry(PasswordEntry updated) async {
+  Future<Either<StorageFailure, bool>> updateEntry(PasswordEntry updated, {int profileId = 1}) async {
     try {
-      final result = await dataSource.updateEntry(updated);
+      final result = await dataSource.updateEntry(updated, profileId: profileId);
       return Right(result);
     } catch (e) {
       if (e is StorageFailure) {

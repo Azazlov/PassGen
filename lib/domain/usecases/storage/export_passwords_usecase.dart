@@ -7,7 +7,7 @@ class ExportPasswordsUseCase {
   const ExportPasswordsUseCase(this.repository);
   final PasswordDataRepository repository;
 
-  Future<Either<StorageFailure, String>> execute() {
-    return repository.exportToJson();
+  Future<Either<StorageFailure, String>> execute({int profileId = 1}) {
+    return repository.exportToJson(profileId: profileId);
   }
 }

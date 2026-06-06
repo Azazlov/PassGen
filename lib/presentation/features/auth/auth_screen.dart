@@ -8,6 +8,7 @@ import '../../../core/constants/breakpoints.dart';
 import '../../../core/utils/android_security_utils.dart';
 import '../../../data/database/database_helper.dart';
 import '../../../domain/entities/auth_result.dart';
+import '../../../domain/entities/profile.dart';
 import 'auth_controller.dart';
 import 'pin_input_widget.dart';
 
@@ -196,6 +197,20 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
     if (!isAvailable) return false;
     final profileId = controller.authState.currentProfileId ?? 1;
     return biometricRepo.isEnabledForProfile(profileId);
+  }
+
+  void _showProfileSwitcher(AuthController controller) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => _ProfileSwitcherSheet(
+        profiles: controller.profiles,
+        selectedId: controller.authState.currentProfileId ?? 1,
+        onSelect: (id) {
+          Navigator.of(ctx).pop();
+          controller.setCurrentProfile(id);
+        },
+      ),
+    );
   }
 
   Future<void> _authenticateWithBiometric(AuthController controller) async {
@@ -423,7 +438,23 @@ class _AuthScreenContentState extends State<_AuthScreenContent> {
                   ),
                 ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
+
+              // Аватарка и имя текущего профиля (всегда)
+              _ProfileBadge(
+                profile: controller.profiles.firstWhere(
+                  (p) => p.id == (controller.authState.currentProfileId ?? 1),
+                  orElse: () => controller.profiles.isNotEmpty
+                      ? controller.profiles.first
+                      : Profile(name: 'Профиль', createdAt: DateTime(0)),
+                ),
+                hasMultiple: controller.profiles.length > 1,
+                onTap: controller.profiles.length > 1
+                    ? () => _showProfileSwitcher(controller)
+                    : null,
+              ),
+
+              const SizedBox(height: 16),
 
               // Индикатор PIN
               PinInputWidget(
@@ -604,6 +635,101 @@ class _DevDatabaseResetButton extends StatelessWidget {
         label: const Text('Сбросить БД'),
         style: OutlinedButton.styleFrom(
           foregroundColor: Theme.of(context).colorScheme.error,
+        ),
+      ),
+    );
+  }
+}
+
+/// Бейдж текущего профиля (аватарка + имя)
+class _ProfileBadge extends StatelessWidget {
+  const _ProfileBadge({
+    required this.profile,
+    required this.hasMultiple,
+    required this.onTap,
+  });
+
+  final Profile profile;
+  final bool hasMultiple;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            profile.avatarEmoji ?? '👤',
+            style: const TextStyle(fontSize: 32),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            profile.name,
+            style: theme.textTheme.bodyLarge,
+          ),
+          if (hasMultiple) ...[
+            const SizedBox(width: 4),
+            Icon(
+              Icons.swap_vert,
+              size: 18,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet для переключения профиля
+class _ProfileSwitcherSheet extends StatelessWidget {
+  const _ProfileSwitcherSheet({
+    required this.profiles,
+    required this.selectedId,
+    required this.onSelect,
+  });
+
+  final List<Profile> profiles;
+  final int selectedId;
+  final void Function(int id) onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Выберите профиль',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ...profiles.map((profile) {
+              final isSelected = profile.id == selectedId;
+              return ListTile(
+                leading: Text(
+                  profile.avatarEmoji ?? '👤',
+                  style: const TextStyle(fontSize: 28),
+                ),
+                title: Text(profile.name),
+                trailing: isSelected
+                    ? Icon(Icons.check, color: theme.colorScheme.primary)
+                    : null,
+                selected: isSelected,
+                onTap: () => onSelect(profile.id!),
+              );
+            }),
+          ],
         ),
       ),
     );

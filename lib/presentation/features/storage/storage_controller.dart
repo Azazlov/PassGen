@@ -41,6 +41,7 @@ class StorageController extends ChangeNotifier {
     this.savePasswordHistoryUseCase,
     this.generatePasswordUseCase,
     this.savePasswordUseCase,
+    this.currentProfileId = 1,
   });
   final GetPasswordsUseCase getPasswordsUseCase;
   final DeletePasswordUseCase deletePasswordUseCase;
@@ -54,6 +55,12 @@ class StorageController extends ChangeNotifier {
   final SavePasswordHistoryUseCase? savePasswordHistoryUseCase;
   final GeneratePasswordUseCase? generatePasswordUseCase;
   final SavePasswordUseCase? savePasswordUseCase;
+
+  int currentProfileId;
+
+  void setProfileId(int id) {
+    currentProfileId = id;
+  }
 
   // Состояние
   List<PasswordEntry> _allPasswords = [];
@@ -158,7 +165,7 @@ class StorageController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await getPasswordsUseCase.execute();
+      final result = await getPasswordsUseCase.execute(profileId: currentProfileId);
 
       final either = result;
       either.fold(
@@ -233,7 +240,7 @@ class StorageController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await deletePasswordUseCase.execute(storageIndex);
+      final result = await deletePasswordUseCase.execute(storageIndex, profileId: currentProfileId);
 
       result.fold(
         (failure) {
@@ -304,7 +311,7 @@ class StorageController extends ChangeNotifier {
         );
       }
 
-      final result = await updateEntryUseCase!.execute(updated);
+      final result = await updateEntryUseCase!.execute(updated, profileId: currentProfileId);
       return await result.fold(
         (failure) async {
           _error = failure.message;
@@ -367,8 +374,8 @@ class StorageController extends ChangeNotifier {
     }
 
     // decryptFieldWithKey ожидает vault-key bytes (а не PIN).
-    // Профиль = 1, как в StorageLocalDataSource.
-    final keyBytes = VaultKeySession.getForProfile(1);
+    final profileId = entry.profileId ?? 1;
+    final keyBytes = VaultKeySession.getForProfile(profileId);
     if (keyBytes == null || keyBytes.isEmpty) {
       return 'Неизвестный сервис';
     }
@@ -523,6 +530,7 @@ class StorageController extends ChangeNotifier {
         reason: 'Регенерация',
         masterPassword: masterPassword,
         expireDays: entry.expireDays,
+        profileId: currentProfileId,
       );
 
       return await result.fold(
@@ -564,7 +572,7 @@ class StorageController extends ChangeNotifier {
 
   /// Экспорт паролей в JSON
   Future<Either<StorageFailure, String>> exportPasswords() async {
-    final result = await exportPasswordsUseCase.execute();
+    final result = await exportPasswordsUseCase.execute(profileId: currentProfileId);
 
     // Логируем экспорт
     result.fold((failure) => null, (data) {
@@ -583,7 +591,7 @@ class StorageController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await importPasswordsUseCase.execute(jsonString);
+      final result = await importPasswordsUseCase.execute(jsonString, profileId: currentProfileId);
 
       return result.fold(
         (failure) {
@@ -615,7 +623,7 @@ class StorageController extends ChangeNotifier {
   Future<Either<StorageFailure, String>> exportPassgen(
     String masterPassword,
   ) async {
-    final result = await exportPassgenUseCase.execute(masterPassword);
+    final result = await exportPassgenUseCase.execute(masterPassword, profileId: currentProfileId);
 
     // Логируем экспорт
     result.fold((failure) => null, (data) {
@@ -637,6 +645,7 @@ class StorageController extends ChangeNotifier {
       final result = await importPassgenUseCase.execute(
         data: data,
         masterPassword: masterPassword,
+        profileId: currentProfileId,
       );
 
       return result.fold(

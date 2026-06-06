@@ -44,6 +44,7 @@ abstract class PasswordGeneratorRepository {
     int? categoryId,
     String? login,
     int? expireDays,
+    int profileId = 1,
   });
 
   /// Получает доступные наборы символов

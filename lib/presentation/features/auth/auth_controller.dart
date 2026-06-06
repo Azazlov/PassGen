@@ -8,6 +8,7 @@ import '../../../core/constants/event_types.dart';
 import '../../../core/security/master_password_session.dart';
 import '../../../domain/entities/auth_result.dart';
 import '../../../domain/entities/auth_state.dart';
+import '../../../domain/entities/profile.dart';
 import '../../../domain/repositories/biometric_repository.dart';
 import '../../../core/errors/failures.dart';
 import '../../../domain/repositories/profile_repository.dart';
@@ -75,6 +76,7 @@ class AuthController extends ChangeNotifier with WidgetsBindingObserver {
   bool _isLoading = false;
   String? _error;
   bool _isSetupMode = false;
+  List<Profile> _profiles = [];
 
   // Для ввода PIN
   final TextEditingController _pinController = TextEditingController();
@@ -86,6 +88,7 @@ class AuthController extends ChangeNotifier with WidgetsBindingObserver {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isSetupMode => _isSetupMode;
+  List<Profile> get profiles => _profiles;
   TextEditingController get pinController => _pinController;
   TextEditingController get confirmPinController => _confirmPinController;
   String get enteredPin => _enteredPin;
@@ -107,6 +110,17 @@ class AuthController extends ChangeNotifier with WidgetsBindingObserver {
       await Future.delayed(const Duration(milliseconds: 100));
 
       _authState = await getAuthStateUseCase.execute();
+      _profiles = (await profileRepository?.getProfiles()) ?? [];
+      if (_profiles.isEmpty && profileRepository != null) {
+        final profile = await profileRepository!.createProfile(
+          'Профиль по умолчанию',
+        );
+        if (profile.id != null) {
+          await profileRepository!.setActiveProfile(profile.id!);
+        }
+        _profiles = [profile];
+        _authState = _authState.copyWith(currentProfileId: profile.id);
+      }
       if (biometricRepository != null) {
         final isAvailable = await biometricRepository!.isAvailable();
         final isEnabled = _authState.currentProfileId != null &&

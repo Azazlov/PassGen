@@ -149,6 +149,7 @@ class MockPasswordGeneratorRepository extends _i1.Mock
     int? categoryId,
     String? login,
     int? expireDays,
+    int? profileId = 1,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#savePassword, [], {
@@ -159,6 +160,7 @@ class MockPasswordGeneratorRepository extends _i1.Mock
               #categoryId: categoryId,
               #login: login,
               #expireDays: expireDays,
+              #profileId: profileId,
             }),
             returnValue:
                 _i4.Future<
@@ -180,6 +182,7 @@ class MockPasswordGeneratorRepository extends _i1.Mock
                       #categoryId: categoryId,
                       #login: login,
                       #expireDays: expireDays,
+                      #profileId: profileId,
                     }),
                   ),
                 ),

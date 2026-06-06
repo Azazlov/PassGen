@@ -10,10 +10,12 @@ class ImportPassgenUseCase {
   Future<Either<StorageFailure, bool>> execute({
     required String data,
     required String masterPassword,
+    int profileId = 1,
   }) {
     return repository.importFromPassgen(
       data: data,
       masterPassword: masterPassword,
+      profileId: profileId,
     );
   }
 }

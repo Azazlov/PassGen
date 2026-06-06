@@ -56,7 +56,7 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Последнее обновление: 1 апреля 2026',
+                'Последнее обновление: ${AppConstants.lastUpdate}',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
@@ -74,9 +74,9 @@ class AboutScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
 
-              // Новое в версии 0.5.2
-              _buildVersionCard(context),
-              const SizedBox(height: 28),
+              // // Новое в версии 0.5.2
+              // _buildVersionCard(context),
+              // const SizedBox(height: 28),
 
               // Особенности
               _buildSectionTitle(context, 'Возможности'),
@@ -84,7 +84,7 @@ class AboutScreen extends StatelessWidget {
               _buildFeatureItem(
                 context,
                 Icons.password,
-                'Генератор паролей (8–64 символа, 5 уровней сложности)',
+                'Генератор паролей (8–32 символов, 5 уровней сложности + глитчирование)',
               ),
               _buildFeatureItem(
                 context,
@@ -104,7 +104,7 @@ class AboutScreen extends StatelessWidget {
               _buildFeatureItem(
                 context,
                 Icons.key,
-                'PBKDF2 деривация ключа (100K итераций)',
+                'PBKDF2 деривация ключа (600K итераций)',
               ),
               _buildFeatureItem(
                 context,
@@ -204,7 +204,7 @@ class AboutScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     _buildStatRow(context, 'Файлов Dart', '130+'),
-                    _buildStatRow(context, 'Строк кода', '~11 000+'),
+                    _buildStatRow(context, 'Строк кода', '~16 000+'),
                     _buildStatRow(context, 'Таблиц БД', '6'),
                     _buildStatRow(context, 'Use Cases', '29+'),
                     _buildStatRow(context, 'Безопасность', '98/100'),

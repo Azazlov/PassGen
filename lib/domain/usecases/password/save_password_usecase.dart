@@ -33,6 +33,7 @@ class SavePasswordUseCase {
     String? nonce,
     String? reason,
     int? expireDays,
+    int profileId = 1,
   }) async {
     // Валидация входных данных
     final validationFailure = _validate(service, password, config);
@@ -66,6 +67,7 @@ class SavePasswordUseCase {
       categoryId: categoryId,
       login: login,
       expireDays: expireDays,
+      profileId: profileId,
     );
   }
 

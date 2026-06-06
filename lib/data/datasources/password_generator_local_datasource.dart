@@ -416,6 +416,7 @@ class PasswordGeneratorLocalDataSource {
     int? categoryId,
     String? login,
     int? expireDays,
+    int profileId = 1,
   }) async {
     if (masterPassword == null || masterPassword.isEmpty) {
       return {
@@ -426,7 +427,7 @@ class PasswordGeneratorLocalDataSource {
     }
 
     try {
-      final passwords = await _storage.getPasswords();
+      final passwords = await _storage.getPasswords(profileId: profileId);
       final masterPasswordBytes = utf8.encode(masterPassword);
       final passwordBytes = utf8.encode(password);
 
@@ -484,7 +485,7 @@ class PasswordGeneratorLocalDataSource {
         passwords.add(newEntry);
       }
 
-      await _storage.savePasswords(passwords);
+      await _storage.savePasswords(passwords, profileId: profileId);
 
       return {'success': true, 'error': null, 'updated': existingIndex != -1};
     } catch (e) {

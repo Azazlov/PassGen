@@ -15,9 +15,9 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
   final PassgenFormat passgenFormat;
 
   @override
-  Future<Either<StorageFailure, String>> exportToJson() async {
+  Future<Either<StorageFailure, String>> exportToJson({int profileId = 1}) async {
     try {
-      final passwords = await dataSource.getPasswords();
+      final passwords = await dataSource.getPasswords(profileId: profileId);
       if (passwords.isEmpty) {
         return const Left(StorageFailure(message: 'Нет паролей для экспорта'));
       }
@@ -35,10 +35,11 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
 
   @override
   Future<Either<StorageFailure, String>> exportToPassgen(
-    String masterPassword,
-  ) async {
+    String masterPassword, {
+    int profileId = 1,
+  }) async {
     try {
-      final passwords = await dataSource.getPasswords();
+      final passwords = await dataSource.getPasswords(profileId: profileId);
       if (passwords.isEmpty) {
         return const Left(StorageFailure(message: 'Нет паролей для экспорта'));
       }
@@ -58,7 +59,7 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
   }
 
   @override
-  Future<Either<StorageFailure, bool>> importFromJson(String jsonString) async {
+  Future<Either<StorageFailure, bool>> importFromJson(String jsonString, {int profileId = 1}) async {
     try {
       final decoded = jsonDecode(jsonString);
       if (decoded == null || decoded is! List) {
@@ -69,7 +70,7 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
           .map((e) => PasswordEntry.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      final existing = await dataSource.getPasswords();
+      final existing = await dataSource.getPasswords(profileId: profileId);
 
       // Проверяем на дубликаты и добавляем только уникальные
       int addedCount = 0;
@@ -100,7 +101,7 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
         );
       }
 
-      await dataSource.savePasswords(existing);
+      await dataSource.savePasswords(existing, profileId: profileId);
       return const Right(true);
     } catch (e) {
       if (e is StorageFailure) {
@@ -114,6 +115,7 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
   Future<Either<StorageFailure, bool>> importFromPassgen({
     required String data,
     required String masterPassword,
+    int profileId = 1,
   }) async {
     try {
       final decrypted = await passgenFormat.importFromJson(
@@ -125,7 +127,7 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
           .map((e) => PasswordEntry.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      final existing = await dataSource.getPasswords();
+      final existing = await dataSource.getPasswords(profileId: profileId);
 
       // Проверяем на дубликаты и добавляем только уникальные
       int addedCount = 0;
@@ -156,7 +158,7 @@ class PasswordDataRepositoryImpl implements PasswordDataRepository {
         );
       }
 
-      await dataSource.savePasswords(existing);
+      await dataSource.savePasswords(existing, profileId: profileId);
       return const Right(true);
     } catch (e) {
       if (e is StorageFailure) {

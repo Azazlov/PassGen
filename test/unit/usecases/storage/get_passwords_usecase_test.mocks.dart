@@ -41,14 +41,23 @@ class MockStorageRepository extends _i1.Mock implements _i3.StorageRepository {
 
   @override
   _i4.Future<_i2.Either<_i5.StorageFailure, bool>> savePasswords(
-    List<_i6.PasswordEntry>? passwords,
-  ) =>
+    List<_i6.PasswordEntry>? passwords, {
+    int? profileId = 1,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#savePasswords, [passwords]),
+            Invocation.method(
+              #savePasswords,
+              [passwords],
+              {#profileId: profileId},
+            ),
             returnValue: _i4.Future<_i2.Either<_i5.StorageFailure, bool>>.value(
               _FakeEither_0<_i5.StorageFailure, bool>(
                 this,
-                Invocation.method(#savePasswords, [passwords]),
+                Invocation.method(
+                  #savePasswords,
+                  [passwords],
+                  {#profileId: profileId},
+                ),
               ),
             ),
           )
@@ -56,16 +65,18 @@ class MockStorageRepository extends _i1.Mock implements _i3.StorageRepository {
 
   @override
   _i4.Future<_i2.Either<_i5.StorageFailure, List<_i6.PasswordEntry>>>
-  getPasswords() =>
+  getPasswords({int? profileId = 1}) =>
       (super.noSuchMethod(
-            Invocation.method(#getPasswords, []),
+            Invocation.method(#getPasswords, [], {#profileId: profileId}),
             returnValue:
                 _i4.Future<
                   _i2.Either<_i5.StorageFailure, List<_i6.PasswordEntry>>
                 >.value(
                   _FakeEither_0<_i5.StorageFailure, List<_i6.PasswordEntry>>(
                     this,
-                    Invocation.method(#getPasswords, []),
+                    Invocation.method(#getPasswords, [], {
+                      #profileId: profileId,
+                    }),
                   ),
                 ),
           )
@@ -75,14 +86,23 @@ class MockStorageRepository extends _i1.Mock implements _i3.StorageRepository {
 
   @override
   _i4.Future<_i2.Either<_i5.StorageFailure, bool>> removePasswordAt(
-    int? index,
-  ) =>
+    int? index, {
+    int? profileId = 1,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#removePasswordAt, [index]),
+            Invocation.method(
+              #removePasswordAt,
+              [index],
+              {#profileId: profileId},
+            ),
             returnValue: _i4.Future<_i2.Either<_i5.StorageFailure, bool>>.value(
               _FakeEither_0<_i5.StorageFailure, bool>(
                 this,
-                Invocation.method(#removePasswordAt, [index]),
+                Invocation.method(
+                  #removePasswordAt,
+                  [index],
+                  {#profileId: profileId},
+                ),
               ),
             ),
           )
@@ -90,14 +110,19 @@ class MockStorageRepository extends _i1.Mock implements _i3.StorageRepository {
 
   @override
   _i4.Future<_i2.Either<_i5.StorageFailure, bool>> updateEntry(
-    _i6.PasswordEntry? updated,
-  ) =>
+    _i6.PasswordEntry? updated, {
+    int? profileId = 1,
+  }) =>
       (super.noSuchMethod(
-            Invocation.method(#updateEntry, [updated]),
+            Invocation.method(#updateEntry, [updated], {#profileId: profileId}),
             returnValue: _i4.Future<_i2.Either<_i5.StorageFailure, bool>>.value(
               _FakeEither_0<_i5.StorageFailure, bool>(
                 this,
-                Invocation.method(#updateEntry, [updated]),
+                Invocation.method(
+                  #updateEntry,
+                  [updated],
+                  {#profileId: profileId},
+                ),
               ),
             ),
           )

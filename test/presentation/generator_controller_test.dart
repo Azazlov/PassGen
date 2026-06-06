@@ -94,6 +94,7 @@ class _FakePasswordGeneratorRepository implements PasswordGeneratorRepository {
     int? categoryId,
     String? login,
     int? expireDays,
+    int profileId = 1,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 10));
     return const Right({'success': true, 'updated': false});
@@ -176,24 +177,25 @@ class _FakeSecurityLogRepository implements SecurityLogRepository {
 
 class _FakeStorageRepository implements StorageRepository {
   @override
-  Future<Either<StorageFailure, List<PasswordEntry>>> getPasswords() async {
+  Future<Either<StorageFailure, List<PasswordEntry>>> getPasswords({int profileId = 1}) async {
     return const Right(<PasswordEntry>[]);
   }
 
   @override
   Future<Either<StorageFailure, bool>> savePasswords(
-    List<PasswordEntry> passwords,
-  ) async {
+    List<PasswordEntry> passwords, {
+    int profileId = 1,
+  }) async {
     return const Right(true);
   }
 
   @override
-  Future<Either<StorageFailure, bool>> removePasswordAt(int index) async {
+  Future<Either<StorageFailure, bool>> removePasswordAt(int index, {int profileId = 1}) async {
     return const Right(true);
   }
 
   @override
-  Future<Either<StorageFailure, bool>> updateEntry(PasswordEntry updated) async {
+  Future<Either<StorageFailure, bool>> updateEntry(PasswordEntry updated, {int profileId = 1}) async {
     return const Right(true);
   }
 

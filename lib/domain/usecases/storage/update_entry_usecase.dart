@@ -12,7 +12,7 @@ class UpdateEntryUseCase {
   const UpdateEntryUseCase(this.repository);
   final StorageRepository repository;
 
-  Future<Either<StorageFailure, bool>> execute(PasswordEntry updated) {
-    return repository.updateEntry(updated);
+  Future<Either<StorageFailure, bool>> execute(PasswordEntry updated, {int profileId = 1}) {
+    return repository.updateEntry(updated, profileId: profileId);
   }
 }
