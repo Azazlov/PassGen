@@ -428,19 +428,24 @@ class PasswordGeneratorLocalDataSource {
     try {
       final passwords = await _storage.getPasswords();
       final masterPasswordBytes = utf8.encode(masterPassword);
+      final passwordBytes = utf8.encode(password);
 
       final miniEncrypted = await _encryptor.encryptToMini(
-        message: utf8.encode(password),
+        message: passwordBytes,
         password: masterPasswordBytes,
       );
 
-      CryptoUtils.secureWipePassword(utf8.encode(password));
+      CryptoUtils.secureWipePassword(passwordBytes);
 
+      // encryptToMini → encrypt → secureWipeData(password) затирает
+      // masterPasswordBytes in-place, поэтому для конфига создаём свежую копию.
+      final configPasswordBytes = utf8.encode(masterPassword);
       final encryptedConfig = await _encryptor.encryptToMini(
         message: utf8.encode(config),
-        password: masterPasswordBytes,
+        password: configPasswordBytes,
       );
 
+      CryptoUtils.secureWipePassword(configPasswordBytes);
       CryptoUtils.secureWipePassword(masterPasswordBytes);
 
       // Извлекаем PBKDF2-nonce из мини-формата (первые 32 байта до декодирования).

@@ -450,13 +450,39 @@ class StorageController extends ChangeNotifier {
       // Пытаемся расшифровать оригинальный конфиг и извлечь настройки
       PasswordGenerationSettings settings;
       try {
-        final encryptor = EncryptorLocalDataSource();
-        final decryptedBytes = await encryptor.decryptFromMini(
-          miniEncrypted: entry.config,
-          password: utf8.encode(masterPassword),
-        );
-        final plaintextConfig = utf8.decode(decryptedBytes);
-        final parts = plaintextConfig.split('.');
+        String? plaintextConfig;
+
+        final decrypt = (List<int> pwd) async {
+          final e = EncryptorLocalDataSource();
+          final b = await e.decryptFromMini(
+            miniEncrypted: entry.config,
+            password: pwd,
+          );
+          return utf8.decode(b);
+        };
+
+        // 1) Пробуем с реальным мастер-паролем (новые записи)
+        try {
+          plaintextConfig = await decrypt(utf8.encode(masterPassword));
+        } catch (_) {
+          // 2) Пробуем с нулевыми байтами (записи, созданные до исправления
+          //    бага с затиранием masterPasswordBytes в savePassword).
+          try {
+            plaintextConfig = await decrypt(
+              List.filled(masterPassword.length, 0),
+            );
+          } catch (_) {
+            // 3) Проверяем, не сохранён ли конфиг в открытом виде (старый формат)
+            if (entry.config.contains('.') &&
+                !entry.config.contains(' ')) {
+              plaintextConfig = entry.config;
+            } else {
+              rethrow;
+            }
+          }
+        }
+
+        final parts = plaintextConfig!.split('.');
         if (parts.length >= 3) {
           final originalLength = int.parse(CryptoUtils.decodeBase64Url(parts[0]));
           final originalFlags = int.parse(CryptoUtils.decodeBase64Url(parts[1]));
@@ -464,15 +490,11 @@ class StorageController extends ChangeNotifier {
             strength: 1,
             lengthRange: [originalLength, originalLength],
             flags: originalFlags,
-            requireUppercase: (originalFlags & PasswordFlags.uppercase) != 0,
-            requireLowercase: (originalFlags & PasswordFlags.lowercase) != 0,
-            requireDigits: (originalFlags & PasswordFlags.digits) != 0,
-            requireSymbols: (originalFlags & PasswordFlags.symbols) != 0,
-            allUnique: (originalFlags & PasswordFlags.allUnique) != 0,
             useCustomLowercase: (originalFlags & PasswordFlags.lowercase) != 0,
             useCustomUppercase: (originalFlags & PasswordFlags.uppercase) != 0,
             useCustomDigits: (originalFlags & PasswordFlags.digits) != 0,
             useCustomSymbols: (originalFlags & PasswordFlags.symbols) != 0,
+            allUnique: (originalFlags & PasswordFlags.allUnique) != 0,
           );
         } else {
           settings = GeneratePasswordUseCase.getSettingsByStrength(2);
